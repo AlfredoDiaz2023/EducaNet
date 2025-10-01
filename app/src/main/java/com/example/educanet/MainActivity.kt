@@ -1,4 +1,4 @@
-package com.example.nombrecaso
+package com.example.educanet
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,7 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.example.educanet.ui.screens.login.LoginScreen
-import com.example.nombrecaso.ui.screens.splash.SplashScreen
+import com.example.educanet.ui.screens.splash.SplashSplash
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +48,7 @@ fun MyApp() {
     MaterialTheme {
         Surface {
             if (!showLogin) {
-                SplashScreen()
+                SplashSplash()
             } else {
                 LoginScreen()
             }
