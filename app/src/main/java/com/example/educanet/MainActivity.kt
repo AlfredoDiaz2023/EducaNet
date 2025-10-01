@@ -1,4 +1,4 @@
-package com.example.educanet
+package com.example.nombrecaso
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -13,35 +13,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.educanet.ui.theme.EducaNetTheme
 
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.example.educanet.ui.screens.login.LoginScreen
+import com.example.educanet.ui.screens.splash.SplashSplash
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EducaNetTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+            MyApp()
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun MyApp() {
+    var showLogin by rememberSaveable{ mutableStateOf(false) }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EducaNetTheme {
-        Greeting("Android")
+    val handler = remember { Handler(Looper.getMainLooper()) }
+    LaunchedEffect(Unit) {
+        handler.postDelayed({showLogin = true}, 2000L)
+    }
+
+    MaterialTheme {
+        Surface {
+            if (!showLogin) {
+                SplashSplash()
+            } else {
+                LoginScreen()
+            }
+        }
     }
 }
