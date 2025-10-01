@@ -1,5 +1,6 @@
 package com.example.nombrecaso.ui.screens.splash
 
+import android.window.SplashScreen
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
 import com.example.educanet.R
 
 @Composable
-fun SplashSplash(
+fun SplashScreen(
     modifier: Modifier = Modifier,
 
     ) {
