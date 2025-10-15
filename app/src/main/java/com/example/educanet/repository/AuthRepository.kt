@@ -1,43 +1,32 @@
 package com.example.educanet.repository
 
-import com.example.educanet.model.Usuario
+import  com.example.educanet.model.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+
 
 class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
-    suspend fun login(correo: String, clave: String) : Usuario? {
+    suspend fun login(correo: String, clave: String): Usuario? {
         return try {
-            // Intentar autenticar con Authenticar de Firebase - admin
-            val resultado = auth.signInWithEmailAndPassword(correo, clave).await()
-            val usuario = resultado.user
-            if (usuario != null ) {
-                getUserFromFirestore(usuario.uid, correo) ?: Usuario (
-                    correo = correo,
-                    nombre = if(correo == "admin@educanet.cl") "Administrador" else "Usuario",
-                    rol = if (correo == "admin@educanet.cl") "admin" else "cliente"
-                )
-            } else null
-        }catch (e: Exception){
-            // Si falla Auth, intentar con Firestore
-            loginWithFirestore(correo, clave)
-        }
-    }
-
-    private suspend fun getUserFromFirestore(uid: String, correo: String): Usuario? {
-        return try {
-            val documento = db.collection("usuario").document(uid).get().await()
-            if(documento.exists()) {
-                Usuario(
-                    correo = documento.getString("correo") ?: correo,
-                    nombre = documento.getString("nombre") ?: "Usuario",
-                    rol = documento.getString("rol") ?: "cliente"
-                )
-            }else null
-        }catch (e: Exception) {
+            //Intentar autenticar con auth
+            when {
+                correo == "admin@nombrecaso.cl" -> {
+                    val resultado = auth.signInWithEmailAndPassword(correo,clave).await()
+                    Usuario(
+                        correo = correo,
+                        nombre = "Administrador",
+                        rol = "admin"
+                    )
+                }
+                else -> {
+                    loginWithFirestore(correo,clave)
+                }
+            }
+        } catch (e: Exception){
             null
         }
     }
@@ -45,20 +34,21 @@ class AuthRepository {
     private suspend fun loginWithFirestore(correo: String, clave: String): Usuario? {
         return try {
             val query = db.collection("usuario")
-                .whereEqualTo("correo",correo)
+                .whereEqualTo("correo", correo)
                 .whereEqualTo("clave", clave)
                 .get()
                 .await()
 
-            if (!query.isEmpty){
+            if (!query.isEmpty && query.documents.isNotEmpty()) {
                 val doc = query.documents[0]
-                Usuario (
+                Usuario(
                     correo = doc.getString("correo") ?: "",
+                    clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Cliente",
                     rol = doc.getString("rol") ?: "cliente"
                 )
-            }else null
-        }catch (e: Exception){
+            } else null
+        } catch (e: Exception) {
             null
         }
     }
