@@ -25,7 +25,7 @@ fun RegistroScreen(
     var confirmarClave by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
 
-    val viewModel: com.example.nombrecaso.viewmodel.RegistroViewModel = viewModel()
+    val viewModel: com.example.educanet.viewmodel.RegistroViewModel = viewModel()
     val cargando by viewModel.cargando.collectAsState()
     val registroExitoso by viewModel.registroExitoso.collectAsState()
     val errorMensaje by viewModel.errorMensaje.collectAsState()
