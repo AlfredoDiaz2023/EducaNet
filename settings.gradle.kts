@@ -7,6 +7,7 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
+        google() // Agregar
         mavenCentral()
         gradlePluginPortal()
     }

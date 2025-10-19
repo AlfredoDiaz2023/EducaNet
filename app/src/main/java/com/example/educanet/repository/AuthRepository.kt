@@ -15,7 +15,8 @@ class AuthRepository {
             //Intentar autenticar con auth
             when {
                 correo == "admin@nombrecaso.cl" -> {
-                    val resultado = auth.signInWithEmailAndPassword(correo,clave).await()
+                    //Autenticación con Firebase Auth
+                    val resultado = auth.signInWithEmailAndPassword(correo, clave).await()
                     Usuario(
                         correo = correo,
                         nombre = "Administrador",
@@ -23,6 +24,7 @@ class AuthRepository {
                     )
                 }
                 else -> {
+                    //Autenticación con la colección usuario de Firestore
                     loginWithFirestore(correo,clave)
                 }
             }
@@ -30,6 +32,8 @@ class AuthRepository {
             null
         }
     }
+
+
 
     private suspend fun loginWithFirestore(correo: String, clave: String): Usuario? {
         return try {
@@ -39,7 +43,7 @@ class AuthRepository {
                 .get()
                 .await()
 
-            if (!query.isEmpty && query.documents.isNotEmpty()) {
+            if (!query.isEmpty) {
                 val doc = query.documents[0]
                 Usuario(
                     correo = doc.getString("correo") ?: "",
