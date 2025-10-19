@@ -13,34 +13,21 @@ class AuthRepository {
     suspend fun login(correo: String, clave: String) : Usuario? {
         return try {
             // Intentar autenticar con Authentication de Firebase - admin
-            val resultado = auth.signInWithEmailAndPassword(correo, clave).await()
-            val usuario = resultado.user
-            if (usuario != null ) {
-                getUserFromFirestore(usuario.uid, correo) ?: Usuario (
-                    correo = correo,
-                    nombre = if (correo == "admin@educanet.cl") "Administrador" else "Usuario",
-                    rol = if (correo == "admin@educanet.cl") "admin" else "cliente"
-                )
-            } else null
+            when {
+                correo == "admin@educanet.cl" -> {
+                    val resultado = auth.signInWithEmailAndPassword(correo, clave).await()
+                    Usuario (
+                        correo = correo,
+                        nombre = "Administrador",
+                        rol = "admin"
+                    )
+                }
+                else -> {
+                    loginWithFirestore(correo, clave)
+                }
+            }
         }catch (e: Exception) {
-            // Si falla Auth, intentar con Firestore
-            loginWithFirestore(correo, clave)
-        }
-    }
-
-    private suspend fun getUserFromFirestore(uid: String, correo: String) : Usuario? {
-        return try {
-            val documento = db.collection("usuario").document(uid).get().await()
-            if (documento.exists()) {
-                Usuario(
-                    correo = documento.getString("correo") ?: correo,
-                    nombre = documento.getString("nombre") ?: "Usuario",
-                    rol = documento.getString("rol") ?: "cliente"
-                )
-            } else null
-        } catch (e: Exception) {
             null
-
         }
     }
 
@@ -51,10 +38,11 @@ class AuthRepository {
                 .whereEqualTo("clave", clave)
                 .get()
                 .await()
-            if (!query.isEmpty) {
+            if (!query.isEmpty && query.documents.isNotEmpty()) {
                 val doc = query.documents[0]
                 Usuario (
                     correo = doc.getString("correo") ?: "",
+                    clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Cliente",
                     rol = doc.getString("rol") ?: "cliente"
                 )

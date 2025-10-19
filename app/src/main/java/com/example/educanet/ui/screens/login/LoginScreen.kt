@@ -17,23 +17,32 @@ import androidx.compose.ui.graphics.Color
 import com.example.educanet.model.Usuario
 
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.educanet.repository.AuthRepository
 import com.example.educanet.viewmodel.LoginViewModel
 
 @Composable
-fun LoginScreen(){ // Funcion de inicio de sesion
+fun LoginScreen(
+    onRegisterClick: () -> Unit = {},
+    onLoginSuccess: (Usuario: com.example.educanet.model.Usuario) -> Unit = {}
+){ // Funcion de inicio de sesion
     // Variable que permite obtener en tiempo de ejecucion el estado de ciclo de vida app
     val context = LocalContext.current
 
     // Variable para el correo
     var correo by remember { mutableStateOf("") }
 
+    //Variable para almacenar la clave del usuario
+    var pass by remember { mutableStateOf("") }
+
     val viewModel: LoginViewModel = viewModel()
+
     // Variable es para almacenar el dato de usuario para el login
     val usuario by viewModel.usuario.collectAsState()
     val carga by viewModel.cargaLogin.collectAsState()
 
-    // Variable es para alamacenar el dato de la password para el login
-    var pass by remember { mutableStateOf("") }
+    //Variable de conexion al Auth
+    val repositorio = AuthRepository()
+
 
     // Funcion que observa cuando el usuario se loque
     LaunchedEffect(usuario) {
@@ -43,6 +52,7 @@ fun LoginScreen(){ // Funcion de inicio de sesion
                 else -> "Bienvenido: ${it.nombre}"
             }
             Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+            onLoginSuccess(it)
 
         }
     }
@@ -101,13 +111,20 @@ fun LoginScreen(){ // Funcion de inicio de sesion
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA40E31), // Establecer el color de Fondo
                 contentColor = Color(0xFFD7EA1E) // Establece el color de texto
-            )
+            ),
+            enabled = !carga
         ) {
             if (carga){
                 CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
             }else {
                 Text("Entrar")
             }
+        }
+        Spacer(Modifier.height(10.dp))
+            // Agregar boton de registro
+        TextButton(onClick = onRegisterClick){
+            Text("¿No tienes cuenta? Registrate aqui",
+                color = Color(0xFF81154C))
         }
     }
 }
