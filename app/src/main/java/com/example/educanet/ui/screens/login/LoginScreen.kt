@@ -16,17 +16,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import com.example.educanet.model.Usuario
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.educanet.viewmodel.LoginViewModel
+
 @Composable
 fun LoginScreen(){ // Funcion de inicio de sesion
     // Variable que permite obtener en tiempo de ejecucion el estado de ciclo de vida app
     val context = LocalContext.current
 
+    // Variable para el correo
+    var correo by remember { mutableStateOf("") }
+
+    val viewModel: LoginViewModel = viewModel()
     // Variable es para almacenar el dato de usuario para el login
-    var usuario by remember { mutableStateOf("") }
+    val usuario by viewModel.usuario.collectAsState()
+    val carga by viewModel.cargaLogin.collectAsState()
 
     // Variable es para alamacenar el dato de la password para el login
     var pass by remember { mutableStateOf("") }
 
+    // Funcion que observa cuando el usuario se loque
+    LaunchedEffect(usuario) {
+        usuario?.let {
+            val mensaje = when (it.rol) {
+                "admin" -> "Bienvenido Admin: ${it.nombre}"
+                else -> "Bienvenido: ${it.nombre}"
+            }
+            Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+
+        }
+    }
     // Componente Column para configurar la organizacion visual de los componentes
     Column (
         modifier = Modifier
@@ -45,8 +64,8 @@ fun LoginScreen(){ // Funcion de inicio de sesion
 
         // Componente OutlinedTextField para crear el input del usuario
         OutlinedTextField(
-            value = usuario, // Obtener el valor del input y guardarlo en la variable usuario
-            onValueChange = { usuario = it}, // Actualizar la variable usuario con el nuevo ingreso del input
+            value = correo, // Obtener el valor del input y guardarlo en la variable usuario
+            onValueChange = { correo = it}, // Actualizar la variable usuario con el nuevo ingreso del input
             label = { Text("Usuario", color = Color(0xFF21C2B2))}, // Agregar titulo Usuario al input
             singleLine = true, // Permite que el texto del input quede en una sola linea
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
@@ -73,15 +92,22 @@ fun LoginScreen(){ // Funcion de inicio de sesion
         // Componente Button para agregar un boton a la vista login
         Button(
             onClick = {
-                Toast.makeText(context, "Bienvenido $usuario", Toast.LENGTH_SHORT)
-                    .show()
+                if (correo.isEmpty() || pass.isEmpty()) {
+                    Toast.makeText(context, "Completar todos los campos", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+                viewModel.login(correo, pass)
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA40E31), // Establecer el color de Fondo
                 contentColor = Color(0xFFD7EA1E) // Establece el color de texto
             )
         ) {
-            Text("Entrar")
+            if (carga){
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+            }else {
+                Text("Entrar")
+            }
         }
     }
 }
