@@ -76,7 +76,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = correo, // Obtener el valor del input y guardarlo en la variable usuario
             onValueChange = { correo = it}, // Actualizar la variable usuario con el nuevo ingreso del input
-            label = { Text("Usuario", color = Color(0xFF21C2B2))}, // Agregar titulo Usuario al input
+            label = { Text("Usuario", color = Color(0xFF355FF6))}, // Agregar titulo Usuario al input
             singleLine = true, // Permite que el texto del input quede en una sola linea
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             modifier = Modifier.fillMaxWidth() // El input rellena la pantalla segun su ancho
@@ -90,7 +90,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = pass, // Obtener el valor del input y guardarlo en la variable pass
             onValueChange = { pass = it}, // Actualizar la variable usuario con el nuevo ingreso del input
-            label = { Text("Contraseña", color = Color(0xFF21C2B2))}, // Agregar titulo Usuario al input
+            label = { Text("Contraseña", color = Color(0xFF355FF6))}, // Agregar titulo Usuario al input
             singleLine = true, // Permite que el texto del input quede en una sola linea
             visualTransformation = PasswordVisualTransformation(), // Oculta la cpntraseña al escribirla
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Define un teclado para ingresar el dato al input
@@ -109,8 +109,8 @@ fun LoginScreen(
                 viewModel.login(correo, pass)
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA40E31), // Establecer el color de Fondo
-                contentColor = Color(0xFFD7EA1E) // Establece el color de texto
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3881EC), // Establecer el color de Fondo
+                contentColor = Color(0xFFFAFCFB) // Establece el color de texto
             ),
             enabled = !carga
         ) {
@@ -124,7 +124,8 @@ fun LoginScreen(
             // Agregar boton de registro
         TextButton(onClick = onRegisterClick){
             Text("¿No tienes cuenta? Registrate aqui",
-                color = Color(0xFF81154C))
+                color = Color(0xFF9B1A2A)
+            )
         }
     }
 }
