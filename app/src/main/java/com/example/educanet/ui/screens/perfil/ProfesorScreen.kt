@@ -29,7 +29,7 @@ fun PerfilProfesorScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            "Bienvenido $nombre",  // Muestra el nombre del profesor
+            "Bienvenido Profesor $nombre",  // Muestra el nombre del profesor
             style = MaterialTheme.typography.bodyLarge
         )
 

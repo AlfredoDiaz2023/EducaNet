@@ -24,6 +24,7 @@ fun RegistroScreen(
     var clave by remember { mutableStateOf("") }
     var confirmarClave by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
+    var rol by remember { mutableStateOf("") }
 
     val viewModel: com.example.educanet.viewmodel.RegistroViewModel = viewModel()
     val cargando by viewModel.cargando.collectAsState()
@@ -110,11 +111,21 @@ fun RegistroScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = rol,
+            onValueChange = { rol = it },
+            label = { Text("Rol *") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
-                viewModel.registroUsuario(correo, clave, confirmarClave, nombre)
+                viewModel.registroUsuario(correo, clave, confirmarClave, nombre, rol)
             },
             modifier = Modifier
                 .fillMaxWidth()

@@ -9,7 +9,7 @@ import java.util.*
 class UsuarioRepository {
     private val db = FirebaseFirestore.getInstance()
 
-    suspend fun registroUsuario(correo: String, clave: String, nombre: String): Boolean {
+    suspend fun registroUsuario(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
             // Verificar si el correo ya existe
             val querySnapshot = db.collection("usuario")
@@ -27,6 +27,8 @@ class UsuarioRepository {
                 "clave" to clave,
                 "nombre" to nombre,
                 "rol" to "cliente",
+                "rol" to "profesor",
+                "rol" to "apoderado",
                 "fechaRegistro" to getCurrentDate()
             )
 

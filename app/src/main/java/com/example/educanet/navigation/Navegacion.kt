@@ -76,5 +76,39 @@ fun AppNavegacion() {
                 }
             )
         }
+
+        composable(
+            "perfil_profesor/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: "Profesor"
+            PerfilClienteScreen(
+                nombre = nombre,
+                onLogout = {
+
+                    // Volver al login limpiando el back stack
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            "perfil_apoderado/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: "Apoderado"
+            PerfilClienteScreen(
+                nombre = nombre,
+                onLogout = {
+
+                    // Volver al login limpiando el back stack
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }

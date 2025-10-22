@@ -29,7 +29,7 @@ fun PerfilApoderadoScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            "Bienvenido $nombre",  // Muestra el nombre del apoderado
+            "Bienvenido Apoderado $nombre",  // Muestra el nombre del apoderado
             style = MaterialTheme.typography.bodyLarge
         )
 

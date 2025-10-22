@@ -24,6 +24,8 @@ class AuthRepository {
                 }
                 else -> {
                     loginWithFirestore(correo, clave)
+                    loginProfesor(correo, clave)
+                    loginApoderado(correo, clave)
                 }
             }
         }catch (e: Exception) {
@@ -45,6 +47,48 @@ class AuthRepository {
                     clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Cliente",
                     rol = doc.getString("rol") ?: "cliente"
+                )
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun loginProfesor(correo: String, clave: String): Usuario? {
+        return try {
+            val query = db.collection("usuario")
+                .whereEqualTo("correo", correo)
+                .whereEqualTo("clave", clave)
+                .get()
+                .await()
+            if (!query.isEmpty && query.documents.isNotEmpty()) {
+                val doc = query.documents[0]
+                Usuario (
+                    correo = doc.getString("correo") ?: "",
+                    clave = doc.getString("clave") ?: "",
+                    nombre = doc.getString("nombre") ?: "Profesor",
+                    rol = doc.getString("rol") ?: "profesor"
+                )
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun loginApoderado(correo: String, clave: String): Usuario? {
+        return try {
+            val query = db.collection("usuario")
+                .whereEqualTo("correo", correo)
+                .whereEqualTo("clave", clave)
+                .get()
+                .await()
+            if (!query.isEmpty && query.documents.isNotEmpty()) {
+                val doc = query.documents[0]
+                Usuario (
+                    correo = doc.getString("correo") ?: "",
+                    clave = doc.getString("clave") ?: "",
+                    nombre = doc.getString("nombre") ?: "Apoderado",
+                    rol = doc.getString("rol") ?: "apoderado"
                 )
             } else null
         } catch (e: Exception) {
