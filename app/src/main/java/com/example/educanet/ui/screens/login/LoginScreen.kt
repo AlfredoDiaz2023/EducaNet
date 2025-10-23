@@ -39,10 +39,26 @@ fun LoginScreen(
     // Variable es para almacenar el dato de usuario para el login
     val usuario by viewModel.usuario.collectAsState()
     val carga by viewModel.cargaLogin.collectAsState()
+    val loginExitoso by viewModel.loginExitoso.collectAsState()
+    val errorMensaje by viewModel.errorMensaje.collectAsState()
 
     //Variable de conexion al Auth
     val repositorio = AuthRepository()
 
+    // Observar éxito del registro
+    LaunchedEffect(loginExitoso) {
+        if (loginExitoso) {
+            Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+
+        }
+    }
+
+    // Observar errores
+    LaunchedEffect(errorMensaje) {
+        if (errorMensaje.isNotEmpty()) {
+            Toast.makeText(context, errorMensaje, Toast.LENGTH_LONG).show()
+        }
+    }
 
     // Funcion que observa cuando el usuario se loque
     LaunchedEffect(usuario) {
