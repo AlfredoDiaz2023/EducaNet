@@ -1,7 +1,10 @@
 package com.example.educanet.repository
 
 import androidx.compose.ui.layout.FirstBaseline
-import com.example.educanet.model.Usuario
+import com.example.educanet.model.Administrador
+import com.example.educanet.model.Profesor
+import com.example.educanet.model.Apoderado
+import com.example.educanet.model.Alumno
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -10,30 +13,22 @@ class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
-    suspend fun login(correo: String, clave: String) : Usuario? {
+    suspend fun login(correo: String, clave: String): Any? {
         return try {
-            // Intentar autenticar con Authentication de Firebase - admin
-            when {
-                correo == "admin@educanet.cl" -> {
-                    val resultado = auth.signInWithEmailAndPassword(correo, clave).await()
-                    Usuario (
-                        correo = correo,
-                        nombre = "Administrador",
-                        rol = "admin"
-                    )
-                }
-                else -> {
-                    loginProfesor(correo, clave)
-                    loginApoderado(correo, clave)
-                    loginAlumno(correo, clave)
-                }
+            if (correo == "admin@educanet.cl") {
+                auth.signInWithEmailAndPassword(correo, clave).await()
+                Administrador(correo, "Administrador", "Administrador")
+            } else {
+                loginProfesor(correo, clave)
+                    ?: loginApoderado(correo, clave)
+                    ?: loginAlumno(correo, clave)
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             null
         }
     }
 
-    private suspend fun loginProfesor(correo: String, clave: String): Usuario? {
+    private suspend fun loginProfesor(correo: String, clave: String): Profesor? {
         return try {
             val query = db.collection("usuario")
                 .whereEqualTo("correo", correo)
@@ -42,11 +37,11 @@ class AuthRepository {
                 .await()
             if (!query.isEmpty && query.documents.isNotEmpty()) {
                 val doc = query.documents[0]
-                Usuario (
+                Profesor (
                     correo = doc.getString("correo") ?: "",
                     clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Profesor",
-                    rol = doc.getString("rol") ?: "profesor"
+                    rol = doc.getString("rol") ?: "Profesor"
                 )
             } else null
         } catch (e: Exception) {
@@ -54,7 +49,7 @@ class AuthRepository {
         }
     }
 
-    private suspend fun loginApoderado(correo: String, clave: String): Usuario? {
+    private suspend fun loginApoderado(correo: String, clave: String): Apoderado? {
         return try {
             val query = db.collection("usuario")
                 .whereEqualTo("correo", correo)
@@ -63,11 +58,11 @@ class AuthRepository {
                 .await()
             if (!query.isEmpty && query.documents.isNotEmpty()) {
                 val doc = query.documents[0]
-                Usuario (
+                Apoderado (
                     correo = doc.getString("correo") ?: "",
                     clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Apoderado",
-                    rol = doc.getString("rol") ?: "apoderado"
+                    rol = doc.getString("rol") ?: "Apoderado"
                 )
             } else null
         } catch (e: Exception) {
@@ -75,7 +70,7 @@ class AuthRepository {
         }
     }
 
-    private suspend fun loginAlumno(correo: String, clave: String): Usuario? {
+    private suspend fun loginAlumno(correo: String, clave: String): Alumno? {
         return try {
             val query = db.collection("usuario")
                 .whereEqualTo("correo", correo)
@@ -84,11 +79,11 @@ class AuthRepository {
                 .await()
             if (!query.isEmpty && query.documents.isNotEmpty()) {
                 val doc = query.documents[0]
-                Usuario (
+                Alumno (
                     correo = doc.getString("correo") ?: "",
                     clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Alumno",
-                    rol = doc.getString("rol") ?: "alumno"
+                    rol = doc.getString("rol") ?: "Alumno"
                 )
             } else null
         } catch (e: Exception) {

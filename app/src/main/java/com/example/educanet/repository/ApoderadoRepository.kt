@@ -1,18 +1,17 @@
 package com.example.educanet.repository
 
-
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
 
-class UsuarioRepository {
+class ApoderadoRepository {
     private val db = FirebaseFirestore.getInstance()
 
-    suspend fun registroUsuario(correo: String, clave: String, nombre: String, rol: String): Boolean {
+    suspend fun registroApoderado(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
             // Verificar si el correo ya existe
-            val querySnapshot = db.collection("usuario")
+            val querySnapshot = db.collection("Apoderado")
                 .whereEqualTo("correo", correo)
                 .get()
                 .await()
@@ -26,14 +25,12 @@ class UsuarioRepository {
                 "correo" to correo,
                 "clave" to clave,
                 "nombre" to nombre,
-                "rol" to "Profesor",
                 "rol" to "Apoderado",
-                "rol" to "Alumno",
                 "fechaRegistro" to getCurrentDate()
             )
 
-            // Agregar documento a la colección "usuario"
-            db.collection("usuario").add(userData).await()
+            // Agregar documento a la colección "Apoderado"
+            db.collection("Apoderado").add(userData).await()
             true
         } catch (e: Exception) {
             false

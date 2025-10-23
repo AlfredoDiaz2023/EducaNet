@@ -33,8 +33,7 @@ fun AppNavegacion() {
                         "admin" -> navController.navigate("perfil_admin/${user.nombre}")
                         "profesor" -> navController.navigate("perfil_profesor/${user.nombre}")
                         "apoderado" -> navController.navigate("perfil_apoderado/${user.nombre}")
-                        "alumno" -> navController.navigate("perfil_alumno/${user.nombre}")
-
+                        else -> navController.navigate("perfil_alumno/${user.nombre}")
 
                     }
                 }

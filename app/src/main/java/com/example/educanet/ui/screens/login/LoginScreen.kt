@@ -24,6 +24,7 @@ import com.example.educanet.viewmodel.LoginViewModel
 fun LoginScreen(
     onRegisterClick: () -> Unit = {},
     onLoginSuccess: (Usuario: com.example.educanet.model.Usuario) -> Unit = {}
+
 ){ // Funcion de inicio de sesion
     // Variable que permite obtener en tiempo de ejecucion el estado de ciclo de vida app
     val context = LocalContext.current
