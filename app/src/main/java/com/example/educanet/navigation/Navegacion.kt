@@ -9,7 +9,9 @@ import androidx.navigation.navArgument
 import com.example.educanet.ui.screens.login.LoginScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
 import com.example.educanet.ui.screens.perfil.PerfilAdminScreen
-import com.example.educanet.ui.screens.perfil.PerfilClienteScreen
+import com.example.educanet.ui.screens.perfil.PerfilProfesorScreen
+import com.example.educanet.ui.screens.perfil.PerfilApoderadoScreen
+import com.example.educanet.ui.screens.perfil.PerfilAlumnoScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -29,7 +31,11 @@ fun AppNavegacion() {
                     // Navegar según el rol pasando el nombre como parámetro
                     when (user.rol) {
                         "admin" -> navController.navigate("perfil_admin/${user.nombre}")
-                        else -> navController.navigate("perfil_cliente/${user.nombre}")
+                        "profesor" -> navController.navigate("perfil_profesor/${user.nombre}")
+                        "apoderado" -> navController.navigate("perfil_apoderado/${user.nombre}")
+                        "alumno" -> navController.navigate("perfil_alumno/${user.nombre}")
+
+
                     }
                 }
             )
@@ -61,28 +67,11 @@ fun AppNavegacion() {
         }
 
         composable(
-            "perfil_cliente/{nombre}",
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val nombre = backStackEntry.arguments?.getString("nombre") ?: "Cliente"
-            PerfilClienteScreen(
-                nombre = nombre,
-                onLogout = {
-
-                    // Volver al login limpiando el back stack
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        composable(
             "perfil_profesor/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
         ) { backStackEntry ->
             val nombre = backStackEntry.arguments?.getString("nombre") ?: "Profesor"
-            PerfilClienteScreen(
+            PerfilProfesorScreen(
                 nombre = nombre,
                 onLogout = {
 
@@ -99,7 +88,24 @@ fun AppNavegacion() {
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
         ) { backStackEntry ->
             val nombre = backStackEntry.arguments?.getString("nombre") ?: "Apoderado"
-            PerfilClienteScreen(
+            PerfilApoderadoScreen(
+                nombre = nombre,
+                onLogout = {
+
+                    // Volver al login limpiando el back stack
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            "perfil_alumno/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: "Alumno"
+            PerfilAlumnoScreen(
                 nombre = nombre,
                 onLogout = {
 

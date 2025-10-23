@@ -26,9 +26,9 @@ class UsuarioRepository {
                 "correo" to correo,
                 "clave" to clave,
                 "nombre" to nombre,
-                "rol" to "cliente",
                 "rol" to "profesor",
                 "rol" to "apoderado",
+                "rol" to "alumno",
                 "fechaRegistro" to getCurrentDate()
             )
 

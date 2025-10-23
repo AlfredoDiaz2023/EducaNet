@@ -48,7 +48,7 @@ fun LoginScreen(
     // Observar éxito del registro
     LaunchedEffect(loginExitoso) {
         if (loginExitoso) {
-            Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "LogIn exitoso", Toast.LENGTH_SHORT).show()
 
         }
     }
@@ -65,7 +65,9 @@ fun LoginScreen(
         usuario?.let {
             val mensaje = when (it.rol) {
                 "admin" -> "Bienvenido Admin: ${it.nombre}"
-                else -> "Bienvenido: ${it.nombre}"
+                "profesor" -> "Bienvenido Profesor: ${it.nombre}"
+                "apoderado" -> "Bienvenido Apoderado: ${it.nombre}"
+                else -> "Bienvenido Alumno: ${it.nombre}"
             }
             Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
             onLoginSuccess(it)

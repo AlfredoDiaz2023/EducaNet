@@ -23,33 +23,12 @@ class AuthRepository {
                     )
                 }
                 else -> {
-                    loginWithFirestore(correo, clave)
                     loginProfesor(correo, clave)
                     loginApoderado(correo, clave)
+                    loginAlumno(correo, clave)
                 }
             }
         }catch (e: Exception) {
-            null
-        }
-    }
-
-    private suspend fun loginWithFirestore(correo: String, clave: String): Usuario? {
-        return try {
-            val query = db.collection("usuario")
-                .whereEqualTo("correo", correo)
-                .whereEqualTo("clave", clave)
-                .get()
-                .await()
-            if (!query.isEmpty && query.documents.isNotEmpty()) {
-                val doc = query.documents[0]
-                Usuario (
-                    correo = doc.getString("correo") ?: "",
-                    clave = doc.getString("clave") ?: "",
-                    nombre = doc.getString("nombre") ?: "Cliente",
-                    rol = doc.getString("rol") ?: "cliente"
-                )
-            } else null
-        } catch (e: Exception) {
             null
         }
     }
@@ -89,6 +68,27 @@ class AuthRepository {
                     clave = doc.getString("clave") ?: "",
                     nombre = doc.getString("nombre") ?: "Apoderado",
                     rol = doc.getString("rol") ?: "apoderado"
+                )
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun loginAlumno(correo: String, clave: String): Usuario? {
+        return try {
+            val query = db.collection("usuario")
+                .whereEqualTo("correo", correo)
+                .whereEqualTo("clave", clave)
+                .get()
+                .await()
+            if (!query.isEmpty && query.documents.isNotEmpty()) {
+                val doc = query.documents[0]
+                Usuario (
+                    correo = doc.getString("correo") ?: "",
+                    clave = doc.getString("clave") ?: "",
+                    nombre = doc.getString("nombre") ?: "Alumno",
+                    rol = doc.getString("rol") ?: "alumno"
                 )
             } else null
         } catch (e: Exception) {

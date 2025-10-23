@@ -9,8 +9,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun PerfilClienteScreen(
-    nombre: String = "Cliente",
+fun PerfilAlumnoScreen(
+    nombre: String = "Alumno",
     onLogout: () -> Unit = {}
 ) {
     Column(
@@ -21,22 +21,22 @@ fun PerfilClienteScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Perfil de Cliente",
+            "Panel de Alumno",
             style = MaterialTheme.typography.headlineMedium,
-            color = Color(0xFF4CAF50)
+            color = Color(0xFFD32F2F)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            "Bienvenido $nombre",  // Muestra el nombre del cliente
+            "Bienvenido Alumno $nombre",  // Muestra el nombre del alumno
             style = MaterialTheme.typography.bodyLarge
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "Rol: Cliente",
+            "Rol: Alumno",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
@@ -45,10 +45,11 @@ fun PerfilClienteScreen(
 
         Button(
             onClick = {
+
                 onLogout()
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4CAF50)
+                containerColor = Color(0xFFD32F2F)
             )
         ) {
             Text("Cerrar Sesión")
