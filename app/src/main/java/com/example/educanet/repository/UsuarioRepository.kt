@@ -1,6 +1,5 @@
 package com.example.educanet.repository
 
-
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -21,14 +20,20 @@ class UsuarioRepository {
                 return false // El correo ya está registrado
             }
 
-            // Crear nuevo usuario solo en Firestore
+            // Normalizar el rol (para evitar errores de mayúsculas o espacios)
+            val rolFinal = when (rol.trim().lowercase()) {
+                "profesor" -> "Profesor"
+                "apoderado" -> "Apoderado"
+                "administrador" -> "Administrador"
+                else -> "Alumno"
+            }
+
+            // Crear mapa de datos del usuario
             val userData = hashMapOf(
                 "correo" to correo,
                 "clave" to clave,
                 "nombre" to nombre,
-                "rol" to "Profesor",
-                "rol" to "Apoderado",
-                "rol" to "Alumno",
+                "rol" to rolFinal,
                 "fechaRegistro" to getCurrentDate()
             )
 

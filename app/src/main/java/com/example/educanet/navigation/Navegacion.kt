@@ -30,9 +30,9 @@ fun AppNavegacion() {
                 onLoginSuccess = { user ->
                     // Navegar según el rol pasando el nombre como parámetro
                     when (user.rol) {
-                        "admin" -> navController.navigate("perfil_admin/${user.nombre}")
-                        "profesor" -> navController.navigate("perfil_profesor/${user.nombre}")
-                        "apoderado" -> navController.navigate("perfil_apoderado/${user.nombre}")
+                        "Administrador" -> navController.navigate("perfil_admin/${user.nombre}")
+                        "Profesor" -> navController.navigate("perfil_profesor/${user.nombre}")
+                        "Apoderado" -> navController.navigate("perfil_apoderado/${user.nombre}")
                         else -> navController.navigate("perfil_alumno/${user.nombre}")
 
                     }

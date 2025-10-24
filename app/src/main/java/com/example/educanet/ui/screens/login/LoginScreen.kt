@@ -64,11 +64,12 @@ fun LoginScreen(
     // Funcion que observa cuando el usuario se loque
     LaunchedEffect(usuario) {
         usuario?.let {
+            // Modifica este 'when' para incluir el nuevo rol
             val mensaje = when (it.rol) {
-                "admin" -> "Bienvenido Admin: ${it.nombre}"
-                "profesor" -> "Bienvenido Profesor: ${it.nombre}"
-                "apoderado" -> "Bienvenido Apoderado: ${it.nombre}"
-                else -> "Bienvenido Alumno: ${it.nombre}"
+                "Administrador" -> "Bienvenido Admin: ${it.nombre}"
+                "Profesor" -> "Bienvenido Profesor: ${it.nombre}"
+                "Apoderado" -> "Bienvenido Apoderado: ${it.nombre}"
+                else -> "Bienvenido Alumno: ${it.nombre}" // 'else' maneja Alumno
             }
             Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
             onLoginSuccess(it)

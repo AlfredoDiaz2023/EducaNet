@@ -1,8 +1,38 @@
 package com.example.educanet.model
 
-data class Usuario (
-    val correo: String = "",
-    val clave: String = "",
-    val nombre: String = "",
-    val rol: String = "" // Variable local va a establecer si el usuario es admin, profesor, apoderado o alumno
+// 1️⃣ Primero defines la clase base sellada
+sealed class Usuario(
+    open val correo: String,
+    open val clave: String,
+    open val nombre: String,
+    open val rol: String
 )
+
+// 2️⃣ Luego defines las subclases (una vez cada una)
+data class Administrador(
+    override val correo: String,
+    override val clave: String,
+    override val nombre: String,
+    override val rol: String = "Administrador"
+) : Usuario(correo, clave, nombre, rol)
+
+data class Alumno(
+    override val correo: String,
+    override val clave: String,
+    override val nombre: String,
+    override val rol: String = "Alumno"
+) : Usuario(correo, clave, nombre, rol)
+
+data class Apoderado(
+    override val correo: String,
+    override val clave: String,
+    override val nombre: String,
+    override val rol: String = "Apoderado"
+) : Usuario(correo, clave, nombre, rol)
+
+data class Profesor(
+    override val correo: String,
+    override val clave: String,
+    override val nombre: String,
+    override val rol: String = "Profesor"
+) : Usuario(correo, clave, nombre, rol)
