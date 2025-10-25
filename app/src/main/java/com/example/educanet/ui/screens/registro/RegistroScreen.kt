@@ -8,12 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroScreen(
     onBack: () -> Unit,
@@ -24,7 +25,11 @@ fun RegistroScreen(
     var clave by remember { mutableStateOf("") }
     var confirmarClave by remember { mutableStateOf("") }
     var nombre by remember { mutableStateOf("") }
+
+    // Campo Rol con menú desplegable
+    val roles = listOf("Profesor", "Apoderado", "Alumno")
     var rol by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
 
     val viewModel: com.example.educanet.viewmodel.RegistroViewModel = viewModel()
     val cargando by viewModel.cargando.collectAsState()
@@ -113,13 +118,38 @@ fun RegistroScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = rol,
-            onValueChange = { rol = it },
-            label = { Text("Rol *") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        // Menú desplegable de Roles (sin Administrador)
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = rol,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Rol *") },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                roles.forEach { opcion ->
+                    DropdownMenuItem(
+                        text = { Text(opcion) },
+                        onClick = {
+                            rol = opcion
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
