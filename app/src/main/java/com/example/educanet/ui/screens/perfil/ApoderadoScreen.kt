@@ -21,7 +21,7 @@ fun PerfilApoderadoScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "Panel de Apoderado",
+            "Panel de Alumno",
             style = MaterialTheme.typography.headlineMedium,
             color = Color(0xFFD32F2F)
         )
@@ -29,14 +29,14 @@ fun PerfilApoderadoScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            "Bienvenido Apoderado $nombre",  // Muestra el nombre del apoderado
+            "Bienvenido Alumno $nombre",  // Muestra el nombre del alumno
             style = MaterialTheme.typography.bodyLarge
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "Rol: Apoderado",
+            "Rol: Alumno",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )

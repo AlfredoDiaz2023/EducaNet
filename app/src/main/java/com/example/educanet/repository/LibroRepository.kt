@@ -89,7 +89,7 @@ class LibroRepository {
         }
     }
 
-    // Obtener producto por ID
+    // Obtener libro por ID
     suspend fun obtenerLibroPorId(libroId: String): Libro? {
         return try {
             val document = db.collection("libro").document(libroId).get().await()
