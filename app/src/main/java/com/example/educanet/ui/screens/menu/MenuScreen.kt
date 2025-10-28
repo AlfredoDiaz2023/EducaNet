@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +23,11 @@ import com.example.educanet.model.Libro
 fun MenuScreen(
     nombre: String,
     rol: String,
+    onLibroClick: () -> Unit = {},
+    onVideoClick: () -> Unit = {},
+    onClaseVirtualClick: () -> Unit = {},
+    onTutoriaClick: () -> Unit = {},
+    onProgresoAcademicoClick: () -> Unit = {},
     onVerCarrito: () -> Unit,
     onLogout: () -> Unit,
     viewModel: CarritoViewModel = viewModel()
@@ -35,6 +41,8 @@ fun MenuScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+
+        Spacer(modifier = Modifier.height(30.dp))
         // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -65,9 +73,10 @@ fun MenuScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "Catálogo de Libros",
+            "Menu EducaNet",
             style = MaterialTheme.typography.headlineSmall,
-            fontSize = 20.sp
+            color = Color(0xFF2694EE),
+            fontSize = 30.sp
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -91,6 +100,51 @@ fun MenuScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
+        }
+
+        Spacer(Modifier.height(24.dp))
+        // Agregar TextButton para redireccionar a Libros y articulos
+        TextButton(onClick = onLibroClick){
+            Text("Libros y Articulos",
+                color = Color(0xFF090909),
+                fontSize = 24.sp
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+        // Agregar TextButton para redireccionar a videos
+        TextButton(onClick = onVideoClick){
+            Text("Videos de Apoyo",
+                color = Color(0xFF090909),
+                fontSize = 24.sp
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+        // Agregar TextButton para redireccionar a Clases virtuales
+        TextButton(onClick = onClaseVirtualClick){
+            Text("Clases Virtuales",
+                color = Color(0xFF090909),
+                fontSize = 24.sp
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+        // Agregar TextButton para redireccionar a Tutorias
+        TextButton(onClick = onTutoriaClick){
+            Text("Tutorias",
+                color = Color(0xFF090909),
+                fontSize = 24.sp
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+        // Agregar TextButton para redireccionar a Progreso acedemico
+        TextButton(onClick = onProgresoAcademicoClick){
+            Text("Progreso Academico",
+                color = Color(0xFF090909),
+                fontSize = 24.sp
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

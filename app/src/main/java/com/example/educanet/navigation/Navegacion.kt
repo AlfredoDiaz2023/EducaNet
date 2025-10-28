@@ -15,6 +15,7 @@ import com.example.educanet.ui.screens.perfil.PerfilApoderadoScreen
 import com.example.educanet.ui.screens.perfil.PerfilAlumnoScreen
 import com.example.educanet.ui.screens.menu.MenuScreen
 import com.example.educanet.ui.screens.carrito.CarritoScreen
+import com.example.educanet.ui.screens.libro.LibroScreen
 import com.example.educanet.viewmodel.CarritoViewModel
 
 @Composable
@@ -26,12 +27,11 @@ fun AppNavegacion() {
         navController = navController,
         startDestination = "login"
     ) {
-        // Pantalla de login
+        // 🔹 Pantalla de login
         composable("login") {
             LoginScreen(
                 onRegisterClick = { navController.navigate("register") },
                 onLoginSuccess = { user ->
-                    // Si el login es correcto, va al menú
                     navController.navigate("menu/${user.nombre}/${user.rol}") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -39,7 +39,7 @@ fun AppNavegacion() {
             )
         }
 
-        // Pantalla de registro
+        // 🔹 Pantalla de registro
         composable("register") {
             RegistroScreen(
                 onBack = { navController.popBackStack() },
@@ -47,7 +47,7 @@ fun AppNavegacion() {
             )
         }
 
-        // Pantalla de menú general (Catálogo de libros)
+        // 🔹 Pantalla de menú principal
         composable(
             "menu/{nombre}/{rol}",
             arguments = listOf(
@@ -61,6 +61,7 @@ fun AppNavegacion() {
             MenuScreen(
                 nombre = nombre,
                 rol = rol,
+                onLibroClick = { navController.navigate("libros") }, // 👈 navegación hacia LibroScreen
                 onVerCarrito = { navController.navigate("carrito") },
                 onLogout = {
                     navController.navigate("login") {
@@ -71,7 +72,12 @@ fun AppNavegacion() {
             )
         }
 
-        // Pantalla de carrito
+        // 🔹 Pantalla de libros (usa LibroRepository)
+        composable("libros") { // 👈
+            LibroScreen()
+        }
+
+        // 🔹 Pantalla de carrito
         composable("carrito") {
             CarritoScreen(
                 onVolverAlMenu = { navController.popBackStack() },
@@ -84,7 +90,7 @@ fun AppNavegacion() {
             )
         }
 
-        // Rutas de perfiles (opcional si los sigues usando)
+        // 🔹 Perfiles
         composable(
             "perfil_admin/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
