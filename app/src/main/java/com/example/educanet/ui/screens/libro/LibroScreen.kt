@@ -3,6 +3,8 @@ package com.example.educanet.ui.screens.libro
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,7 +15,7 @@ import com.example.educanet.model.Libro
 import kotlinx.coroutines.launch
 
 @Composable
-fun LibroScreen() {
+fun LibroScreen(onBack: () -> Unit) {
     val libroRepository = remember { LibroRepository() }
     val scope = rememberCoroutineScope()
 
@@ -35,15 +37,16 @@ fun LibroScreen() {
             .padding(16.dp)
     ) {
 
-        Spacer(modifier = Modifier.height(30.dp))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "Libros",
+                "Libros y Artículos",
                 style = MaterialTheme.typography.headlineSmall
             )
         }

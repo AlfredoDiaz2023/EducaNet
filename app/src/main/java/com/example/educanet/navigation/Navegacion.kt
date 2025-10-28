@@ -74,7 +74,7 @@ fun AppNavegacion() {
 
         // 🔹 Pantalla de libros (usa LibroRepository)
         composable("libros") { // 👈
-            LibroScreen()
+            LibroScreen(onBack = { navController.popBackStack() })
         }
 
         // 🔹 Pantalla de carrito

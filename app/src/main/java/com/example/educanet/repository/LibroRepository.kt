@@ -93,7 +93,7 @@ class LibroRepository {
 
     suspend fun obtenerLibroPorId(libroId: String): Libro? {
         return try {
-            val document = db.collection("libros") // ✅ corregido
+            val document = db.collection("libros") //
                 .document(libroId)
                 .get()
                 .await()
