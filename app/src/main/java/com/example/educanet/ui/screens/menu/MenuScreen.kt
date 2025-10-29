@@ -32,8 +32,6 @@ fun MenuScreen(
     onLogout: () -> Unit,
     viewModel: CarritoViewModel = viewModel()
 ) {
-    val libros by viewModel.libros.collectAsState()
-    val cargando by viewModel.cargando.collectAsState()
     val carrito by viewModel.carrito.collectAsState()
 
     Column(
@@ -41,9 +39,9 @@ fun MenuScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
         Spacer(modifier = Modifier.height(30.dp))
-        // Header
+
+        // Header con nombre y carrito
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -54,7 +52,7 @@ fun MenuScreen(
                 Text("Rol: $rol", fontSize = 14.sp)
             }
 
-            // Botón del carrito con badge
+            // Icono del carrito con badge
             BadgedBox(
                 badge = {
                     if (carrito.isNotEmpty()) {
@@ -79,72 +77,35 @@ fun MenuScreen(
             fontSize = 30.sp
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(Modifier.height(24.dp))
 
-        if (cargando) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn {
-                items(libros) { libro ->
-                    LibroItem(
-                        libro = libro,
-                        onAgregar = { viewModel.agregarAlCarrito(libro) },
-                        onEliminar = { viewModel.removerDelCarrito(libro) },
-                        cantidadEnCarrito = carrito.find { it.libro.id == libro.id }?.cantidad ?: 0
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
+        // ✅ Opción para ir a Libros y artículos
+        TextButton(onClick = onLibroClick) {
+            Text("Libros y Artículos", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
-        // Agregar TextButton para redireccionar a Libros y articulos
-        TextButton(onClick = onLibroClick){
-            Text("Libros y Articulos",
-                color = Color(0xFF090909),
-                fontSize = 24.sp
-            )
+
+        TextButton(onClick = onVideoClick) {
+            Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
-        // Agregar TextButton para redireccionar a videos
-        TextButton(onClick = onVideoClick){
-            Text("Videos de Apoyo",
-                color = Color(0xFF090909),
-                fontSize = 24.sp
-            )
+
+        TextButton(onClick = onClaseVirtualClick) {
+            Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
-        // Agregar TextButton para redireccionar a Clases virtuales
-        TextButton(onClick = onClaseVirtualClick){
-            Text("Clases Virtuales",
-                color = Color(0xFF090909),
-                fontSize = 24.sp
-            )
+
+        TextButton(onClick = onTutoriaClick) {
+            Text("Tutorías", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
-        // Agregar TextButton para redireccionar a Tutorias
-        TextButton(onClick = onTutoriaClick){
-            Text("Tutorias",
-                color = Color(0xFF090909),
-                fontSize = 24.sp
-            )
-        }
 
-        Spacer(Modifier.height(24.dp))
-        // Agregar TextButton para redireccionar a Progreso acedemico
-        TextButton(onClick = onProgresoAcademicoClick){
-            Text("Progreso Academico",
-                color = Color(0xFF090909),
-                fontSize = 24.sp
-            )
+        TextButton(onClick = onProgresoAcademicoClick) {
+            Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -154,55 +115,6 @@ fun MenuScreen(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Cerrar sesión")
-        }
-    }
-}
-
-@Composable
-fun LibroItem(
-    libro: Libro,
-    onAgregar: () -> Unit,
-    onEliminar: () -> Unit,
-    cantidadEnCarrito: Int
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = libro.nombre,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text("Stock: ${libro.cantidad}", style = MaterialTheme.typography.bodySmall)
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (cantidadEnCarrito > 0) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onEliminar) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                    }
-                    Text(
-                        cantidadEnCarrito.toString(),
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                    IconButton(onClick = onAgregar) {
-                        Icon(Icons.Default.Add, contentDescription = "Agregar")
-                    }
-                }
-            } else {
-                Button(onClick = onAgregar) {
-                    Text("Agregar al carrito")
-                }
-            }
         }
     }
 }
