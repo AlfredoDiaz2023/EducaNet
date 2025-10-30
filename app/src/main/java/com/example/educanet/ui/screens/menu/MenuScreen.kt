@@ -55,7 +55,8 @@ fun MenuScreen(
             "Menu EducaNet",
             style = MaterialTheme.typography.headlineSmall,
             color = Color(0xFF2694EE),
-            fontSize = 30.sp
+            fontSize = 30.sp,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
         Spacer(Modifier.height(24.dp))
