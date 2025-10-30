@@ -69,7 +69,7 @@ fun LoginScreen(
                 "Administrador" -> "Bienvenido Admin: ${it.nombre}"
                 "Profesor" -> "Bienvenido Profesor: ${it.nombre}"
                 "Apoderado" -> "Bienvenido Apoderado: ${it.nombre}"
-                else -> "Bienvenido Alumno: ${it.nombre}" // 'else' maneja Alumno
+                else -> "Bienvenido Alumno: ${it.nombre}" //
             }
             Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
             onLoginSuccess(it)
