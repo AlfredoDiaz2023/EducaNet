@@ -1,9 +1,12 @@
 package com.example.educanet.model
 
+import com.google.firebase.firestore.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class VideoApoyo(
     val id: String = "",
     val nombre: String = "",
-    val profesor: Profesor,
+    val profesor: Profesor? = null, // Cambiado a nullable con valor por defecto
     val nivel: String = "",
     val video: String = "",
     val descripcion: String = "",

@@ -16,6 +16,8 @@ import com.example.educanet.ui.screens.perfil.PerfilAlumnoScreen
 import com.example.educanet.ui.screens.menu.MenuScreen
 import com.example.educanet.ui.screens.libro.LibroScreen
 import com.example.educanet.ui.screens.notificaciones.NotificacionesScreen
+import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
+import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 
 @Composable
 fun AppNavegacion() {
@@ -61,6 +63,7 @@ fun AppNavegacion() {
                 nombre = nombre,
                 rol = rol,
                 onLibroClick = { navController.navigate("libros") },
+                onVideoClick = { navController.navigate("video_apoyo") }, // Asegúrate de tener este callback en MenuScreen
                 onVerNotificaciones = { navController.navigate("notificaciones") },
                 onLogout = {
                     navController.navigate("login") {
@@ -74,6 +77,17 @@ fun AppNavegacion() {
 
         composable("libros") { 
             LibroScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("video_apoyo") {
+            VideoApoyoScreen(
+                onBack = { navController.popBackStack() },
+                onAddVideo = { navController.navigate("add_video") }
+            )
+        }
+
+        composable("add_video") {
+            AddVideoScreen(onBack = { navController.popBackStack() })
         }
 
 
