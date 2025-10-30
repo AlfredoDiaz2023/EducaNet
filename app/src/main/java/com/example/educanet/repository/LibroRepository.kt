@@ -15,7 +15,7 @@ class LibroRepository {
 
     suspend fun obtenerLibros(limite: Int = 10): ResultadoLibros {
         return try {
-            val query = db.collection("libros")
+            val query = db.collection("libro")
                 .whereGreaterThan("cantidad", 0)
                 .orderBy("cantidad", Query.Direction.DESCENDING)
                 .limit(limite.toLong())
@@ -39,6 +39,7 @@ class LibroRepository {
 
             ResultadoLibros(libros, ultimoDocumento)
         } catch (e: Exception) {
+            e.printStackTrace() // 👈 imprime el error para debug
             ResultadoLibros(emptyList(), null)
         }
     }
@@ -72,27 +73,31 @@ class LibroRepository {
 
             ResultadoLibros(libros, nuevoUltimoDocumento)
         } catch (e: Exception) {
+            e.printStackTrace()
             ResultadoLibros(emptyList(), null)
         }
     }
 
-    // Actualizar stock en Firestore
     suspend fun actualizarStock(libroId: String, nuevoStock: Int): Boolean {
         return try {
-            db.collection("libro")
+            db.collection("libros")
                 .document(libroId)
                 .update("cantidad", nuevoStock)
                 .await()
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }
 
-    // Obtener producto por ID
     suspend fun obtenerLibroPorId(libroId: String): Libro? {
         return try {
-            val document = db.collection("libro").document(libroId).get().await()
+            val document = db.collection("libros") //
+                .document(libroId)
+                .get()
+                .await()
+
             if (document.exists()) {
                 Libro(
                     id = document.id,
@@ -105,6 +110,7 @@ class LibroRepository {
                 null
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
