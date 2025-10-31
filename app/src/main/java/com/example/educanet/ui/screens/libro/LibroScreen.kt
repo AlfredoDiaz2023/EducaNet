@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LibroScreen(
+    rol: String,
     onBack: () -> Unit,
     onAddLibro: () -> Unit
 ) {
@@ -62,8 +63,10 @@ fun LibroScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddLibro) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar Libro")
+            if (rol == "Profesor") {
+                FloatingActionButton(onClick = onAddLibro) {
+                    Icon(Icons.Default.Add, contentDescription = "Agregar Libro")
+                }
             }
         }
     ) { padding ->

@@ -1,5 +1,7 @@
 package com.example.educanet.ui.screens.clasesvirtuales
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,6 +38,7 @@ import com.example.educanet.viewmodel.ClaseVirtualViewModel
 
 @Composable
 fun ClasesVirtualesScreen(
+    rol: String,
     onBack: () -> Unit,
     onAddClase: () -> Unit,
     claseVirtualViewModel: ClaseVirtualViewModel = viewModel()
@@ -80,11 +84,13 @@ fun ClasesVirtualesScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onAddClase,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Agregar Clase")
+        if (rol == "Profesor") {
+            Button(
+                onClick = onAddClase,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Agregar Clase")
+            }
         }
     }
 }
@@ -93,6 +99,8 @@ fun ClasesVirtualesScreen(
 fun ClaseVirtualItem(
     clase: ClaseVirtual
 ) {
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -108,7 +116,13 @@ fun ClaseVirtualItem(
             clase.profesor?.let {
                 Text("Profesor: ${it.nombre}")
             }
-
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { 
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(clase.meet))
+                context.startActivity(intent)
+            }) {
+                Text("Iniciar Clase")
+            }
         }
     }
 }

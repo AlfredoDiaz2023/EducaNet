@@ -1,12 +1,12 @@
 package com.example.educanet.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.educanet.ui.screens.clasesvirtuales.AddClaseVirtualScreen
 import com.example.educanet.ui.screens.clasesvirtuales.ClasesVirtualesScreen
 import com.example.educanet.ui.screens.libro.AddLibroScreen
 import com.example.educanet.ui.screens.login.LoginScreen
@@ -83,6 +83,7 @@ fun AppNavegacion() {
         ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rol") ?: ""
             LibroScreen(
+                rol = rol,
                 onBack = { navController.popBackStack() },
                 onAddLibro = { navController.navigate("add_libro") }
             )
@@ -109,13 +110,15 @@ fun AppNavegacion() {
         ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rol") ?: ""
             ClasesVirtualesScreen(
-
+                rol = rol,
                 onBack = { navController.popBackStack() },
                 onAddClase = { navController.navigate("add_clase_virtual") }
             )
         }
 
-
+        composable("add_clase_virtual") {
+            AddClaseVirtualScreen(onBack = { navController.popBackStack() })
+        }
 
         composable("tutorias") {
             TutoriasScreen(onBack = { navController.popBackStack() })
