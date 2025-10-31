@@ -3,12 +3,11 @@ package com.example.educanet.model
 import com.google.firebase.firestore.IgnoreExtraProperties
 
 @IgnoreExtraProperties
-data class VideoApoyo(
+data class Tutoria(
     val id: String = "",
     val nombre: String = "",
     val profesor: Profesor? = null,
-    val nivel: String = "",
-    val video: String = "",
-    val descripcion: String = "",
-    val duracion: Int = 0
+    val alumno: Alumno? = null,
+    val duracion: Int = 0,
+    val descripcion: String = ""
 )

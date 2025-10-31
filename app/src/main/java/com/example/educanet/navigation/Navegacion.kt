@@ -7,7 +7,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.educanet.ui.screens.clasesvirtuales.ClasesVirtualesScreen
 import com.example.educanet.ui.screens.login.LoginScreen
+import com.example.educanet.ui.screens.progresoacademico.ProgresoAcademicoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
 import com.example.educanet.ui.screens.perfil.PerfilAdminScreen
 import com.example.educanet.ui.screens.perfil.PerfilProfesorScreen
@@ -16,6 +18,7 @@ import com.example.educanet.ui.screens.perfil.PerfilAlumnoScreen
 import com.example.educanet.ui.screens.menu.MenuScreen
 import com.example.educanet.ui.screens.libro.LibroScreen
 import com.example.educanet.ui.screens.notificaciones.NotificacionesScreen
+import com.example.educanet.ui.screens.tutorias.TutoriasScreen
 import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
 import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 
@@ -63,7 +66,10 @@ fun AppNavegacion() {
                 nombre = nombre,
                 rol = rol,
                 onLibroClick = { navController.navigate("libros") },
-                onVideoClick = { navController.navigate("video_apoyo") }, // Asegúrate de tener este callback en MenuScreen
+                onVideoClick = { navController.navigate("video_apoyo") },
+                onClaseVirtualClick = { navController.navigate("clases_virtuales") },
+                onTutoriaClick = { navController.navigate("tutorias") },
+                onProgresoAcademicoClick = { navController.navigate("progreso_academico") },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
                 onLogout = {
                     navController.navigate("login") {
@@ -84,6 +90,18 @@ fun AppNavegacion() {
                 onBack = { navController.popBackStack() },
                 onAddVideo = { navController.navigate("add_video") }
             )
+        }
+
+        composable("clases_virtuales") {
+            ClasesVirtualesScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("tutorias") {
+            TutoriasScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("progreso_academico") {
+            ProgresoAcademicoScreen(onBack = { navController.popBackStack() })
         }
 
         composable("add_video") {
