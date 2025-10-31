@@ -13,6 +13,16 @@ data class ResultadoVideosApoyo(
 class VideoApoyoRepository {
     private val db = FirebaseFirestore.getInstance()
 
+    suspend fun agregarVideo(video: VideoApoyo): Boolean {
+        return try {
+            db.collection("video_apoyo").add(video).await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     suspend fun obtenerVideosDeApoyo(limite: Int = 10): ResultadoVideosApoyo {
         return try {
             val query = db.collection("video_apoyo")

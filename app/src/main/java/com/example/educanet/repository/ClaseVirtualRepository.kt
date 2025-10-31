@@ -13,6 +13,16 @@ data class ResultadoClasesVirtuales(
 class ClaseVirtualRepository {
     private val db = FirebaseFirestore.getInstance()
 
+    suspend fun agregarClaseVirtual(claseVirtual: ClaseVirtual): Boolean {
+        return try {
+            db.collection("clases_virtuales").add(claseVirtual).await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     suspend fun obtenerClasesVirtuales(limite: Int = 10): ResultadoClasesVirtuales {
         return try {
             val query = db.collection("clases_virtuales")

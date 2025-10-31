@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.educanet.ui.screens.clasesvirtuales.ClasesVirtualesScreen
+import com.example.educanet.ui.screens.libro.AddLibroScreen
 import com.example.educanet.ui.screens.login.LoginScreen
 import com.example.educanet.ui.screens.progresoacademico.ProgresoAcademicoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
@@ -25,7 +26,6 @@ import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 @Composable
 fun AppNavegacion() {
     val navController = rememberNavController()
-    
 
     NavHost(
         navController = navController,
@@ -43,14 +43,12 @@ fun AppNavegacion() {
             )
         }
 
-
         composable("register") {
             RegistroScreen(
                 onBack = { navController.popBackStack() },
                 onRegisterSuccess = { navController.popBackStack() }
             )
         }
-
 
         composable(
             "menu/{nombre}/{rol}",
@@ -65,9 +63,9 @@ fun AppNavegacion() {
             MenuScreen(
                 nombre = nombre,
                 rol = rol,
-                onLibroClick = { navController.navigate("libros") },
+                onLibroClick = { navController.navigate("libros/$rol") },
                 onVideoClick = { navController.navigate("video_apoyo") },
-                onClaseVirtualClick = { navController.navigate("clases_virtuales") },
+                onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
                 onTutoriaClick = { navController.navigate("tutorias") },
                 onProgresoAcademicoClick = { navController.navigate("progreso_academico") },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
@@ -75,14 +73,23 @@ fun AppNavegacion() {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
-                },
-
+                }
             )
         }
 
+        composable(
+            "libros/{rol}",
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+            LibroScreen(
+                onBack = { navController.popBackStack() },
+                onAddLibro = { navController.navigate("add_libro") }
+            )
+        }
 
-        composable("libros") { 
-            LibroScreen(onBack = { navController.popBackStack() })
+        composable("add_libro") {
+            AddLibroScreen(onBack = { navController.popBackStack() })
         }
 
         composable("video_apoyo") {
@@ -92,9 +99,23 @@ fun AppNavegacion() {
             )
         }
 
-        composable("clases_virtuales") {
-            ClasesVirtualesScreen(onBack = { navController.popBackStack() })
+        composable("add_video") {
+            AddVideoScreen(onBack = { navController.popBackStack() })
         }
+
+        composable(
+            "clases_virtuales/{rol}",
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+            ClasesVirtualesScreen(
+
+                onBack = { navController.popBackStack() },
+                onAddClase = { navController.navigate("add_clase_virtual") }
+            )
+        }
+
+
 
         composable("tutorias") {
             TutoriasScreen(onBack = { navController.popBackStack() })
@@ -103,11 +124,6 @@ fun AppNavegacion() {
         composable("progreso_academico") {
             ProgresoAcademicoScreen(onBack = { navController.popBackStack() })
         }
-
-        composable("add_video") {
-            AddVideoScreen(onBack = { navController.popBackStack() })
-        }
-
 
         composable(
             "perfil_admin/{nombre}",
@@ -156,6 +172,7 @@ fun AppNavegacion() {
                 }
             })
         }
+
         composable("notificaciones") {
             NotificacionesScreen(onBack = { navController.popBackStack() })
         }

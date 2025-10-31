@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Profesor
 import com.example.educanet.model.VideoApoyo
+import com.example.educanet.repository.VideoApoyoRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +26,9 @@ data class AddVideoUiState(
 
 class AddVideoViewModel : ViewModel() {
 
-    private val db = FirebaseFirestore.getInstance()
+    private val videoApoyoRepository = VideoApoyoRepository()
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     private val _uiState = MutableStateFlow(AddVideoUiState())
     val uiState: StateFlow<AddVideoUiState> = _uiState.asStateFlow()
@@ -51,24 +53,28 @@ class AddVideoViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(duracion = duracionInt)
     }
 
-
     fun saveVideo() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSaving = true)
+            _uiState.value = _uiState.value.copy(isSaving = true, errorMessage = null)
 
             try {
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
-                    _uiState.value = _uiState.value.copy(errorMessage = "Usuario no autenticado", isSaving = false)
+                    _uiState.value = _uiState.value.copy(errorMessage = "Usuario no autenticado.", isSaving = false)
                     return@launch
                 }
 
-                // Obtener datos del profesor desde Firestore
                 val userDoc = db.collection("users").document(currentUser.uid).get().await()
-                val profesor = userDoc.toObject(Profesor::class.java)
+                val userRole = userDoc.getString("rol")
 
+                if (userRole != "Profesor") {
+                    _uiState.value = _uiState.value.copy(errorMessage = "Solo los profesores pueden agregar videos.", isSaving = false)
+                    return@launch
+                }
+                
+                val profesor = userDoc.toObject(Profesor::class.java)
                 if (profesor == null) {
-                    _uiState.value = _uiState.value.copy(errorMessage = "No se encontraron datos del profesor", isSaving = false)
+                    _uiState.value = _uiState.value.copy(errorMessage = "No se pudieron obtener los datos del profesor.", isSaving = false)
                     return@launch
                 }
 
@@ -78,13 +84,18 @@ class AddVideoViewModel : ViewModel() {
                     video = _uiState.value.videoUrl,
                     descripcion = _uiState.value.descripcion,
                     duracion = _uiState.value.duracion,
-                    profesor = profesor // Asignar el objeto Profesor
+                    profesor = profesor
                 )
 
-                db.collection("video_apoyo").add(video).await()
-                _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
+                val success = videoApoyoRepository.agregarVideo(video)
+
+                if (success) {
+                    _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
+                } else {
+                    _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Error al guardar el video.")
+                }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = e.message)
+                _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = e.message ?: "Ocurrió un error desconocido.")
             }
         }
     }

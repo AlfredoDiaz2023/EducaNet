@@ -1,20 +1,13 @@
-package com.example.educanet.ui.screens.videoApoyo
+package com.example.educanet.ui.screens.libro
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -25,18 +18,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.educanet.viewmodel.AddVideoViewModel
+import com.example.educanet.viewmodel.AddLibroViewModel
 
 @Composable
-fun AddVideoScreen(
+fun AddLibroScreen(
     onBack: () -> Unit,
-    addVideoViewModel: AddVideoViewModel = viewModel()
+    addLibroViewModel: AddLibroViewModel = viewModel()
 ) {
-    val uiState by addVideoViewModel.uiState.collectAsState()
+    val uiState by addLibroViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.saveSuccess) {
@@ -53,70 +45,50 @@ fun AddVideoScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(it)
                 .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Agregar Video", style = MaterialTheme.typography.headlineSmall)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = uiState.nombre,
-                onValueChange = addVideoViewModel::onNombreChange,
-                label = { Text("Nombre del Video") },
+                onValueChange = addLibroViewModel::onNombreChange,
+                label = { Text("Nombre del Libro") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = uiState.nivel,
-                onValueChange = addVideoViewModel::onNivelChange,
+                onValueChange = addLibroViewModel::onNivelChange,
                 label = { Text("Nivel") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = uiState.videoUrl,
-                onValueChange = addVideoViewModel::onVideoUrlChange,
-                label = { Text("URL del Video") },
+                value = uiState.cantidad.toString(),
+                onValueChange = addLibroViewModel::onCantidadChange,
+                label = { Text("Cantidad") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = uiState.descripcion,
-                onValueChange = addVideoViewModel::onDescripcionChange,
-                label = { Text("Descripción") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = uiState.duracion.toString(),
-                onValueChange = addVideoViewModel::onDuracionChange,
-                label = { Text("Duración (minutos)") },
+                value = uiState.imagen,
+                onValueChange = addLibroViewModel::onImagenChange,
+                label = { Text("URL de la Imagen") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { addVideoViewModel.saveVideo() },
+                onClick = { addLibroViewModel.saveLibro() },
                 enabled = !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (uiState.isSaving) {
                     CircularProgressIndicator()
                 } else {
-                    Text("Guardar Video")
+                    Text("Guardar Libro")
                 }
             }
         }

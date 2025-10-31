@@ -13,6 +13,18 @@ data class ResultadoLibros(
 class LibroRepository {
     private val db = FirebaseFirestore.getInstance()
 
+    suspend fun agregarLibro(libro: Libro): Boolean {
+        return try {
+            db.collection("libro")
+                .add(libro)
+                .await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     suspend fun obtenerLibros(limite: Int = 10): ResultadoLibros {
         return try {
             val query = db.collection("libro")
