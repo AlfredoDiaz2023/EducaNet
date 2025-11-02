@@ -19,7 +19,6 @@ fun MenuScreen(
     onLibroClick: () -> Unit = {},
     onVideoClick: () -> Unit = {},
     onClaseVirtualClick: () -> Unit = {},
-    onTutoriaClick: () -> Unit = {},
     onProgresoAcademicoClick: () -> Unit = {},
     onVerNotificaciones: () -> Unit = {},
     onLogout: () -> Unit
@@ -76,12 +75,6 @@ fun MenuScreen(
 
         TextButton(onClick = onClaseVirtualClick) {
             Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        TextButton(onClick = onTutoriaClick) {
-            Text("Tutorías", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))

@@ -5,71 +5,49 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
-data class ResultadoProgresosAcademicos(
-    val progresos: List<ProgresoAcademico>,
+data class ResultadoNotas(
+    val progresoAcademico: List<ProgresoAcademico>,
     val ultimoDocumento: Any?
 )
 
 class ProgresoAcademicoRepository {
     private val db = FirebaseFirestore.getInstance()
 
-    suspend fun obtenerProgresosAcademicos(limite: Int = 10): ResultadoProgresosAcademicos {
+    suspend fun agregarNota(progresoAcademico: ProgresoAcademico): Boolean {
         return try {
-            val query = db.collection("progresos_academicos")
-                .orderBy("asignatura", Query.Direction.ASCENDING)
-                .limit(limite.toLong())
-
-            val querySnapshot = query.get().await()
-            val progresos = querySnapshot.toObjects(ProgresoAcademico::class.java)
-
-            val ultimoDocumento = if (querySnapshot.documents.isNotEmpty()) {
-                querySnapshot.documents.last()
-            } else {
-                null
-            }
-
-            ResultadoProgresosAcademicos(progresos, ultimoDocumento)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResultadoProgresosAcademicos(emptyList(), null)
-        }
-    }
-
-    suspend fun obtenerMasProgresosAcademicos(limite: Int = 10, ultimoDocumento: Any?): ResultadoProgresosAcademicos {
-        return try {
-            if (ultimoDocumento == null) return ResultadoProgresosAcademicos(emptyList(), null)
-
-            val query = db.collection("progresos_academicos")
-                .orderBy("asignatura", Query.Direction.ASCENDING)
-                .startAfter(ultimoDocumento)
-                .limit(limite.toLong())
-
-            val querySnapshot = query.get().await()
-            val progresos = querySnapshot.toObjects(ProgresoAcademico::class.java)
-
-            val nuevoUltimoDocumento = if (querySnapshot.documents.isNotEmpty()) {
-                querySnapshot.documents.last()
-            } else {
-                null
-            }
-
-            ResultadoProgresosAcademicos(progresos, nuevoUltimoDocumento)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ResultadoProgresosAcademicos(emptyList(), null)
-        }
-    }
-
-    suspend fun obtenerProgresoAcademicoPorId(progresoId: String): ProgresoAcademico? {
-        return try {
-            db.collection("progresos_academicos")
-                .document(progresoId)
-                .get()
+            db.collection("notas")
+                .add(progresoAcademico)
                 .await()
-                .toObject(ProgresoAcademico::class.java)
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            false
+        }
+    }
+
+    suspend fun obtenerNotas(limite: Int = 20): ResultadoNotas {
+        return try {
+            val query = db.collection("notas")
+                .orderBy("notas", Query.Direction.DESCENDING)
+                .limit(limite.toLong())
+
+            val querySnapshot = query.get().await()
+            val lista = querySnapshot.documents.map { doc ->
+                ProgresoAcademico(
+                    id = doc.id,
+                    profesor = doc.getString("profesor") ?: "",
+                    alumno = doc.getString("alumno") ?: "",
+                    asignatura = doc.getString("asignatura") ?: "",
+                    curso = doc.getString("curso") ?: "",
+                    notas = doc.getDouble("notas") ?: 0.0
+                )
+            }
+
+            val ultimo = querySnapshot.documents.lastOrNull()
+            ResultadoNotas(lista, ultimo)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResultadoNotas(emptyList(), null)
         }
     }
 }

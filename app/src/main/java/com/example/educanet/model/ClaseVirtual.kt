@@ -10,6 +10,7 @@ data class ClaseVirtual(
     val nivel: String = "",
     val clase: String = "",
     val descripcion: String = "",
-    val meet: String = ""
+    val meet: String = "",
+    val duracion: Int = 0
 
 )

@@ -83,6 +83,7 @@ class AddClaseVirtualViewModel : ViewModel() {
                     nivel = _uiState.value.nivel,
                     meet = _uiState.value.meetUrl,
                     descripcion = _uiState.value.descripcion,
+                    duracion = _uiState.value.duracion,
                     profesor = profesor
                 )
 
