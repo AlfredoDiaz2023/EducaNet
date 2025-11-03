@@ -5,7 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,40 +29,39 @@ fun ProgresoAcademicoScreen(
         cargando = false
     }
 
-    Scaffold(
-        floatingActionButton = {
-            if (rol == "Profesor") {
-                FloatingActionButton(onClick = onAddNota) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar Nota")
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+            Text("Progreso Académico", style = MaterialTheme.typography.titleLarge)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        if (cargando) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(notas) { nota ->
+                    NotaItem(nota)
                 }
             }
         }
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Text("Progreso Académico", style = MaterialTheme.typography.titleLarge)
-            }
 
-            Spacer(Modifier.height(16.dp))
-
-            if (cargando) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(notas) { nota ->
-                        NotaItem(nota)
-                    }
-                }
+        if (rol == "Profesor") {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onAddNota,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Agregar Nota")
             }
         }
     }

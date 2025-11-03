@@ -15,15 +15,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,50 +59,50 @@ fun LibroScreen(
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            if (rol == "Profesor") {
-                FloatingActionButton(onClick = onAddLibro) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar Libro")
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                "Libros y Artículos",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (cargando) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(libros) { libro ->
+                    LibroItem(libro = libro)
                 }
             }
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
 
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Libros y Artículos",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
-
+        if (rol == "Profesor") {
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (cargando) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(libros) { libro ->
-                        LibroItem(libro = libro)
-                    }
-                }
+            Button(
+                onClick = onAddLibro,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Agregar Libro")
             }
         }
     }
