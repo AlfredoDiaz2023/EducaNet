@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.educanet.ui.CameraScreen
 import com.example.educanet.ui.screens.clasesvirtuales.AddClaseVirtualScreen
 import com.example.educanet.ui.screens.clasesvirtuales.ClasesVirtualesScreen
 import com.example.educanet.ui.screens.libro.AddLibroScreen
@@ -71,6 +72,7 @@ fun AppNavegacion() {
                 onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
                 onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
+                onCameraClick = { navController.navigate("camera") },
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -203,6 +205,11 @@ fun AppNavegacion() {
         // NOTIFICACIONES
         composable("notificaciones") {
             NotificacionesScreen(onBack = { navController.popBackStack() })
+        }
+
+        // CAMARA
+        composable("camera") {
+            CameraScreen()
         }
     }
 }

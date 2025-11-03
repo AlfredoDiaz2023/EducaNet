@@ -21,6 +21,7 @@ fun MenuScreen(
     onClaseVirtualClick: () -> Unit = {},
     onProgresoAcademicoClick: () -> Unit = {},
     onVerNotificaciones: () -> Unit = {},
+    onCameraClick: () -> Unit = {},
     onLogout: () -> Unit
 
 ) {
@@ -81,6 +82,12 @@ fun MenuScreen(
 
         TextButton(onClick = onProgresoAcademicoClick) {
             Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        TextButton(onClick = onCameraClick) {
+            Text("Cámara", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
