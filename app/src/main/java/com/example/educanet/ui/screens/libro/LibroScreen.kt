@@ -41,6 +41,7 @@ import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import kotlinx.coroutines.launch
 
+// Screen para mostrar la lista de libros
 @Composable
 fun LibroScreen(
     rol: String,
@@ -143,6 +144,7 @@ fun LibroScreen(
     }
 }
 
+// Elemento individual para cada libro en la lista
 @Composable
 fun LibroItem(
     libro: Libro,

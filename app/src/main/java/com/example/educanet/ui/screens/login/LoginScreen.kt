@@ -18,6 +18,7 @@ import com.example.educanet.model.Usuario
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.repository.AuthRepository
+import com.example.educanet.ui.common.Logo
 import com.example.educanet.viewmodel.LoginViewModel
 
 @Composable
@@ -84,6 +85,7 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Logo(modifier = Modifier.size(150.dp))
         // Componente Text para agregar un texto que indique en que vista me encuentro
         Text("Iniciar Sesion",
             style = MaterialTheme.typography.headlineSmall,
