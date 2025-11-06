@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Profesor
 import com.example.educanet.model.VideoApoyo
+import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.VideoApoyoRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -27,6 +28,7 @@ data class AddVideoUiState(
 class AddVideoViewModel : ViewModel() {
 
     private val videoApoyoRepository = VideoApoyoRepository()
+    private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -90,6 +92,10 @@ class AddVideoViewModel : ViewModel() {
                 val success = videoApoyoRepository.agregarVideo(video)
 
                 if (success) {
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Nuevo video de apoyo agregado",
+                        mensaje = "Se ha agregado el video: ${_uiState.value.nombre}"
+                    )
                     _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
                 } else {
                     _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Error al guardar el video.")

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Libro
 import com.example.educanet.repository.LibroRepository
+import com.example.educanet.repository.NotificacionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +23,7 @@ data class AddLibroUiState(
 class AddLibroViewModel : ViewModel() {
 
     private val libroRepository = LibroRepository()
+    private val notificacionRepository = NotificacionRepository()
 
     private val _uiState = MutableStateFlow(AddLibroUiState())
     val uiState: StateFlow<AddLibroUiState> = _uiState.asStateFlow()
@@ -58,6 +60,10 @@ class AddLibroViewModel : ViewModel() {
                 val success = libroRepository.agregarLibro(libro)
 
                 if (success) {
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Nuevo libro agregado",
+                        mensaje = "Se ha agregado el libro: ${_uiState.value.nombre}"
+                    )
                     _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
                 } else {
                     _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Error al guardar el libro")

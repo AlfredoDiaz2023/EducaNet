@@ -32,30 +32,62 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.educanet.model.Libro
 import com.example.educanet.repository.LibroRepository
+import com.example.educanet.repository.NotificacionRepository
 import kotlinx.coroutines.launch
 
 @Composable
 fun LibroScreen(
     rol: String,
+    nombre: String,
     onBack: () -> Unit,
     onAddLibro: () -> Unit
 ) {
     val libroRepository = remember { LibroRepository() }
+    val notificacionRepository = remember { NotificacionRepository() }
     val scope = rememberCoroutineScope()
 
     var libros by remember { mutableStateOf<List<Libro>>(emptyList()) }
     var cargando by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
+    fun cargarLibros() {
         scope.launch {
+            cargando = true
             val resultado = libroRepository.obtenerLibros()
             libros = resultado.libros
             cargando = false
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        cargarLibros()
+    }
+
+    suspend fun handleSolicitarLibro(libro: Libro) {
+        if (libro.cantidad > 0) {
+            val nuevoStock = libro.cantidad - 1
+            val success = libroRepository.actualizarStock(libro.id, nuevoStock)
+
+            if (success) {
+                notificacionRepository.agregarNotificacion(
+                    titulo = "Solicitud de libro",
+                    mensaje = "El usuario $nombre ($rol) ha solicitado el libro: ${libro.nombre}"
+                )
+                // Actualizar la lista localmente
+                val updatedLibros = libros.map {
+                    if (it.id == libro.id) {
+                        it.copy(cantidad = nuevoStock)
+                    } else {
+                        it
+                    }
+                }
+                libros = updatedLibros
+            }
         }
     }
 
@@ -84,13 +116,16 @@ fun LibroScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         if (cargando) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
             LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(libros) { libro ->
-                    LibroItem(libro = libro)
+                items(libros, key = { it.id }) { libro ->
+                    LibroItem(
+                        libro = libro,
+                        onSolicitar = { handleSolicitarLibro(libro) }
+                    )
                 }
             }
         }
@@ -110,8 +145,15 @@ fun LibroScreen(
 
 @Composable
 fun LibroItem(
-    libro: Libro
+    libro: Libro,
+    onSolicitar: suspend () -> Unit
 ) {
+    var isRequesting by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val estado = if (libro.cantidad > 0) "Disponible" else "No disponible"
+    val colorEstado = if (libro.cantidad > 0) Color(0xFF4CAF50) else Color.Red
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,6 +178,27 @@ fun LibroItem(
             Text(libro.nombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("Nivel: ${libro.nivel}")
             Text("Cantidad: ${libro.cantidad}")
+            Text(estado, color = colorEstado, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    scope.launch {
+                        isRequesting = true
+                        try {
+                            onSolicitar()
+                        } finally {
+                            isRequesting = false
+                        }
+                    }
+                },
+                enabled = libro.cantidad > 0 && !isRequesting
+            ) {
+                if (isRequesting) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text("Solicitar")
+                }
+            }
         }
     }
 }

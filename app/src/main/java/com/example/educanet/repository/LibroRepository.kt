@@ -51,7 +51,7 @@ class LibroRepository {
 
             ResultadoLibros(libros, ultimoDocumento)
         } catch (e: Exception) {
-            e.printStackTrace() // 👈 imprime el error para debug
+            e.printStackTrace()
             ResultadoLibros(emptyList(), null)
         }
     }
@@ -60,7 +60,7 @@ class LibroRepository {
         return try {
             if (ultimoDocumento == null) return ResultadoLibros(emptyList(), null)
 
-            val query = db.collection("libros")
+            val query = db.collection("libro")
                 .whereGreaterThan("cantidad", 0)
                 .orderBy("cantidad", Query.Direction.DESCENDING)
                 .startAfter(ultimoDocumento)
@@ -92,7 +92,7 @@ class LibroRepository {
 
     suspend fun actualizarStock(libroId: String, nuevoStock: Int): Boolean {
         return try {
-            db.collection("libros")
+            db.collection("libro")
                 .document(libroId)
                 .update("cantidad", nuevoStock)
                 .await()
@@ -105,7 +105,7 @@ class LibroRepository {
 
     suspend fun obtenerLibroPorId(libroId: String): Libro? {
         return try {
-            val document = db.collection("libros") //
+            val document = db.collection("libro")
                 .document(libroId)
                 .get()
                 .await()

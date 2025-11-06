@@ -25,9 +25,40 @@ class NotificacionRepository {
         val nueva = hashMapOf(
             "titulo" to titulo,
             "mensaje" to mensaje,
-            "fecha" to System.currentTimeMillis()
+            "fecha" to System.currentTimeMillis(),
+            "isRead" to false
         )
         db.collection("notificaciones").add(nueva).await()
+    }
+
+    suspend fun hayNotificacionesSinLeer(): Boolean {
+        return try {
+            val snapshot = db.collection("notificaciones")
+                .whereEqualTo("isRead", false)
+                .limit(1)
+                .get()
+                .await()
+            !snapshot.isEmpty
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun marcarTodasComoLeidas() {
+        try {
+            val snapshot = db.collection("notificaciones")
+                .whereEqualTo("isRead", false)
+                .get()
+                .await()
+
+            val batch = db.batch()
+            for (doc in snapshot.documents) {
+                batch.update(doc.reference, "isRead", true)
+            }
+            batch.commit().await()
+        } catch (e: Exception) {
+            // Manejar la excepción
+        }
     }
 
     suspend fun eliminarNotificacion(id: String) {

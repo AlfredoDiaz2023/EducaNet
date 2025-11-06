@@ -27,6 +27,7 @@ fun NotificacionesScreen(onBack: () -> Unit) {
     LaunchedEffect(Unit) {
         scope.launch {
             notificaciones = repo.obtenerNotificaciones()
+            repo.marcarTodasComoLeidas()
             cargando = false
         }
     }
@@ -48,7 +49,7 @@ fun NotificacionesScreen(onBack: () -> Unit) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-                    items(notificaciones) { noti ->
+                    items(notificaciones, key = { it.id }) { noti ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -68,7 +69,8 @@ fun NotificacionesScreen(onBack: () -> Unit) {
                                 IconButton(onClick = {
                                     scope.launch {
                                         repo.eliminarNotificacion(noti.id)
-                                        notificaciones = repo.obtenerNotificaciones()
+                                        // Actualizar la lista localmente
+                                        notificaciones = notificaciones.filter { it.id != noti.id }
                                     }
                                 }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Eliminar")

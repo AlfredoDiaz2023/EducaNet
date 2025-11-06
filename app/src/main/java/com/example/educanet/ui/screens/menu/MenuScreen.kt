@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.educanet.viewmodel.MenuViewModel
 
 @Composable
 fun MenuScreen(
@@ -22,10 +24,11 @@ fun MenuScreen(
     onProgresoAcademicoClick: () -> Unit = {},
     onVerNotificaciones: () -> Unit = {},
     onCameraClick: () -> Unit = {},
-    onLogout: () -> Unit
-
+    onLogout: () -> Unit,
+    menuViewModel: MenuViewModel = viewModel()
 ) {
 
+    val hasUnreadNotifications by menuViewModel.hasUnreadNotifications.collectAsState()
 
     Column(
         modifier = Modifier
@@ -44,8 +47,17 @@ fun MenuScreen(
                 Text("Bienvenido, $nombre", fontWeight = FontWeight.Bold)
                 Text("Rol: $rol", fontSize = 14.sp)
             }
-            IconButton(onClick = onVerNotificaciones) {
-                Icon(Icons.Default.Notifications, contentDescription = "Ver Notificaciones")
+            IconButton(onClick = {
+                menuViewModel.checkForUnreadNotifications()
+                onVerNotificaciones()
+            }) {
+                BadgedBox(badge = {
+                    if (hasUnreadNotifications) {
+                        Badge()
+                    }
+                }) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Ver Notificaciones")
+                }
             }
         }
 

@@ -20,7 +20,7 @@ class AuthRepository {
                     correo = correo,
                     clave = clave,
                     nombre = "Administrador"
-                ) // 'rol' usará el valor por defecto de la data class
+                )
 
             } else {
 
@@ -40,22 +40,22 @@ class AuthRepository {
                 .await()
 
             if (query.isEmpty || query.documents.isEmpty()) {
-                return null // Usuario no encontrado o clave incorrecta
+                return null
             }
 
-            // Si encontramos al usuario, leemos sus datos
+
             val doc = query.documents[0]
             val email = doc.getString("correo") ?: ""
             val pass = doc.getString("clave") ?: ""
             val nombre = doc.getString("nombre")
             val rol = doc.getString("rol")
 
-            // Decidimos qué objeto de usuario crear según el rol
+
             when (rol) {
                 "Profesor" -> Profesor(
                     correo = email,
                     clave = pass,
-                    nombre = nombre ?: "Profesor", // Si es null, usa "Profesor"
+                    nombre = nombre ?: "Profesor",
                     rol = rol
                 )
                 "Apoderado" -> Apoderado(
@@ -71,10 +71,10 @@ class AuthRepository {
                     rol = rol
                 )
 
-                else -> null // Rol desconocido o nulo
+                else -> null
             }
         } catch (e: Exception) {
-            null // Error al consultar Firestore
+            null
         }
     }
 }

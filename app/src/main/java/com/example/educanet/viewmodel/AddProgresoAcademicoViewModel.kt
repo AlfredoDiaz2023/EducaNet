@@ -3,6 +3,7 @@ package com.example.educanet.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.ProgresoAcademico
+import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ProgresoAcademicoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,7 @@ data class AddProgresoAcademicoUiState(
 
 class AddProgresoAcademicoViewModel : ViewModel() {
     private val repo = ProgresoAcademicoRepository()
+    private val notificacionRepository = NotificacionRepository()
 
     private val _uiState = MutableStateFlow(AddProgresoAcademicoUiState())
     val uiState: StateFlow<AddProgresoAcademicoUiState> = _uiState.asStateFlow()
@@ -51,11 +53,22 @@ class AddProgresoAcademicoViewModel : ViewModel() {
                 )
 
                 val ok = repo.agregarNota(data)
-                _uiState.value = _uiState.value.copy(
-                    isSaving = false,
-                    saveSuccess = ok,
-                    errorMessage = if (!ok) "Error al guardar nota" else null
-                )
+                if (ok) {
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Nueva nota agregada",
+                        mensaje = "Se agregó una nota de ${_uiState.value.notas} para el alumno ${_uiState.value.alumno} en la asignatura ${_uiState.value.asignatura}."
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        saveSuccess = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        saveSuccess = false,
+                        errorMessage = "Error al guardar nota"
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,

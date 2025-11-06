@@ -22,8 +22,6 @@ import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
 import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
 
-
-
 @Composable
 fun AppNavegacion() {
     val navController = rememberNavController()
@@ -67,7 +65,7 @@ fun AppNavegacion() {
             MenuScreen(
                 nombre = nombre,
                 rol = rol,
-                onLibroClick = { navController.navigate("libros/$rol") },
+                onLibroClick = { navController.navigate("libros/$rol/$nombre") },
                 onVideoClick = { navController.navigate("video_apoyo") },
                 onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
                 onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
@@ -83,12 +81,17 @@ fun AppNavegacion() {
 
         // LIBROS
         composable(
-            "libros/{rol}",
-            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+            "libros/{rol}/{nombre}",
+            arguments = listOf(
+                navArgument("rol") { type = NavType.StringType },
+                navArgument("nombre") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val rol = backStackEntry.arguments?.getString("rol") ?: ""
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
             LibroScreen(
                 rol = rol,
+                nombre = nombre,
                 onBack = { navController.popBackStack() },
                 onAddLibro = { navController.navigate("add_libro") }
             )

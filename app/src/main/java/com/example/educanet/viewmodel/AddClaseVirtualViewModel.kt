@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.ClaseVirtual
 import com.example.educanet.model.Profesor
 import com.example.educanet.repository.ClaseVirtualRepository
+import com.example.educanet.repository.NotificacionRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ data class AddClaseVirtualUiState(
 class AddClaseVirtualViewModel : ViewModel() {
 
     private val claseVirtualRepository = ClaseVirtualRepository()
+    private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -90,6 +92,10 @@ class AddClaseVirtualViewModel : ViewModel() {
                 val success = claseVirtualRepository.agregarClaseVirtual(claseVirtual)
 
                 if (success) {
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Nueva clase virtual agregada",
+                        mensaje = "Se ha agregado la clase: ${_uiState.value.nombre}"
+                    )
                     _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
                 } else {
                     _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Error al guardar la clase virtual.")
