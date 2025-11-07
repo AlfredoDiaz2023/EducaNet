@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.educanet.model.ProgresoAcademico
 import com.example.educanet.repository.ProgresoAcademicoRepository
+import com.example.educanet.ui.common.Logo
 
 @Composable
 fun ProgresoAcademicoScreen(
@@ -32,8 +33,12 @@ fun ProgresoAcademicoScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Logo(modifier = Modifier.size(80.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")

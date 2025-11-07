@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.educanet.model.Notificacion
 import com.example.educanet.repository.NotificacionRepository
+import com.example.educanet.ui.common.Logo
 import kotlinx.coroutines.launch
 
 
@@ -44,9 +45,14 @@ fun NotificacionesScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            Logo(modifier = Modifier.size(80.dp).align(Alignment.CenterHorizontally))
+            Spacer(modifier = Modifier.height(16.dp))
+
             if (cargando) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
                     items(notificaciones, key = { it.id }) { noti ->

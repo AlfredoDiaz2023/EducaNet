@@ -28,8 +28,7 @@ class LibroRepository {
     suspend fun obtenerLibros(limite: Int = 10): ResultadoLibros {
         return try {
             val query = db.collection("libro")
-                .whereGreaterThan("cantidad", 0)
-                .orderBy("cantidad", Query.Direction.DESCENDING)
+                .orderBy("nombre", Query.Direction.ASCENDING)
                 .limit(limite.toLong())
 
             val querySnapshot = query.get().await()
@@ -61,8 +60,7 @@ class LibroRepository {
             if (ultimoDocumento == null) return ResultadoLibros(emptyList(), null)
 
             val query = db.collection("libro")
-                .whereGreaterThan("cantidad", 0)
-                .orderBy("cantidad", Query.Direction.DESCENDING)
+                .orderBy("nombre", Query.Direction.ASCENDING)
                 .startAfter(ultimoDocumento)
                 .limit(limite.toLong())
 

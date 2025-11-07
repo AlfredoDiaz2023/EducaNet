@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.educanet.ui.common.Logo
 import com.example.educanet.viewmodel.MenuViewModel
 
 @Composable
@@ -33,9 +34,11 @@ fun MenuScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(30.dp))
+        Logo(modifier = Modifier.size(100.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
 
         Row(

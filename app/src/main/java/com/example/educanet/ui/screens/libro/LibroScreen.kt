@@ -39,6 +39,7 @@ import coil.compose.AsyncImage
 import com.example.educanet.model.Libro
 import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
+import com.example.educanet.ui.common.Logo
 import kotlinx.coroutines.launch
 
 // Screen para mostrar la lista de libros
@@ -95,10 +96,12 @@ fun LibroScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Logo(modifier = Modifier.size(80.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(30.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
