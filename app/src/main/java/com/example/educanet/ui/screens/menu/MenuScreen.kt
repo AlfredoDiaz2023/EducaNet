@@ -77,32 +77,62 @@ fun MenuScreen(
         Spacer(Modifier.height(24.dp))
 
 
-        TextButton(onClick = onLibroClick) {
+        Button(
+            onClick = onLibroClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF23A1B7),
+                contentColor = Color.Black
+            )
+        ) {
             Text("Libros y Artículos", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
 
-        TextButton(onClick = onVideoClick) {
+        Button(
+            onClick = onVideoClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF23A1B7),
+                contentColor = Color.Black
+            )
+        ) {
             Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
 
-        TextButton(onClick = onClaseVirtualClick) {
+        Button(
+            onClick = onClaseVirtualClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF23A1B7),
+                contentColor = Color.Black
+            )
+        ) {
             Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
 
-        TextButton(onClick = onProgresoAcademicoClick) {
+        Button(
+            onClick = onProgresoAcademicoClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF23A1B7),
+                contentColor = Color.Black
+            )
+        ){
             Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
         }
 
         Spacer(Modifier.height(24.dp))
 
-        TextButton(onClick = onCameraClick) {
-            Text("Cámara", color = Color(0xFF090909), fontSize = 24.sp)
+        Button(
+            onClick = onCameraClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF23A1B7),
+                contentColor = Color.Black
+            )
+        ) {
+            Text("Cámara", fontSize = 24.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
