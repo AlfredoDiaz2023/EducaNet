@@ -1,6 +1,8 @@
 package com.example.educanet.ui.screens.menu
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
@@ -8,11 +10,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.educanet.ui.common.Logo
+import com.example.educanet.R
 import com.example.educanet.viewmodel.MenuViewModel
 
 @Composable
@@ -28,120 +33,147 @@ fun MenuScreen(
     onLogout: () -> Unit,
     menuViewModel: MenuViewModel = viewModel()
 ) {
-
     val hasUnreadNotifications by menuViewModel.hasUnreadNotifications.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Logo(modifier = Modifier.size(100.dp))
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text("Bienvenido, $nombre", fontWeight = FontWeight.Bold)
-                Text("Rol: $rol", fontSize = 14.sp)
-            }
-            IconButton(onClick = {
-                menuViewModel.checkForUnreadNotifications()
-                onVerNotificaciones()
-            }) {
-                BadgedBox(badge = {
-                    if (hasUnreadNotifications) {
-                        Badge()
-                    }
-                }) {
-                    Icon(Icons.Default.Notifications, contentDescription = "Ver Notificaciones")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            "Menu EducaNet",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color(0xFF2694EE),
-            fontSize = 30.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+    // Fondo con imagen
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Imagen de fondo (ajústala o cámbiala)
+        Image(
+            painter = painterResource(id = R.drawable.logo), // puedes usar otro drawable
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.08f // transparencia del fondo
         )
 
-        Spacer(Modifier.height(24.dp))
-
-
-        Button(
-            onClick = onLibroClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF23A1B7),
-                contentColor = Color.Black
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Libros y Artículos", color = Color(0xFF090909), fontSize = 24.sp)
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Button(
-            onClick = onVideoClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF23A1B7),
-                contentColor = Color.Black
+            // Logo más pequeño y transparente
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo EducaNet",
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer(alpha = 0.8f) // transparencia
             )
-        ) {
-            Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
-        }
 
-        Spacer(Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onClaseVirtualClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF23A1B7),
-                contentColor = Color.Black
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("Bienvenido, $nombre", fontWeight = FontWeight.Bold)
+                    Text("Rol: $rol", fontSize = 14.sp)
+                }
+                IconButton(onClick = {
+                    menuViewModel.checkForUnreadNotifications()
+                    onVerNotificaciones()
+                }) {
+                    BadgedBox(badge = {
+                        if (hasUnreadNotifications) Badge()
+                    }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Ver Notificaciones")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                "Menu EducaNet",
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2694EE),
+                fontSize = 30.sp,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-        ) {
-            Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
-        }
 
-        Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-        Button(
-            onClick = onProgresoAcademicoClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF23A1B7),
-                contentColor = Color.Black
-            )
-        ){
-            Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
-        }
+            // Botones
+            Button(
+                onClick = onLibroClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF23A1B7),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Libros y Artículos", color = Color(0xFF090909), fontSize = 24.sp)
+            }
 
-        Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-        Button(
-            onClick = onCameraClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF23A1B7),
-                contentColor = Color.Black
-            )
-        ) {
-            Text("Cámara", fontSize = 24.sp)
-        }
+            Button(
+                onClick = onVideoClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFFFFF),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
 
-        Button(
-            onClick = onLogout,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Cerrar sesión")
+            Button(
+                onClick = onClaseVirtualClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF23A1B7),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = onProgresoAcademicoClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF23A1B7),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = onCameraClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF23A1B7),
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Cámara", fontSize = 24.sp)
+            }
+
+            Spacer(modifier = Modifier.height(50.dp))
+
+            Button(
+                onClick = onLogout,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFEE1B0B),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Cerrar sesión")
+            }
         }
     }
 }
