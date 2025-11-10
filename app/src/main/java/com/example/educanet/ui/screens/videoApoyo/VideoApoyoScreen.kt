@@ -1,36 +1,25 @@
 package com.example.educanet.ui.screens.videoApoyo
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.educanet.R
 import com.example.educanet.model.VideoApoyo
 import com.example.educanet.ui.common.Logo
 import com.example.educanet.viewmodel.VideoApoyoViewModel
@@ -44,50 +33,78 @@ fun VideoApoyoScreen(
     val videos by videoApoyoViewModel.videos.collectAsState()
     val cargando by videoApoyoViewModel.cargando.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Logo(modifier = Modifier.size(80.dp))
-        Spacer(modifier = Modifier.height(16.dp))
+    // 🔹 Fondo con imagen + contenido principal
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Imagen de fondo
+        Image(
+            painter = painterResource(id = R.drawable.logo), // tu imagen de fondo
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.08f // transparencia del fondo
+        )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Contenido principal
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                "Videos de Apoyo",
-                style = MaterialTheme.typography.headlineSmall
+            // Logo superior pequeño y con transparencia
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo EducaNet",
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer(alpha = 0.8f)
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        if (cargando) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Videos de Apoyo",
+                    style = MaterialTheme.typography.headlineSmall
+                )
             }
-        } else {
-            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(videos) { video ->
-                    VideoApoyoItem(video = video)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (cargando) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(videos) { video ->
+                        VideoApoyoItem(video = video)
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onAddVideo,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Agregar Video")
+            Button(
+                onClick = onAddVideo,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Agregar Video")
+            }
         }
     }
 }

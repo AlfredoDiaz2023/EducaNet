@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.viewmodel.AddVideoViewModel
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AddVideoScreen(
@@ -68,7 +70,7 @@ fun AddVideoScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Agregar Video", style = MaterialTheme.typography.headlineSmall)
+                Text("Agregar Video", style = MaterialTheme.typography.titleLarge)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -110,6 +112,10 @@ fun AddVideoScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = { addVideoViewModel.saveVideo() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50),
+                    contentColor = Color.White
+                ),
                 enabled = !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -1,11 +1,15 @@
 package com.example.educanet.ui.screens.progresoacademico
 
 import androidx.compose.foundation.layout.* // Column, Spacer, fillMaxWidth, fillMaxSize, padding, height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.* // Scaffold, Button, Text, OutlinedTextField, etc.
 import androidx.compose.runtime.* // remember, LaunchedEffect, collectAsState
+import androidx.compose.ui.Alignment
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.Modifier // ✅ Import necesario para usar Modifier
-import androidx.compose.ui.unit.dp // ✅ Import necesario para usar 16.dp, 8.dp, etc.
+import androidx.compose.ui.Modifier // Import necesario para usar Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp // Import necesario para usar 16.dp, 8.dp, etc.
 import com.example.educanet.viewmodel.AddProgresoAcademicoViewModel
 
 @Composable
@@ -31,6 +35,25 @@ fun AddProgresoAcademicoScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver"
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Agregar Progreso",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = uiState.profesor,
                 onValueChange = viewModel::onProfesorChange,
@@ -78,6 +101,10 @@ fun AddProgresoAcademicoScreen(
 
             Button(
                 onClick = { viewModel.saveNota() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50),
+                    contentColor = Color.White
+                ),
                 enabled = !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth()
             ) {

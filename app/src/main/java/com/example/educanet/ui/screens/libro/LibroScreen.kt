@@ -1,39 +1,19 @@
 package com.example.educanet.ui.screens.libro
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -41,9 +21,9 @@ import com.example.educanet.model.Libro
 import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.ui.common.Logo
+import com.example.educanet.R
 import kotlinx.coroutines.launch
 
-// Screen para mostrar la lista de libros
 @Composable
 fun LibroScreen(
     rol: String,
@@ -81,72 +61,89 @@ fun LibroScreen(
                     titulo = "Solicitud de libro",
                     mensaje = "El usuario $nombre ($rol) ha solicitado el libro: ${libro.nombre}"
                 )
-                // Actualizar la lista localmente
-                val updatedLibros = libros.map {
-                    if (it.id == libro.id) {
-                        it.copy(cantidad = nuevoStock)
-                    } else {
-                        it
-                    }
+                libros = libros.map {
+                    if (it.id == libro.id) it.copy(cantidad = nuevoStock) else it
                 }
-                libros = updatedLibros
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Logo(modifier = Modifier.size(80.dp))
-        Spacer(modifier = Modifier.height(16.dp))
+    // Fondo con imagen + contenido principal
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Imagen de fondo
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            alpha = 0.08f // transparencia
+        )
 
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Contenido principal
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                "Libros y Artículos",
-                style = MaterialTheme.typography.headlineSmall
+            // Logo superior más pequeño y con algo de transparencia
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo EducaNet",
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer(alpha = 0.8f)
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (cargando) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(libros, key = { it.id }) { libro ->
-                    LibroItem(
-                        libro = libro,
-                        onSolicitar = { handleSolicitarLibro(libro) }
-                    )
-                }
-            }
-        }
-
-        if (rol == "Profesor") {
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = onAddLibro,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50),
-                    contentColor = Color.White
-                ),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Agregar Libro")
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Libros y Artículos",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (cargando) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(libros, key = { it.id }) { libro ->
+                        LibroItem(
+                            libro = libro,
+                            onSolicitar = { handleSolicitarLibro(libro) }
+                        )
+                    }
+                }
+            }
+
+            if (rol == "Profesor") {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onAddLibro,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text("Agregar Libro")
+                }
             }
         }
     }
@@ -201,10 +198,17 @@ fun LibroItem(
                         }
                     }
                 },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3881EC),
+                    contentColor = Color.White
+                ),
                 enabled = libro.cantidad > 0 && !isRequesting
             ) {
                 if (isRequesting) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 } else {
                     Text("Solicitar")
                 }

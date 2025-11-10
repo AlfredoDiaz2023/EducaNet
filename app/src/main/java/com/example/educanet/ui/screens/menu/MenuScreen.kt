@@ -1,6 +1,7 @@
 package com.example.educanet.ui.screens.menu
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -102,9 +103,16 @@ fun MenuScreen(
                 onClick = onLibroClick,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF23A1B7),
+                    containerColor = Color(0xFFFFFFFF),
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Libros y Artículos", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -117,7 +125,14 @@ fun MenuScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFFFFFF),
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp, // grosor del borde
+                        color = Color.Black, // color del borde
+                        shape = RoundedCornerShape(50) // misma forma que el botón
+                    )
             ) {
                 Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -128,9 +143,16 @@ fun MenuScreen(
                 onClick = onClaseVirtualClick,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF23A1B7),
+                    containerColor = Color(0xFFFFFFFF),
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -141,9 +163,16 @@ fun MenuScreen(
                 onClick = onProgresoAcademicoClick,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF23A1B7),
+                    containerColor = Color(0xFFFFFFFF),
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -154,9 +183,16 @@ fun MenuScreen(
                 onClick = onCameraClick,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF23A1B7),
+                    containerColor = Color(0xFFFFFFFF),
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Cámara", fontSize = 24.sp)
             }
