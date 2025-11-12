@@ -70,7 +70,7 @@ fun ProgresoAcademicoScreen(
                     .graphicsLayer(alpha = 0.8f)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {

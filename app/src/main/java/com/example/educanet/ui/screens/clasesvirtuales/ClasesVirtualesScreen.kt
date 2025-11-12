@@ -64,7 +64,7 @@ fun ClasesVirtualesScreen(
                     .graphicsLayer(alpha = 0.8f)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -73,7 +73,7 @@ fun ClasesVirtualesScreen(
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Text(
                     "Clases Virtuales",
                     style = MaterialTheme.typography.headlineSmall
