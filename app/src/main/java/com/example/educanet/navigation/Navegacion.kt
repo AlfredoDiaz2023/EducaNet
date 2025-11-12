@@ -21,6 +21,7 @@ import com.example.educanet.ui.screens.perfil.*
 import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
 import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
+import com.example.educanet.ui.screens.imagen.ImagePickerScreen
 
 @Composable
 fun AppNavegacion() {
@@ -71,6 +72,7 @@ fun AppNavegacion() {
                 onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
                 onCameraClick = { navController.navigate("camera") },
+                onImagePickerClick = { navController.navigate("imagePicker") },
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -229,6 +231,10 @@ fun AppNavegacion() {
                     navController.popBackStack()
                 }
             )
+        }
+
+        composable("imagePicker") {
+            ImagePickerScreen(onBack = { navController.popBackStack() })
         }
     }
 }

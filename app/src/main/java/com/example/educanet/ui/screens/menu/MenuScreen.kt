@@ -31,6 +31,7 @@ fun MenuScreen(
     onProgresoAcademicoClick: () -> Unit = {},
     onVerNotificaciones: () -> Unit = {},
     onCameraClick: () -> Unit = {},
+    onImagePickerClick: () -> Unit = {},
     onLogout: () -> Unit,
     menuViewModel: MenuViewModel = viewModel()
 ) {
@@ -209,6 +210,9 @@ fun MenuScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text("Cerrar sesión")
+            }
+            Button(onClick = onImagePickerClick) {
+                Text("Abrir galería de imágenes")
             }
         }
     }
