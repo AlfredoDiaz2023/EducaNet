@@ -66,7 +66,7 @@ fun AppNavegacion() {
                 nombre = nombre,
                 rol = rol,
                 onLibroClick = { navController.navigate("libros/$rol/$nombre") },
-                onVideoClick = { navController.navigate("video_apoyo") },
+                onVideoClick = { navController.navigate("video_apoyo/$rol") },
                 onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
                 onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
@@ -102,8 +102,12 @@ fun AppNavegacion() {
         }
 
         // VIDEO APOYO
-        composable("video_apoyo") {
+        composable("video_apoyo/{rol}",
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: ""
             VideoApoyoScreen(
+                rol = rol,
                 onBack = { navController.popBackStack() },
                 onAddVideo = { navController.navigate("add_video") }
             )
@@ -212,7 +216,19 @@ fun AppNavegacion() {
 
         // CAMARA
         composable("camera") {
-            CameraScreen()
+            CameraScreen(
+                onImageCaptured = { uri ->
+                    // Envía la URI de la imagen a la pantalla anterior y regresa
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("captured_image_uri", uri.toString())
+                    navController.popBackStack()
+                },
+                onError = {
+                    // Simplemente regresa si hay un error
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

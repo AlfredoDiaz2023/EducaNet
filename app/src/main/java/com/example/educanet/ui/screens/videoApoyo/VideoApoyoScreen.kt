@@ -26,6 +26,7 @@ import com.example.educanet.viewmodel.VideoApoyoViewModel
 
 @Composable
 fun VideoApoyoScreen(
+    rol: String,
     onBack: () -> Unit,
     onAddVideo: () -> Unit,
     videoApoyoViewModel: VideoApoyoViewModel = viewModel()
@@ -93,17 +94,18 @@ fun VideoApoyoScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = onAddVideo,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50),
-                    contentColor = Color.White
-                ),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("Agregar Video")
+            if (rol == "Profesor") {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onAddVideo,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text("Agregar Video")
+                }
             }
         }
     }

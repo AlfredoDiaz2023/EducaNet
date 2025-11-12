@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.regex.Pattern
 
 data class AddVideoUiState(
     val nombre: String = "",
@@ -55,6 +56,17 @@ class AddVideoViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(duracion = duracionInt)
     }
 
+    private fun getYouTubeId(youTubeUrl: String): String? {
+        val pattern = "(?<=watch\\?v=|/videos/|embed\\/|youtu.be\\/|\\/v\\/|\\/e\\/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed\\?feature=oembed&url=http%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D|%2Fv%2F|e(?:mbed)?%2F|watch%3Fv%3D|v%2F|%3Fv%3D)[^#&?]*.{11}"
+        val compiledPattern = Pattern.compile(pattern)
+        val matcher = compiledPattern.matcher(youTubeUrl)
+        return if (matcher.find()) {
+            matcher.group()
+        } else {
+            null
+        }
+    }
+
     fun saveVideo() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true, errorMessage = null)
@@ -67,23 +79,36 @@ class AddVideoViewModel : ViewModel() {
                 }
 
                 val userDoc = db.collection("users").document(currentUser.uid).get().await()
-                val userRole = userDoc.getString("rol")
+                if (!userDoc.exists()) {
+                    _uiState.value = _uiState.value.copy(errorMessage = "No se encontró el documento del usuario.", isSaving = false)
+                    return@launch
+                }
 
-                if (userRole != "Profesor") {
+                val userRole = userDoc.getString("rol")
+                if (userRole?.equals("Profesor", ignoreCase = true) != true) {
                     _uiState.value = _uiState.value.copy(errorMessage = "Solo los profesores pueden agregar videos.", isSaving = false)
                     return@launch
                 }
                 
-                val profesor = userDoc.toObject(Profesor::class.java)
-                if (profesor == null) {
-                    _uiState.value = _uiState.value.copy(errorMessage = "No se pudieron obtener los datos del profesor.", isSaving = false)
+                val profesorNombre = userDoc.getString("nombre")
+                if (profesorNombre == null) {
+                    _uiState.value = _uiState.value.copy(errorMessage = "El documento del profesor no tiene nombre.", isSaving = false)
                     return@launch
                 }
+                val profesor = Profesor(nombre = profesorNombre, correo = currentUser.email ?: "")
+
+                val videoId = getYouTubeId(_uiState.value.videoUrl)
+                if (videoId == null) {
+                    _uiState.value = _uiState.value.copy(errorMessage = "La URL de YouTube no es válida.", isSaving = false)
+                    return@launch
+                }
+
+                val embedUrl = "https://www.youtube.com/embed/$videoId"
 
                 val video = VideoApoyo(
                     nombre = _uiState.value.nombre,
                     nivel = _uiState.value.nivel,
-                    video = _uiState.value.videoUrl,
+                    video = embedUrl, // Guardamos la URL de incrustación
                     descripcion = _uiState.value.descripcion,
                     duracion = _uiState.value.duracion,
                     profesor = profesor

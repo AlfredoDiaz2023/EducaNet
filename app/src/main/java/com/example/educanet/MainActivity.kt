@@ -15,6 +15,7 @@ import com.example.educanet.ui.theme.EducaNetTheme
 
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +28,7 @@ import com.example.educanet.navigation.AppNavegacion
 import com.example.educanet.ui.screens.login.LoginScreen
 import com.example.educanet.ui.screens.splash.SplashScreen
 import com.example.educanet.ui.screens.splash.SplashScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

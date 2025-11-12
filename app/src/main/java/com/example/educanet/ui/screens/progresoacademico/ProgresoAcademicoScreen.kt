@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
-import com.example.educanet.R // ✅ Asegúrate de tener este import correcto
+import com.example.educanet.R 
 import com.example.educanet.model.ProgresoAcademico
 import com.example.educanet.repository.ProgresoAcademicoRepository
 
