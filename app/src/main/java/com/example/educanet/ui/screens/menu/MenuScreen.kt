@@ -37,12 +37,11 @@ fun MenuScreen(
 ) {
     val hasUnreadNotifications by menuViewModel.hasUnreadNotifications.collectAsState()
 
-
     // Fondo con imagen
     Box(modifier = Modifier.fillMaxSize()) {
-        // Imagen de fondo (ajústala o cámbiala)
+        // Imagen de fondo
         Image(
-            painter = painterResource(id = R.drawable.logo), // puedes usar otro drawable
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -61,43 +60,53 @@ fun MenuScreen(
                 contentDescription = "Logo EducaNet",
                 modifier = Modifier
                     .size(80.dp)
-                    .graphicsLayer(alpha = 0.8f) // transparencia
+                    .graphicsLayer(alpha = 0.8f)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // 🔹 BLOQUE MODIFICADO (texto centrado + icono a la derecha)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Column {
-                    Text("Bienvenido, $nombre",
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Bienvenido, $nombre",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2CF608),
-                        fontSize = 16.sp,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        color = Color(0xFF090909),
+                        fontSize = 16.sp
                     )
                     Text(
                         text = "Rol: $rol",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF2CF608),
-                        fontSize = 10.sp
+                        color = Color(0xFF090909),
+                        fontSize = 12.sp
                     )
                 }
-                IconButton(onClick = {
-                    menuViewModel.checkForUnreadNotifications()
-                    onVerNotificaciones()
-                }) {
+
+                IconButton(
+                    onClick = {
+                        menuViewModel.checkForUnreadNotifications()
+                        onVerNotificaciones()
+                    },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
                     BadgedBox(badge = {
                         if (hasUnreadNotifications) Badge()
                     }) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Ver Notificaciones")
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = "Ver Notificaciones"
+                        )
                     }
                 }
             }
+            // 🔹 FIN DE LA MODIFICACIÓN
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -142,11 +151,7 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = 2.dp, // grosor del borde
-                        color = Color.Black, // color del borde
-                        shape = RoundedCornerShape(50) // misma forma que el botón
-                    )
+                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
             ) {
                 Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -162,11 +167,7 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = 2.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(50)
-                    )
+                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
             ) {
                 Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -182,11 +183,7 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = 2.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(50)
-                    )
+                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
             ) {
                 Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -202,11 +199,7 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = 2.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(50)
-                    )
+                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
             ) {
                 Text("Cámara", fontSize = 24.sp)
             }
@@ -222,11 +215,7 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = 2.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(50)
-                    )
+                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
             ) {
                 Text("Abrir galería de imágenes", color = Color(0xFF090909), fontSize = 24.sp)
             }
