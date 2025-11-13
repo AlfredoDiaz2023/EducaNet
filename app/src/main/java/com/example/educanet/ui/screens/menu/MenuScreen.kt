@@ -37,6 +37,7 @@ fun MenuScreen(
 ) {
     val hasUnreadNotifications by menuViewModel.hasUnreadNotifications.collectAsState()
 
+
     // Fondo con imagen
     Box(modifier = Modifier.fillMaxSize()) {
         // Imagen de fondo (ajústala o cámbiala)
@@ -71,8 +72,20 @@ fun MenuScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Bienvenido, $nombre", fontWeight = FontWeight.Bold)
-                    Text("Rol: $rol", fontSize = 14.sp)
+                    Text("Bienvenido, $nombre",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2CF608),
+                        fontSize = 16.sp,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Text(
+                        text = "Rol: $rol",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF2CF608),
+                        fontSize = 10.sp
+                    )
                 }
                 IconButton(onClick = {
                     menuViewModel.checkForUnreadNotifications()
@@ -198,7 +211,7 @@ fun MenuScreen(
                 Text("Cámara", fontSize = 24.sp)
             }
 
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = onImagePickerClick,
@@ -215,10 +228,10 @@ fun MenuScreen(
                         shape = RoundedCornerShape(50)
                     )
             ) {
-                Text("Abrir galería de imágenes")
+                Text("Abrir galería de imágenes", color = Color(0xFF090909), fontSize = 24.sp)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             Button(
                 onClick = onLogout,

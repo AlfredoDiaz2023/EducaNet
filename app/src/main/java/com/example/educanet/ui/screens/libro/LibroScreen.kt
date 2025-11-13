@@ -53,15 +53,23 @@ fun LibroScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Libros y Artículos",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Libros y Artículos",
-                    style = MaterialTheme.typography.headlineSmall
+                    "Total: ${uiState.libros.size}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
@@ -144,7 +152,7 @@ fun LibroItem(
     var isRequesting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val estado = if (libro.cantidad > 0) "Disponible" else "No disponible"
+    val estado = "Disponibles: ${libro.cantidad}"
     val colorEstado = if (libro.cantidad > 0) Color(0xFF4CAF50) else Color.Red
 
     Card(
