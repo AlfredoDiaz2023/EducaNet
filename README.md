@@ -1,2 +1,2 @@
 # EducaNet
-Aplicacion EducaNet - Android Studio - Kotlin
+Aplicacion EducaNet - Android Studio - Kotlin arreglar reseñas
