@@ -25,7 +25,10 @@ class ResenaRepository {
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .await()
-            snapshot.toObjects(Resena::class.java)
+            // Corregir la conversión de documentos y asignar el ID
+            snapshot.documents.mapNotNull {
+                it.toObject(Resena::class.java)?.copy(id = it.id)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()

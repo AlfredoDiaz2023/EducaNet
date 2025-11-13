@@ -1,11 +1,14 @@
 package com.example.educanet.ui.screens.libro
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,6 +54,8 @@ fun LibroScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(30.dp)) // Espacio superior
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -60,7 +65,9 @@ fun LibroScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
+
                     Spacer(modifier = Modifier.width(8.dp))
+
                     Text(
                         "Libros y Artículos",
                         style = MaterialTheme.typography.headlineSmall
@@ -73,7 +80,7 @@ fun LibroScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -234,7 +241,7 @@ fun ResenasDialog(
                     items(resenas) { resena ->
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
                             Text(resena.userName, fontWeight = FontWeight.Bold)
-                            Text("Calificación: ${resena.rating}")
+                            RatingBar(rating = resena.rating, isReadOnly = true)
                             Text(resena.comment)
                             Divider(modifier = Modifier.padding(top = 8.dp))
                         }
@@ -264,13 +271,8 @@ fun AddResenaDialog(
         title = { Text("Agregar reseña para ${libro.nombre}") },
         text = {
             Column {
-                Text("Calificación (0-5):")
-                Slider(
-                    value = rating,
-                    onValueChange = { rating = it },
-                    valueRange = 0f..5f,
-                    steps = 4
-                )
+                Text("Tu calificación:")
+                RatingBar(rating = rating, onRatingChange = { rating = it })
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = comment,
@@ -291,4 +293,29 @@ fun AddResenaDialog(
             }
         }
     )
+}
+
+@Composable
+fun RatingBar(
+    rating: Float,
+    onRatingChange: ((Float) -> Unit)? = null,
+    isReadOnly: Boolean = false
+) {
+    Row {
+        (1..5).forEach { index ->
+            val isSelected = index <= rating
+            Icon(
+                imageVector = if (isSelected) Icons.Filled.Star else Icons.Filled.StarBorder,
+                contentDescription = null, // decorative element
+                tint = Color(0xFFFFC107),
+                modifier = Modifier.then(
+                    if (!isReadOnly && onRatingChange != null) {
+                        Modifier.clickable { onRatingChange(index.toFloat()) }
+                    } else {
+                        Modifier
+                    }
+                )
+            )
+        }
+    }
 }
