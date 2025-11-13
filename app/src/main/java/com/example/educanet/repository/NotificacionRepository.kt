@@ -4,6 +4,7 @@ import com.example.educanet.model.Notificacion
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+
 class NotificacionRepository {
     private val db = FirebaseFirestore.getInstance()
 
