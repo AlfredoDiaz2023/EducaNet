@@ -201,6 +201,26 @@ fun MenuScreen(
             Spacer(modifier = Modifier.height(50.dp))
 
             Button(
+                onClick = onImagePickerClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFFFFF),
+                    contentColor = Color.Black
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
+            ) {
+                Text("Abrir galería de imágenes")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
                 onClick = onLogout,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
@@ -210,9 +230,6 @@ fun MenuScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text("Cerrar sesión")
-            }
-            Button(onClick = onImagePickerClick) {
-                Text("Abrir galería de imágenes")
             }
         }
     }
