@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Libro
 import com.example.educanet.model.Resena
+import com.example.educanet.model.Reserva
 import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ResenaRepository
+import com.example.educanet.repository.ReservaRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,7 @@ class LibroViewModel : ViewModel() {
 
     private val libroRepository = LibroRepository()
     private val resenaRepository = ResenaRepository()
+    private val reservaRepository = ReservaRepository()
     private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
 
@@ -104,6 +107,33 @@ class LibroViewModel : ViewModel() {
                 } else {
                     _uiState.value = _uiState.value.copy(error = "Error al solicitar el libro.")
                 }
+            }
+        }
+    }
+
+    fun reservarLibro(libro: Libro, nombreUsuario: String) {
+        viewModelScope.launch {
+            val user = auth.currentUser
+            if (user == null) {
+                _uiState.value = _uiState.value.copy(error = "Debes iniciar sesión para reservar.")
+                return@launch
+            }
+
+            val reserva = Reserva(
+                libroId = libro.id,
+                userId = user.uid,
+                userName = nombreUsuario,
+                libroNombre = libro.nombre
+            )
+
+            val success = reservaRepository.agregarReserva(reserva)
+            if (success) {
+                notificacionRepository.agregarNotificacion(
+                    titulo = "Nueva reserva de libro",
+                    mensaje = "El usuario $nombreUsuario ha reservado el libro: ${libro.nombre}"
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(error = "Error al crear la reserva.")
             }
         }
     }

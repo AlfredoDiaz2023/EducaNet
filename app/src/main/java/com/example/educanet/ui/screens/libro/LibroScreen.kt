@@ -95,6 +95,7 @@ fun LibroScreen(
                         LibroItem(
                             libro = libro,
                             onSolicitar = { viewModel.solicitarLibro(libro, nombre, rol) },
+                            onReservar = { viewModel.reservarLibro(libro, nombre) },
                             onVerResenas = {
                                 selectedLibro = libro
                                 viewModel.obtenerResenas(libro.id)
@@ -153,13 +154,14 @@ fun LibroScreen(
 fun LibroItem(
     libro: Libro,
     onSolicitar: () -> Unit,
+    onReservar: () -> Unit,
     onVerResenas: () -> Unit,
     onAddResena: () -> Unit
 ) {
     var isRequesting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val estado = "Disponibles: ${libro.cantidad}"
+    val estado = if (libro.cantidad > 0) "Disponible" else "No disponible"
     val colorEstado = if (libro.cantidad > 0) Color(0xFF4CAF50) else Color.Red
 
     Card(
@@ -185,9 +187,11 @@ fun LibroItem(
 
             Text(libro.nombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("Nivel: ${libro.nivel}")
+            Text("Cantidad: ${libro.cantidad}")
             Text(estado, color = colorEstado, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             Row {
+                // Botón Solicitar (solo activo si hay stock)
                 Button(
                     onClick = {
                         scope.launch {
@@ -211,14 +215,29 @@ fun LibroItem(
                         Text("Solicitar")
                     }
                 }
+
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = onVerResenas, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4), contentColor = Color.White)) {
-                    Text("Ver Reseñas")
+
+                // Botón Reservar (siempre visible)
+                Button(
+                    onClick = onReservar,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF44336),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Reservar")
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onAddResena, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800), contentColor = Color.White)) {
-                Text("Dejar Reseña")
+            Row {
+                Button(onClick = onVerResenas, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00BCD4), contentColor = Color.White)) {
+                    Text("Ver Reseñas")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = onAddResena, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800), contentColor = Color.White)) {
+                    Text("Dejar Reseña")
+                }
             }
         }
     }
