@@ -1,0 +1,91 @@
+package com.example.educanet.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.educanet.model.Libro
+import com.example.educanet.model.Reserva
+import com.example.educanet.repository.NotificacionRepository
+import com.example.educanet.repository.ReservaRepository
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+data class CarritoUiState(
+    val items: List<Libro> = emptyList(),
+    val isConfirming: Boolean = false,
+    val confirmationSuccess: Boolean = false,
+    val error: String? = null
+)
+
+class CarritoViewModel : ViewModel() {
+
+    private val reservaRepository = ReservaRepository()
+    private val notificacionRepository = NotificacionRepository()
+    private val auth = FirebaseAuth.getInstance()
+
+    private val _uiState = MutableStateFlow(CarritoUiState())
+    val uiState: StateFlow<CarritoUiState> = _uiState.asStateFlow()
+
+    fun addToCart(libro: Libro) {
+        val currentItems = _uiState.value.items.toMutableList()
+        if (!currentItems.contains(libro)) {
+            currentItems.add(libro)
+            _uiState.value = _uiState.value.copy(items = currentItems)
+        }
+    }
+
+    fun removeFromCart(libro: Libro) {
+        val currentItems = _uiState.value.items.toMutableList()
+        currentItems.remove(libro)
+        _uiState.value = _uiState.value.copy(items = currentItems)
+    }
+
+    fun confirmReservations(userName: String) {
+        viewModelScope.launch {
+            val user = auth.currentUser
+            if (user == null) {
+                _uiState.value = _uiState.value.copy(error = "Debes iniciar sesión para reservar.")
+                return@launch
+            }
+
+            _uiState.value = _uiState.value.copy(isConfirming = true)
+            try {
+                val itemsToReserve = _uiState.value.items
+                if (itemsToReserve.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(error = "El carrito está vacío.", isConfirming = false)
+                    return@launch
+                }
+
+                var allSuccess = true
+                for (libro in itemsToReserve) {
+                    val reserva = Reserva(
+                        libroId = libro.id,
+                        userId = user.uid,
+                        userName = userName,
+                        libroNombre = libro.nombre
+                    )
+                    val success = reservaRepository.agregarReserva(reserva)
+                    if (!success) {
+                        allSuccess = false
+                    }
+                }
+
+                if (allSuccess) {
+                    val bookNames = itemsToReserve.joinToString(", ") { it.nombre }
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Nuevas reservas creadas",
+                        mensaje = "El usuario $userName ha reservado los siguientes libros: $bookNames"
+                    )
+                    _uiState.value = CarritoUiState(confirmationSuccess = true) // Reset state on success
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "Error al crear una o más reservas.", isConfirming = false)
+                }
+
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message, isConfirming = false)
+            }
+        }
+    }
+}

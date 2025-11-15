@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.educanet.ui.CameraScreen
+import com.example.educanet.ui.screens.carrito.CarritoScreen
 import com.example.educanet.ui.screens.clasesvirtuales.AddClaseVirtualScreen
 import com.example.educanet.ui.screens.clasesvirtuales.ClasesVirtualesScreen
 import com.example.educanet.ui.screens.libro.AddLibroScreen
@@ -18,14 +19,17 @@ import com.example.educanet.ui.screens.progresoacademico.ProgresoAcademicoScreen
 import com.example.educanet.ui.screens.menu.MenuScreen
 import com.example.educanet.ui.screens.notificaciones.NotificacionesScreen
 import com.example.educanet.ui.screens.perfil.*
+import com.example.educanet.ui.screens.reservas.ReservasScreen
 import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
 import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
 import com.example.educanet.ui.screens.imagen.ImagePickerScreen
+import com.example.educanet.viewmodel.CarritoViewModel
 
 @Composable
 fun AppNavegacion() {
     val navController = rememberNavController()
+    val carritoViewModel: CarritoViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -72,7 +76,6 @@ fun AppNavegacion() {
                 onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
                 onCameraClick = { navController.navigate("camera") },
-                onImagePickerClick = { navController.navigate("imagePicker") },
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -94,8 +97,22 @@ fun AppNavegacion() {
             LibroScreen(
                 rol = rol,
                 nombre = nombre,
+                carritoViewModel = carritoViewModel,
                 onBack = { navController.popBackStack() },
-                onAddLibro = { navController.navigate("add_libro") }
+                onAddLibro = { navController.navigate("add_libro") },
+                onCarritoClick = { navController.navigate("carrito/$nombre") }
+            )
+        }
+
+        // CARRITO
+        composable("carrito/{nombre}",
+             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
+            CarritoScreen(
+                onBack = { navController.popBackStack() },
+                carritoViewModel = carritoViewModel,
+                userName = nombre
             )
         }
 
@@ -235,6 +252,11 @@ fun AppNavegacion() {
 
         composable("imagePicker") {
             ImagePickerScreen(onBack = { navController.popBackStack() })
+        }
+
+        // RESERVAS
+        composable("reservas") {
+            ReservasScreen(onBack = { navController.popBackStack() })
         }
     }
 }

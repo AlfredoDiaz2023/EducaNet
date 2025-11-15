@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
@@ -23,6 +24,7 @@ import coil.compose.AsyncImage
 import com.example.educanet.R
 import com.example.educanet.model.Libro
 import com.example.educanet.model.Resena
+import com.example.educanet.viewmodel.CarritoViewModel
 import com.example.educanet.viewmodel.LibroViewModel
 import kotlinx.coroutines.launch
 
@@ -30,8 +32,10 @@ import kotlinx.coroutines.launch
 fun LibroScreen(
     rol: String,
     nombre: String,
+    carritoViewModel: CarritoViewModel,
     onBack: () -> Unit,
     onAddLibro: () -> Unit,
+    onCarritoClick: () -> Unit,
     viewModel: LibroViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -39,88 +43,96 @@ fun LibroScreen(
     var showAddResenaDialog by remember { mutableStateOf(false) }
     var selectedLibro by remember { mutableStateOf<Libro?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.08f
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(30.dp)) // Espacio superior
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        "Libros y Artículos",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                Text(
-                    "Total: ${uiState.libros.size}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = onCarritoClick) {
+                Icon(Icons.Default.ShoppingCart, contentDescription = "Ver Carrito")
             }
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize().padding(it)) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.08f
+            )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(30.dp)) // Espacio superior
 
-            if (uiState.isLoading) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    items(uiState.libros, key = { it.id }) { libro ->
-                        LibroItem(
-                            libro = libro,
-                            onSolicitar = { viewModel.solicitarLibro(libro, nombre, rol) },
-                            onReservar = { viewModel.reservarLibro(libro, nombre) },
-                            onVerResenas = {
-                                selectedLibro = libro
-                                viewModel.obtenerResenas(libro.id)
-                                showResenasDialog = true
-                            },
-                            onAddResena = {
-                                selectedLibro = libro
-                                showAddResenaDialog = true
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            "Libros y Artículos",
+                            style = MaterialTheme.typography.headlineSmall
                         )
                     }
+                    Text(
+                        "Total: ${uiState.libros.size}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-            }
 
-            if (rol == "Profesor") {
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = onAddLibro,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Agregar Libro")
+                Spacer(modifier = Modifier.height(20.dp))
+
+                if (uiState.isLoading) {
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(uiState.libros, key = { it.id }) { libro ->
+                            LibroItem(
+                                libro = libro,
+                                onSolicitar = { viewModel.solicitarLibro(libro, nombre, rol) },
+                                onReservar = { carritoViewModel.addToCart(libro) },
+                                onVerResenas = {
+                                    selectedLibro = libro
+                                    viewModel.obtenerResenas(libro.id)
+                                    showResenasDialog = true
+                                },
+                                onAddResena = {
+                                    selectedLibro = libro
+                                    showAddResenaDialog = true
+                                }
+                            )
+                        }
+                    }
+                }
+
+                if (rol == "Profesor") {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = onAddLibro,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("Agregar Libro")
+                    }
                 }
             }
         }

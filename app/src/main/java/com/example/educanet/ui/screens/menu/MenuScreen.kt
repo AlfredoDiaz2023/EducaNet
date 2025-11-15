@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.R
+import com.example.educanet.ui.common.FotoPerfil
 import com.example.educanet.viewmodel.MenuViewModel
 
 @Composable
@@ -31,17 +32,17 @@ fun MenuScreen(
     onProgresoAcademicoClick: () -> Unit = {},
     onVerNotificaciones: () -> Unit = {},
     onCameraClick: () -> Unit = {},
-    onImagePickerClick: () -> Unit = {},
+    onCarritoClick: () -> Unit = {},
     onLogout: () -> Unit,
     menuViewModel: MenuViewModel = viewModel()
 ) {
-    val hasUnreadNotifications by menuViewModel.hasUnreadNotifications.collectAsState()
+    val uiState by menuViewModel.uiState.collectAsState()
+    val usuario = uiState.usuario
 
     // Fondo con imagen
     Box(modifier = Modifier.fillMaxSize()) {
-        // Imagen de fondo
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.logo), // puedes usar otro drawable
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
@@ -60,53 +61,44 @@ fun MenuScreen(
                 contentDescription = "Logo EducaNet",
                 modifier = Modifier
                     .size(80.dp)
-                    .graphicsLayer(alpha = 0.8f)
+                    .graphicsLayer(alpha = 0.8f) // transparencia
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 BLOQUE MODIFICADO (texto centrado + icono a la derecha)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Bienvenido, $nombre",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF090909),
-                        fontSize = 16.sp
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FotoPerfil(
+                        fotoUrl = usuario?.fotoUrl,
+                        isUploading = uiState.isUploadingPhoto,
+                        onImageSelected = { uri ->
+                            menuViewModel.updateProfilePicture(uri.toString())
+                        }
                     )
-                    Text(
-                        text = "Rol: $rol",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF090909),
-                        fontSize = 12.sp
-                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column {
+                        Text("Bienvenido, ${usuario?.nombre ?: nombre}", fontWeight = FontWeight.Bold)
+                        Text("Rol: ${usuario?.rol ?: rol}", fontSize = 14.sp)
+                    }
                 }
 
-                IconButton(
-                    onClick = {
-                        menuViewModel.checkForUnreadNotifications()
-                        onVerNotificaciones()
-                    },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
+                IconButton(onClick = {
+                    menuViewModel.checkForUnreadNotifications()
+                    onVerNotificaciones()
+                }) {
                     BadgedBox(badge = {
-                        if (hasUnreadNotifications) Badge()
+                        if (uiState.hasUnreadNotifications) Badge()
                     }) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Ver Notificaciones"
-                        )
+                        Icon(Icons.Default.Notifications, contentDescription = "Ver Notificaciones")
                     }
                 }
             }
-            // 🔹 FIN DE LA MODIFICACIÓN
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -151,7 +143,11 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
+                    .border(
+                        width = 2.dp, // grosor del borde
+                        color = Color.Black, // color del borde
+                        shape = RoundedCornerShape(50) // misma forma que el botón
+                    )
             ) {
                 Text("Videos de Apoyo", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -167,7 +163,11 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Clases Virtuales", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -183,7 +183,11 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Progreso Académico", color = Color(0xFF090909), fontSize = 24.sp)
             }
@@ -199,15 +203,19 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
                 Text("Cámara", fontSize = 24.sp)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
             Button(
-                onClick = onImagePickerClick,
+                onClick = onCarritoClick,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFFFFFF),
@@ -215,10 +223,15 @@ fun MenuScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(width = 2.dp, color = Color.Black, shape = RoundedCornerShape(50))
+                    .border(
+                        width = 2.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(50)
+                    )
             ) {
-                Text("Abrir galería de imágenes", color = Color(0xFF090909), fontSize = 24.sp)
+                Text("Reservas de Libros", fontSize = 24.sp)
             }
+
 
             Spacer(modifier = Modifier.height(50.dp))
 
