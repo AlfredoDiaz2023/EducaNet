@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Libro
 import com.example.educanet.model.Reserva
+import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ReservaRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -16,12 +17,14 @@ data class CarritoUiState(
     val items: List<Libro> = emptyList(),
     val isConfirming: Boolean = false,
     val confirmationSuccess: Boolean = false,
+    val confirmationMessage: String? = null,
     val error: String? = null
 )
 
 class CarritoViewModel : ViewModel() {
 
     private val reservaRepository = ReservaRepository()
+    private val libroRepository = LibroRepository() // Añadir el repositorio de libros
     private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
 
@@ -30,7 +33,7 @@ class CarritoViewModel : ViewModel() {
 
     fun addToCart(libro: Libro) {
         val currentItems = _uiState.value.items.toMutableList()
-        if (!currentItems.contains(libro)) {
+        if (!currentItems.any { it.id == libro.id }) { // Evitar duplicados
             currentItems.add(libro)
             _uiState.value = _uiState.value.copy(items = currentItems)
         }
@@ -60,14 +63,25 @@ class CarritoViewModel : ViewModel() {
 
                 var allSuccess = true
                 for (libro in itemsToReserve) {
-                    val reserva = Reserva(
-                        libroId = libro.id,
-                        userId = user.uid,
-                        userName = userName,
-                        libroNombre = libro.nombre
-                    )
-                    val success = reservaRepository.agregarReserva(reserva)
-                    if (!success) {
+                    if (libro.cantidad > 0) {
+                        val nuevoStock = libro.cantidad - 1
+                        // Actualizar el stock en la base de datos
+                        val stockUpdated = libroRepository.actualizarStock(libro.id, nuevoStock)
+
+                        if (stockUpdated) {
+                            val reserva = Reserva(
+                                libroId = libro.id,
+                                userId = user.uid,
+                                userName = userName,
+                                libroNombre = libro.nombre
+                            )
+                            val reservaSuccess = reservaRepository.agregarReserva(reserva)
+                            if (!reservaSuccess) allSuccess = false
+                        } else {
+                            allSuccess = false
+                        }
+                    } else {
+                        // Opcional: manejar el caso en que el libro ya no tiene stock al momento de confirmar
                         allSuccess = false
                     }
                 }
@@ -78,14 +92,18 @@ class CarritoViewModel : ViewModel() {
                         titulo = "Nuevas reservas creadas",
                         mensaje = "El usuario $userName ha reservado los siguientes libros: $bookNames"
                     )
-                    _uiState.value = CarritoUiState(confirmationSuccess = true) // Reset state on success
+                    _uiState.value = CarritoUiState(confirmationSuccess = true, confirmationMessage = "¡Reservas confirmadas con éxito!")
                 } else {
-                    _uiState.value = _uiState.value.copy(error = "Error al crear una o más reservas.", isConfirming = false)
+                    _uiState.value = _uiState.value.copy(error = "Error al crear o actualizar una o más reservas.", isConfirming = false)
                 }
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message, isConfirming = false)
             }
         }
+    }
+
+    fun messageShown() {
+        _uiState.value = _uiState.value.copy(confirmationMessage = null, confirmationSuccess = false) // Resetear ambos estados
     }
 }

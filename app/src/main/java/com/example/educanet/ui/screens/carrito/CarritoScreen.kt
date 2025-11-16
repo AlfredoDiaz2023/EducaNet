@@ -40,6 +40,7 @@ fun CarritoScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            Spacer(modifier = Modifier.height(30.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -48,7 +49,7 @@ fun CarritoScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Mi Carrito de Reservas", style = MaterialTheme.typography.headlineSmall)
+                Text("Reservas", style = MaterialTheme.typography.headlineSmall)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

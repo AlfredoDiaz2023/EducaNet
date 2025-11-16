@@ -212,27 +212,6 @@ fun MenuScreen(
                 Text("Cámara", fontSize = 24.sp)
             }
 
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = onCarritoClick,
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFFFFF),
-                    contentColor = Color.Black
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 2.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(50)
-                    )
-            ) {
-                Text("Reservas de Libros", fontSize = 24.sp)
-            }
-
-
             Spacer(modifier = Modifier.height(50.dp))
 
             Button(
