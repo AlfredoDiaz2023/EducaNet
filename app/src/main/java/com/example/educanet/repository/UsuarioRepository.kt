@@ -10,17 +10,17 @@ class UsuarioRepository {
 
     suspend fun registroUsuario(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
-            // Verificar si el correo ya existe
+
             val querySnapshot = db.collection("usuario")
                 .whereEqualTo("correo", correo)
                 .get()
                 .await()
 
             if (!querySnapshot.isEmpty) {
-                return false // El correo ya está registrado
+                return false
             }
 
-            // Normalizar el rol (para evitar errores de mayúsculas o espacios)
+
             val rolFinal = when (rol.trim().lowercase()) {
                 "profesor" -> "Profesor"
                 "apoderado" -> "Apoderado"
@@ -28,7 +28,7 @@ class UsuarioRepository {
                 else -> "Alumno"
             }
 
-            // Crear mapa de datos del usuario
+
             val userData = hashMapOf(
                 "correo" to correo,
                 "clave" to clave,
@@ -37,7 +37,7 @@ class UsuarioRepository {
                 "fechaRegistro" to getCurrentDate()
             )
 
-            // Agregar documento a la colección "usuario"
+
             db.collection("usuario").add(userData).await()
             true
         } catch (e: Exception) {

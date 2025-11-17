@@ -1,5 +1,7 @@
 package com.example.educanet.model
 
+import com.google.firebase.firestore.IgnoreExtraProperties
+
 data class Libro(
     val id: String = "",
     val nombre: String = "",
@@ -7,3 +9,4 @@ data class Libro(
     val imagen: String = "",
     val cantidad: Int = 0
 )
+

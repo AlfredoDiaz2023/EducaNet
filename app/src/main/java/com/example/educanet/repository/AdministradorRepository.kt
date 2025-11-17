@@ -10,17 +10,17 @@ class AdministradorRepository {
 
     suspend fun registroAdministrador(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
-            // Verificar si el correo ya existe
+
             val querySnapshot = db.collection("Administrador")
                 .whereEqualTo("correo", correo)
                 .get()
                 .await()
 
             if (!querySnapshot.isEmpty) {
-                return false // El correo ya está registrado
+                return false
             }
 
-            // Crear nuevo Administrador solo en Firestore
+
             val userData = hashMapOf(
                 "correo" to correo,
                 "clave" to clave,
@@ -29,7 +29,7 @@ class AdministradorRepository {
                 "fechaRegistro" to getCurrentDate()
             )
 
-            // Agregar documento a la colección "Administrador"
+
             db.collection("Administrador").add(userData).await()
             true
         } catch (e: Exception) {

@@ -2,201 +2,108 @@ package com.example.educanet.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educanet.model.ItemCarrito
 import com.example.educanet.model.Libro
+import com.example.educanet.model.Reserva
 import com.example.educanet.repository.LibroRepository
+import com.example.educanet.repository.NotificacionRepository
+import com.example.educanet.repository.ReservaRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+data class CarritoUiState(
+    val items: List<Libro> = emptyList(),
+    val isConfirming: Boolean = false,
+    val confirmationSuccess: Boolean = false,
+    val confirmationMessage: String? = null,
+    val error: String? = null
+)
+
 class CarritoViewModel : ViewModel() {
-    private val repository = LibroRepository()
 
-    private val _libros = MutableStateFlow<List<Libro>>(emptyList())
-    val libros: StateFlow<List<Libro>> = _libros
+    private val reservaRepository = ReservaRepository()
+    private val libroRepository = LibroRepository() // Añadir el repositorio de libros
+    private val notificacionRepository = NotificacionRepository()
+    private val auth = FirebaseAuth.getInstance()
 
-    private val _carrito = MutableStateFlow<List<ItemCarrito>>(emptyList())
-    val carrito: StateFlow<List<ItemCarrito>> = _carrito
+    private val _uiState = MutableStateFlow(CarritoUiState())
+    val uiState: StateFlow<CarritoUiState> = _uiState.asStateFlow()
 
-    private val _cargando = MutableStateFlow(false)
-    val cargando: StateFlow<Boolean> = _cargando
-
-    private var ultimoDocumento: Any? = null
-    private val limiteLibros = 10
-
-    init {
-        cargarLibros()
-    }
-
-    fun cargarLibros() {
-        _cargando.value = true
-        viewModelScope.launch {
-            try {
-                val resultado = repository.obtenerLibros(limite = limiteLibros)
-                _libros.value = resultado.libros
-                ultimoDocumento = resultado.ultimoDocumento
-            } catch (e: Exception) {
-                // Manejar error
-            } finally {
-                _cargando.value = false
-            }
+    fun addToCart(libro: Libro) {
+        val currentItems = _uiState.value.items.toMutableList()
+        if (!currentItems.any { it.id == libro.id }) { // Evitar duplicados
+            currentItems.add(libro)
+            _uiState.value = _uiState.value.copy(items = currentItems)
         }
     }
 
-    fun cargarMasLibros() {
-        if (_cargando.value) return
-
-        _cargando.value = true
-        viewModelScope.launch {
-            try {
-                val resultado = repository.obtenerMasLibros(
-                    limite = limiteLibros,
-                    ultimoDocumento = ultimoDocumento
-                )
-                if (resultado.libros.isNotEmpty()) {
-                    _libros.value = _libros.value + resultado.libros
-                    ultimoDocumento = resultado.ultimoDocumento
-                }
-            } catch (e: Exception) {
-                // Manejar error
-            } finally {
-                _cargando.value = false
-            }
-        }
+    fun removeFromCart(libro: Libro) {
+        val currentItems = _uiState.value.items.toMutableList()
+        currentItems.remove(libro)
+        _uiState.value = _uiState.value.copy(items = currentItems)
     }
 
-    fun agregarAlCarrito(libro: Libro) {
+    fun confirmReservations(userName: String) {
         viewModelScope.launch {
+            val user = auth.currentUser
+            if (user == null) {
+                _uiState.value = _uiState.value.copy(error = "Debes iniciar sesión para reservar.")
+                return@launch
+            }
+
+            _uiState.value = _uiState.value.copy(isConfirming = true)
             try {
-                // Verificar cantidad actualizado
-                val libroActualizado = repository.obtenerLibroPorId(libro.id)
-                if (libroActualizado == null || libroActualizado.cantidad <= 0) return@launch
-
-                val carritoActual = _carrito.value.toMutableList()
-                val itemExistente = carritoActual.find { it.libro.id == libro.id }
-
-                // Verificar cantidad disponible
-                val cantidadDisponible = libroActualizado.cantidad - (itemExistente?.cantidad ?: 0)
-                if (cantidadDisponible <= 0) return@launch
-
-                if (itemExistente != null) {
-                    itemExistente.cantidad++
-                    // Actualizar cantidad en Firestore
-                    repository.actualizarStock(libro.id, libroActualizado.cantidad - 1)
-                } else {
-                    carritoActual.add(ItemCarrito(libro = libroActualizado, cantidad = 1))
-                    // Actualizar cantidad en Firestore
-                    repository.actualizarStock(libro.id, libroActualizado.cantidad - 1)
+                val itemsToReserve = _uiState.value.items
+                if (itemsToReserve.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(error = "El carrito está vacío.", isConfirming = false)
+                    return@launch
                 }
 
-                _carrito.value = carritoActual
-                actualizarLibrosEnCatalogo()
-            } catch (e: Exception) {
-                // Manejar error
-            }
-        }
-    }
+                var allSuccess = true
+                for (libro in itemsToReserve) {
+                    if (libro.cantidad > 0) {
+                        val nuevoStock = libro.cantidad - 1
+                        // Actualizar el stock en la base de datos
+                        val stockUpdated = libroRepository.actualizarStock(libro.id, nuevoStock)
 
-    fun removerDelCarrito(libro: Libro) {
-        viewModelScope.launch {
-            try {
-                val carritoActual = _carrito.value.toMutableList()
-                val itemExistente = carritoActual.find { it.libro.id == libro.id }
-
-                if (itemExistente != null) {
-                    if (itemExistente.cantidad > 1) {
-                        itemExistente.cantidad--
-                        // Aumentar cantidad en Firestore
-                        val libroActualizado = repository.obtenerLibroPorId(libro.id)
-                        if (libroActualizado != null) {
-                            repository.actualizarStock(libro.id, libroActualizado.cantidad + 1)
+                        if (stockUpdated) {
+                            val reserva = Reserva(
+                                libroId = libro.id,
+                                userId = user.uid,
+                                userName = userName,
+                                libroNombre = libro.nombre
+                            )
+                            val reservaSuccess = reservaRepository.agregarReserva(reserva)
+                            if (!reservaSuccess) allSuccess = false
+                        } else {
+                            allSuccess = false
                         }
                     } else {
-                        carritoActual.remove(itemExistente)
-                        // Aumentar cantidad en Firestore
-                        val libroActualizado = repository.obtenerLibroPorId(libro.id)
-                        if (libroActualizado != null) {
-                            repository.actualizarStock(libro.id, libroActualizado.cantidad + 1)
-                        }
+                        // Opcional: manejar el caso en que el libro ya no tiene stock al momento de confirmar
+                        allSuccess = false
                     }
                 }
 
-                _carrito.value = carritoActual
-                actualizarLibrosEnCatalogo()
-            } catch (e: Exception) {
-                // Manejar error
-            }
-        }
-    }
-
-    fun eliminarLibroDelCarrito(libro: Libro) {
-        viewModelScope.launch {
-            try {
-                val carritoActual = _carrito.value.toMutableList()
-                val itemExistente = carritoActual.find { it.libro.id == libro.id }
-
-                if (itemExistente != null) {
-                    carritoActual.remove(itemExistente)
-                    // Restaurar todo el stock en Firestore
-                    val libroActualizado = repository.obtenerLibroPorId(libro.id)
-                    if (libroActualizado != null) {
-                        repository.actualizarStock(
-                            libro.id,
-                            libroActualizado.cantidad + itemExistente.cantidad
-                        )
-                    }
+                if (allSuccess) {
+                    val bookNames = itemsToReserve.joinToString(", ") { it.nombre }
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Nuevas reservas creadas",
+                        mensaje = "El usuario $userName ha reservado los siguientes libros: $bookNames"
+                    )
+                    _uiState.value = CarritoUiState(confirmationSuccess = true, confirmationMessage = "¡Reservas confirmadas con éxito!")
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "Error al crear o actualizar una o más reservas.", isConfirming = false)
                 }
 
-                _carrito.value = carritoActual
-                actualizarLibrosEnCatalogo()
             } catch (e: Exception) {
-                // Manejar error
+                _uiState.value = _uiState.value.copy(error = e.message, isConfirming = false)
             }
         }
     }
 
-    fun vaciarCarrito() {
-        viewModelScope.launch {
-            try {
-                // Restaurar stock de todos los libros en el carrito
-                _carrito.value.forEach { item ->
-                    val libroActualizado = repository.obtenerLibroPorId(item.libro.id)
-                    if (libroActualizado != null) {
-                        repository.actualizarStock(
-                            item.libro.id,
-                            libroActualizado.cantidad + item.cantidad
-                        )
-                    }
-                }
-
-                _carrito.value = emptyList()
-                actualizarLibrosEnCatalogo()
-            } catch (e: Exception) {
-                // Manejar error
-            }
-        }
+    fun messageShown() {
+        _uiState.value = _uiState.value.copy(confirmationMessage = null, confirmationSuccess = false) // Resetear ambos estados
     }
-
-    fun confirmarCompra() {
-        viewModelScope.launch {
-            try {
-                // Aquí puedes implementar la lógica de confirmación de compra
-                // Por ahora solo limpiamos el carrito
-                _carrito.value = emptyList()
-                // Recargar libros para actualizar stocks
-                cargarLibros()
-            } catch (e: Exception) {
-                // Manejar error
-            }
-        }
-    }
-
-    private suspend fun actualizarLibrosEnCatalogo() {
-        // Recargar libros para reflejar cambios de stock
-        val resultado = repository.obtenerLibros(limite = _libros.value.size + limiteLibros)
-        _libros.value = resultado.libros
-        ultimoDocumento = resultado.ultimoDocumento
-    }
-
-
 }

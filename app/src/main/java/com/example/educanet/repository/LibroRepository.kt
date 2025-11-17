@@ -13,11 +13,22 @@ data class ResultadoLibros(
 class LibroRepository {
     private val db = FirebaseFirestore.getInstance()
 
+    suspend fun agregarLibro(libro: Libro): Boolean {
+        return try {
+            db.collection("libro")
+                .add(libro)
+                .await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     suspend fun obtenerLibros(limite: Int = 10): ResultadoLibros {
         return try {
             val query = db.collection("libro")
-                .whereGreaterThan("cantidad", 0)
-                .orderBy("cantidad", Query.Direction.DESCENDING)
+                .orderBy("nombre", Query.Direction.ASCENDING)
                 .limit(limite.toLong())
 
             val querySnapshot = query.get().await()
@@ -39,7 +50,7 @@ class LibroRepository {
 
             ResultadoLibros(libros, ultimoDocumento)
         } catch (e: Exception) {
-            e.printStackTrace() // 👈 imprime el error para debug
+            e.printStackTrace()
             ResultadoLibros(emptyList(), null)
         }
     }
@@ -48,9 +59,8 @@ class LibroRepository {
         return try {
             if (ultimoDocumento == null) return ResultadoLibros(emptyList(), null)
 
-            val query = db.collection("libros")
-                .whereGreaterThan("cantidad", 0)
-                .orderBy("cantidad", Query.Direction.DESCENDING)
+            val query = db.collection("libro")
+                .orderBy("nombre", Query.Direction.ASCENDING)
                 .startAfter(ultimoDocumento)
                 .limit(limite.toLong())
 
@@ -80,7 +90,7 @@ class LibroRepository {
 
     suspend fun actualizarStock(libroId: String, nuevoStock: Int): Boolean {
         return try {
-            db.collection("libros")
+            db.collection("libro")
                 .document(libroId)
                 .update("cantidad", nuevoStock)
                 .await()
@@ -93,7 +103,7 @@ class LibroRepository {
 
     suspend fun obtenerLibroPorId(libroId: String): Libro? {
         return try {
-            val document = db.collection("libros") //
+            val document = db.collection("libro")
                 .document(libroId)
                 .get()
                 .await()

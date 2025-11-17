@@ -7,15 +7,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.educanet.ui.screens.login.LoginScreen
-import com.example.educanet.ui.screens.registro.RegistroScreen
-import com.example.educanet.ui.screens.perfil.PerfilAdminScreen
-import com.example.educanet.ui.screens.perfil.PerfilProfesorScreen
-import com.example.educanet.ui.screens.perfil.PerfilApoderadoScreen
-import com.example.educanet.ui.screens.perfil.PerfilAlumnoScreen
-import com.example.educanet.ui.screens.menu.MenuScreen
+import com.example.educanet.ui.CameraScreen
 import com.example.educanet.ui.screens.carrito.CarritoScreen
+import com.example.educanet.ui.screens.clasesvirtuales.AddClaseVirtualScreen
+import com.example.educanet.ui.screens.clasesvirtuales.ClasesVirtualesScreen
+import com.example.educanet.ui.screens.libro.AddLibroScreen
 import com.example.educanet.ui.screens.libro.LibroScreen
+import com.example.educanet.ui.screens.login.LoginScreen
+import com.example.educanet.ui.screens.progresoacademico.AddProgresoAcademicoScreen
+import com.example.educanet.ui.screens.progresoacademico.ProgresoAcademicoScreen
+import com.example.educanet.ui.screens.menu.MenuScreen
+import com.example.educanet.ui.screens.notificaciones.NotificacionesScreen
+import com.example.educanet.ui.screens.perfil.*
+import com.example.educanet.ui.screens.reservas.ReservasScreen
+import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
+import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
+import com.example.educanet.ui.screens.registro.RegistroScreen
+import com.example.educanet.ui.screens.imagen.ImagePickerScreen
 import com.example.educanet.viewmodel.CarritoViewModel
 
 @Composable
@@ -27,7 +35,8 @@ fun AppNavegacion() {
         navController = navController,
         startDestination = "login"
     ) {
-        // 🔹 Pantalla de login
+
+        // LOGIN
         composable("login") {
             LoginScreen(
                 onRegisterClick = { navController.navigate("register") },
@@ -39,7 +48,7 @@ fun AppNavegacion() {
             )
         }
 
-        // 🔹 Pantalla de registro
+        // REGISTER
         composable("register") {
             RegistroScreen(
                 onBack = { navController.popBackStack() },
@@ -47,7 +56,7 @@ fun AppNavegacion() {
             )
         }
 
-        // 🔹 Pantalla de menú principal
+        // MENU
         composable(
             "menu/{nombre}/{rol}",
             arguments = listOf(
@@ -61,36 +70,116 @@ fun AppNavegacion() {
             MenuScreen(
                 nombre = nombre,
                 rol = rol,
-                onLibroClick = { navController.navigate("libros") }, // 👈 navegación hacia LibroScreen
-                onVerCarrito = { navController.navigate("carrito") },
+                onLibroClick = { navController.navigate("libros/$rol/$nombre") },
+                onVideoClick = { navController.navigate("video_apoyo/$rol") },
+                onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
+                onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
+                onVerNotificaciones = { navController.navigate("notificaciones") },
+                onCameraClick = { navController.navigate("camera") },
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
-                },
-                viewModel = carritoViewModel
+                }
             )
         }
 
-        // 🔹 Pantalla de libros (usa LibroRepository)
-        composable("libros") { // 👈
-            LibroScreen(onBack = { navController.popBackStack() })
+        // LIBROS
+        composable(
+            "libros/{rol}/{nombre}",
+            arguments = listOf(
+                navArgument("rol") { type = NavType.StringType },
+                navArgument("nombre") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
+            LibroScreen(
+                rol = rol,
+                nombre = nombre,
+                carritoViewModel = carritoViewModel,
+                onBack = { navController.popBackStack() },
+                onAddLibro = { navController.navigate("add_libro") },
+                onCarritoClick = { navController.navigate("carrito/$nombre") }
+            )
         }
 
-        // 🔹 Pantalla de carrito
-        composable("carrito") {
+        // CARRITO
+        composable("carrito/{nombre}",
+             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
             CarritoScreen(
-                onVolverAlMenu = { navController.popBackStack() },
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                viewModel = carritoViewModel
+                onBack = { navController.popBackStack() },
+                carritoViewModel = carritoViewModel,
+                userName = nombre
             )
         }
 
-        // 🔹 Perfiles
+        composable("add_libro") {
+            AddLibroScreen(onBack = { navController.popBackStack() })
+        }
+
+        // VIDEO APOYO
+        composable("video_apoyo/{rol}",
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+            VideoApoyoScreen(
+                rol = rol,
+                onBack = { navController.popBackStack() },
+                onAddVideo = { navController.navigate("add_video") }
+            )
+        }
+
+        composable("add_video") {
+            AddVideoScreen(onBack = { navController.popBackStack() })
+        }
+
+        // CLASES VIRTUALES
+        composable(
+            "clases_virtuales/{rol}",
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+            ClasesVirtualesScreen(
+                rol = rol,
+                onBack = { navController.popBackStack() },
+                onAddClase = { navController.navigate("add_clase_virtual") }
+            )
+        }
+
+        composable("add_clase_virtual") {
+            AddClaseVirtualScreen(onBack = { navController.popBackStack() })
+        }
+
+        // PROGRESO ACADEMICO
+        composable("progreso_academico/{rol}",
+            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val rol = backStackEntry.arguments?.getString("rol") ?: "Alumno"
+            ProgresoAcademicoScreen(
+                rol = rol,
+                onBack = { navController.popBackStack() },
+                onAddNota = { navController.navigate("add_progreso_academico") }
+            )
+        }
+
+        // ADD NOTA
+        composable(
+            "add_nota/{progresoId}",
+            arguments = listOf(navArgument("progresoId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val progresoId = backStackEntry.arguments?.getString("progresoId") ?: ""
+            AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ADD PROGRESO
+        composable("add_progreso_academico") {
+            AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
+        }
+
+        // PERFIL
         composable(
             "perfil_admin/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
@@ -137,6 +226,37 @@ fun AppNavegacion() {
                     popUpTo(0) { inclusive = true }
                 }
             })
+        }
+
+        // NOTIFICACIONES
+        composable("notificaciones") {
+            NotificacionesScreen(onBack = { navController.popBackStack() })
+        }
+
+        // CAMARA
+        composable("camera") {
+            CameraScreen(
+                onImageCaptured = { uri ->
+                    // Envía la URI de la imagen a la pantalla anterior y regresa
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("captured_image_uri", uri.toString())
+                    navController.popBackStack()
+                },
+                onError = {
+                    // Simplemente regresa si hay un error
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("imagePicker") {
+            ImagePickerScreen(onBack = { navController.popBackStack() })
+        }
+
+        // RESERVAS
+        composable("reservas") {
+            ReservasScreen(onBack = { navController.popBackStack() })
         }
     }
 }

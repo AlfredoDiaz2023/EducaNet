@@ -24,7 +24,7 @@ class LoginViewModel : ViewModel() {
 
     fun login(correo: String, clave: String) {
         _cargaLogin.value = true
-        _errorMensaje.value = "" // Limpiar mensaje previo
+        _errorMensaje.value = ""
         viewModelScope.launch {
             try {
                 val resultado = repositorio.login(correo, clave)
