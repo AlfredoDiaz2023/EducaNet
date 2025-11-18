@@ -25,13 +25,18 @@ class ProgresoAcademicoRepository {
         }
     }
 
-    suspend fun obtenerNotas(limite: Int = 20): ResultadoNotas {
+    suspend fun obtenerNotas(userEmail: String? = null, userRole: String? = null, limite: Int = 20): ResultadoNotas {
         return try {
-            val query = db.collection("notas")
-                .orderBy("notas", Query.Direction.DESCENDING)
-                .limit(limite.toLong())
+            var query: Query = db.collection("notas")
 
-            val querySnapshot = query.get().await()
+            if (userRole == "alumno" && userEmail != null) {
+                query = query.whereEqualTo("alumno", userEmail)
+            }
+
+            val querySnapshot = query.orderBy("notas", Query.Direction.DESCENDING)
+                .limit(limite.toLong())
+                .get()
+                .await()
             val lista = querySnapshot.documents.map { doc ->
                 ProgresoAcademico(
                     id = doc.id,

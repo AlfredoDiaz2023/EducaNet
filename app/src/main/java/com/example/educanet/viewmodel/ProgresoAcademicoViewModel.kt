@@ -67,7 +67,7 @@ class ProgresoAcademicoViewModel : ViewModel() {
         viewModelScope.launch {
             _cargando.value = true
             try {
-                val resultado = progresoAcademicoRepository.obtenerNotas()
+                val resultado = progresoAcademicoRepository.obtenerNotas(userEmail, userRole)
                 _progresos.value = resultado.progresoAcademico
             } catch (e: Exception) {
                 e.printStackTrace()
