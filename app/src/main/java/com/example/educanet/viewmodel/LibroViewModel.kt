@@ -4,12 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Libro
 import com.example.educanet.model.Resena
-import com.example.educanet.model.Reserva
 import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ResenaRepository
 import com.example.educanet.repository.ReservaRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,24 +30,43 @@ class LibroViewModel : ViewModel() {
     private val reservaRepository = ReservaRepository()
     private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     private val _uiState = MutableStateFlow(LibroScreenUiState())
     val uiState: StateFlow<LibroScreenUiState> = _uiState.asStateFlow()
 
     init {
-        cargarLibros()
+        escucharLibrosTiempoReal()   // 👈🔥 ahora sí en tiempo real
     }
 
-    private fun cargarLibros() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val resultado = libroRepository.obtenerLibros()
-                _uiState.value = _uiState.value.copy(libros = resultado.libros, isLoading = false)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+    // 🔥🔥🔥 CAMBIO IMPORTANTE: Listener en tiempo real
+    private fun escucharLibrosTiempoReal() {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+
+        db.collection("libro")
+            .orderBy("nombre", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, error ->
+
+                if (error != null) {
+                    _uiState.value = _uiState.value.copy(error = error.message, isLoading = false)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val librosActualizados = snapshot.documents.map { document ->
+                        Libro(
+                            id = document.id,
+                            nombre = document.getString("nombre") ?: "",
+                            nivel = document.getString("nivel") ?: "",
+                            imagen = document.getString("imagen") ?: "",
+                            cantidad = document.getLong("cantidad")?.toInt() ?: 0
+                        )
+                    }
+
+                    // Actualiza UI automáticamente
+                    _uiState.value = _uiState.value.copy(libros = librosActualizados, isLoading = false)
+                }
             }
-        }
     }
 
     fun obtenerResenas(libroId: String) {
@@ -62,8 +82,7 @@ class LibroViewModel : ViewModel() {
 
     fun agregarResena(libroId: String, rating: Float, comment: String) {
         viewModelScope.launch {
-            val user = auth.currentUser
-            if (user == null) {
+            val user = auth.currentUser ?: run {
                 _uiState.value = _uiState.value.copy(error = "Debes iniciar sesión para dejar una reseña.")
                 return@launch
             }
@@ -78,7 +97,7 @@ class LibroViewModel : ViewModel() {
 
             val success = resenaRepository.agregarResena(resena)
             if (success) {
-                obtenerResenas(libroId) // Refresh reviews
+                obtenerResenas(libroId)
             } else {
                 _uiState.value = _uiState.value.copy(error = "Error al agregar la reseña.")
             }
@@ -96,14 +115,6 @@ class LibroViewModel : ViewModel() {
                         titulo = "Solicitud de libro",
                         mensaje = "El usuario $nombreUsuario ($rolUsuario) ha solicitado el libro: ${libro.nombre}"
                     )
-                    val updatedLibros = _uiState.value.libros.map {
-                        if (it.id == libro.id) {
-                            it.copy(cantidad = nuevoStock)
-                        } else {
-                            it
-                        }
-                    }
-                    _uiState.value = _uiState.value.copy(libros = updatedLibros)
                 } else {
                     _uiState.value = _uiState.value.copy(error = "Error al solicitar el libro.")
                 }
@@ -122,14 +133,6 @@ class LibroViewModel : ViewModel() {
                         titulo = "Reserva de libro",
                         mensaje = "El usuario $nombreUsuario ($rolUsuario) ha reservado el libro: ${libro.nombre}"
                     )
-                    val updatedLibros = _uiState.value.libros.map {
-                        if (it.id == libro.id) {
-                            it.copy(cantidad = nuevoStock)
-                        } else {
-                            it
-                        }
-                    }
-                    _uiState.value = _uiState.value.copy(libros = updatedLibros)
                 } else {
                     _uiState.value = _uiState.value.copy(error = "Error al reservar el libro.")
                 }

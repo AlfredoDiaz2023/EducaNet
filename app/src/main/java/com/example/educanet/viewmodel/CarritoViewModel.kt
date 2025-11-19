@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+
 data class CarritoUiState(
     val items: List<Libro> = emptyList(),
+    val libros: List<Libro> = emptyList(),
     val isConfirming: Boolean = false,
     val confirmationSuccess: Boolean = false,
     val confirmationMessage: String? = null,
@@ -58,7 +60,10 @@ class CarritoViewModel : ViewModel() {
             try {
                 val itemsToReserve = _uiState.value.items
                 if (itemsToReserve.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(error = "El carrito está vacío.", isConfirming = false)
+                    _uiState.value = _uiState.value.copy(
+                        error = "El carrito está vacío.",
+                        isConfirming = false
+                    )
                     return@launch
                 }
 
@@ -66,17 +71,15 @@ class CarritoViewModel : ViewModel() {
 
                 for (libro in itemsToReserve) {
 
-                    // 1️⃣ Si hay stock, descontamos
-                    if (libro.cantidad > 0) {
-                        val nuevoStock = libro.cantidad - 1
-                        val stockUpdated = libroRepository.actualizarStock(libro.id, nuevoStock)
+                    // 1️⃣ DESCONTAR STOCK AUNQUE SEA 0 (sin bloquear reserva)
+                    val nuevoStock = if (libro.cantidad > 0) libro.cantidad - 1 else 0
 
-                        if (!stockUpdated) {
-                            allSuccess = false
-                        }
+                    val stockUpdated = libroRepository.actualizarStock(libro.id, nuevoStock)
+                    if (!stockUpdated) {
+                        allSuccess = false
                     }
 
-                    // 2️⃣ SIEMPRE crear la reserva (con o sin stock)
+                    // 2️⃣ SIEMPRE crear la reserva
                     val reserva = Reserva(
                         libroId = libro.id,
                         userId = user.uid,
@@ -90,7 +93,7 @@ class CarritoViewModel : ViewModel() {
                     }
                 }
 
-                // 3️⃣ Si todo salió bien → notificación + éxito
+                // 3️⃣ Notificación + éxito
                 if (allSuccess) {
                     val bookNames = itemsToReserve.joinToString(", ") { it.nombre }
 
@@ -99,6 +102,7 @@ class CarritoViewModel : ViewModel() {
                         mensaje = "El usuario $userName ha reservado los siguientes libros: $bookNames"
                     )
 
+                    // Limpiar carrito y mostrar éxito
                     _uiState.value = CarritoUiState(
                         confirmationSuccess = true,
                         confirmationMessage = "¡Reservas confirmadas con éxito!"
@@ -112,7 +116,10 @@ class CarritoViewModel : ViewModel() {
                 }
 
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message, isConfirming = false)
+                _uiState.value = _uiState.value.copy(
+                    error = e.message,
+                    isConfirming = false
+                )
             }
         }
     }

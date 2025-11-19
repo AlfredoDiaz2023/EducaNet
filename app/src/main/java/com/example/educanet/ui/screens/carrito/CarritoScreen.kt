@@ -18,6 +18,8 @@ import com.example.educanet.ui.common.AppBackground
 import com.example.educanet.viewmodel.CarritoViewModel
 import kotlinx.coroutines.launch
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarritoScreen(
@@ -26,11 +28,12 @@ fun CarritoScreen(
     userName: String
 ) {
     val uiState by carritoViewModel.uiState.collectAsState()
+    var isRequesting by remember { mutableStateOf(false) }
 
     // Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 🟦 Mostrar mensaje de éxito
+    // Mostrar mensaje de éxito
     LaunchedEffect(uiState.confirmationMessage) {
         uiState.confirmationMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
@@ -38,7 +41,7 @@ fun CarritoScreen(
         }
     }
 
-    // 🟦 Cuando termine la confirmación, volver atrás
+    // Cuando termine la confirmación, volver atrás
     LaunchedEffect(uiState.confirmationSuccess) {
         if (uiState.confirmationSuccess) {
             onBack()
@@ -74,7 +77,7 @@ fun CarritoScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 🟦 Lista o mensaje vacío
+                // Lista o mensaje vacío
                 if (uiState.items.isEmpty()) {
                     Box(
                         modifier = Modifier.weight(1f),
@@ -95,16 +98,17 @@ fun CarritoScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 🟦 Botón confirmar reservas
+                // Botón confirmar reservas
                 val scope = rememberCoroutineScope()
 
                 Button(
                     onClick = {
                         scope.launch {
+                            isRequesting = true
                             try {
                                 carritoViewModel.confirmReservations(userName)
                             } finally {
-                                // No necesitas manejar loading manualmente porque el ViewModel ya lo hace
+                                isRequesting = false
                             }
                         }
                     },
@@ -147,10 +151,15 @@ fun CarritoItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(libro.nombre, fontWeight = FontWeight.Bold)
                 Text("Nivel: ${libro.nivel}")
+
+                // AGREGAR ESTO PARA VER LIBRO.cantidad EN TIEMPO REAL
+                Text("Stock: ${libro.cantidad}")
             }
+
             IconButton(onClick = onRemove) {
                 Icon(Icons.Default.Delete, contentDescription = "Quitar del carrito")
             }
         }
     }
 }
+
