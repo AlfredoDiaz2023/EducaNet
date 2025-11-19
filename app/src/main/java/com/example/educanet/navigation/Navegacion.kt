@@ -28,6 +28,7 @@ import com.example.educanet.viewmodel.CarritoViewModel
 
 @Composable
 fun AppNavegacion() {
+
     val navController = rememberNavController()
     val carritoViewModel: CarritoViewModel = viewModel()
 
@@ -36,7 +37,9 @@ fun AppNavegacion() {
         startDestination = "login"
     ) {
 
+        // ------------------------------
         // LOGIN
+        // ------------------------------
         composable("login") {
             LoginScreen(
                 onRegisterClick = { navController.navigate("register") },
@@ -48,7 +51,9 @@ fun AppNavegacion() {
             )
         }
 
-        // REGISTER
+        // ------------------------------
+        // REGISTRO
+        // ------------------------------
         composable("register") {
             RegistroScreen(
                 onBack = { navController.popBackStack() },
@@ -56,16 +61,18 @@ fun AppNavegacion() {
             )
         }
 
-        // MENU
+        // ------------------------------
+        // MENU PRINCIPAL
+        // ------------------------------
         composable(
-            "menu/{nombre}/{rol}",
+            route = "menu/{nombre}/{rol}",
             arguments = listOf(
                 navArgument("nombre") { type = NavType.StringType },
                 navArgument("rol") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
-            val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
-            val rol = backStackEntry.arguments?.getString("rol") ?: "Alumno"
+        ) { entry ->
+            val nombre = entry.arguments?.getString("nombre") ?: "Usuario"
+            val rol = entry.arguments?.getString("rol") ?: "Alumno"
 
             MenuScreen(
                 nombre = nombre,
@@ -84,33 +91,53 @@ fun AppNavegacion() {
             )
         }
 
+        // ------------------------------
         // LIBROS
+        // ------------------------------
         composable(
-            "libros/{rol}/{nombre}",
+            route = "libros/{rol}/{nombre}",
             arguments = listOf(
                 navArgument("rol") { type = NavType.StringType },
                 navArgument("nombre") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
-            val rol = backStackEntry.arguments?.getString("rol") ?: ""
-            val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
+        ) { entry ->
+
+            val rol = entry.arguments?.getString("rol") ?: ""
+            val nombre = entry.arguments?.getString("nombre") ?: ""
+
             LibroScreen(
                 rol = rol,
                 nombre = nombre,
                 carritoViewModel = carritoViewModel,
                 onBack = { navController.popBackStack() },
                 onAddLibro = { navController.navigate("add_libro") },
-                onCarritoClick = { navController.navigate("carrito/$nombre") }
+
+                // 🔥 CORREGIDO: abrir siempre bien el carrito
+                onCarritoClick = {
+                    navController.navigate("carrito/$nombre") {
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
             )
         }
 
+        // ------------------------------
         // CARRITO
-        composable("carrito/{nombre}",
-             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val nombre = backStackEntry.arguments?.getString("nombre") ?: ""
+        // ------------------------------
+        composable(
+            route = "carrito/{nombre}",
+            arguments = listOf(
+                navArgument("nombre") { type = NavType.StringType }
+            )
+        ) { entry ->
+
+            val nombre = entry.arguments?.getString("nombre") ?: ""
+
             CarritoScreen(
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    navController.popBackStack()
+                },
                 carritoViewModel = carritoViewModel,
                 userName = nombre
             )
@@ -120,11 +147,14 @@ fun AppNavegacion() {
             AddLibroScreen(onBack = { navController.popBackStack() })
         }
 
+        // ------------------------------
         // VIDEO APOYO
-        composable("video_apoyo/{rol}",
+        // ------------------------------
+        composable(
+            route = "video_apoyo/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+        ) { entry ->
+            val rol = entry.arguments?.getString("rol") ?: ""
             VideoApoyoScreen(
                 rol = rol,
                 onBack = { navController.popBackStack() },
@@ -136,12 +166,14 @@ fun AppNavegacion() {
             AddVideoScreen(onBack = { navController.popBackStack() })
         }
 
+        // ------------------------------
         // CLASES VIRTUALES
+        // ------------------------------
         composable(
-            "clases_virtuales/{rol}",
+            route = "clases_virtuales/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val rol = backStackEntry.arguments?.getString("rol") ?: ""
+        ) { entry ->
+            val rol = entry.arguments?.getString("rol") ?: ""
             ClasesVirtualesScreen(
                 rol = rol,
                 onBack = { navController.popBackStack() },
@@ -153,11 +185,14 @@ fun AppNavegacion() {
             AddClaseVirtualScreen(onBack = { navController.popBackStack() })
         }
 
-        // PROGRESO ACADEMICO
-        composable("progreso_academico/{rol}",
+        // ------------------------------
+        // PROGRESO ACADÉMICO
+        // ------------------------------
+        composable(
+            route = "progreso_academico/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val rol = backStackEntry.arguments?.getString("rol") ?: "Alumno"
+        ) { entry ->
+            val rol = entry.arguments?.getString("rol") ?: "Alumno"
             ProgresoAcademicoScreen(
                 rol = rol,
                 onBack = { navController.popBackStack() },
@@ -165,21 +200,13 @@ fun AppNavegacion() {
             )
         }
 
-        // ADD NOTA
-        composable(
-            "add_nota/{progresoId}",
-            arguments = listOf(navArgument("progresoId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val progresoId = backStackEntry.arguments?.getString("progresoId") ?: ""
-            AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
-        }
-
-        // ADD PROGRESO
         composable("add_progreso_academico") {
             AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
         }
 
-        // PERFIL
+        // ------------------------------
+        // PERFILES
+        // ------------------------------
         composable(
             "perfil_admin/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
@@ -228,23 +255,25 @@ fun AppNavegacion() {
             })
         }
 
+        // ------------------------------
         // NOTIFICACIONES
+        // ------------------------------
         composable("notificaciones") {
             NotificacionesScreen(onBack = { navController.popBackStack() })
         }
 
-        // CAMARA
+        // ------------------------------
+        // CÁMARA
+        // ------------------------------
         composable("camera") {
             CameraScreen(
                 onImageCaptured = { uri ->
-                    // Envía la URI de la imagen a la pantalla anterior y regresa
                     navController.previousBackStackEntry
                         ?.savedStateHandle
                         ?.set("captured_image_uri", uri.toString())
                     navController.popBackStack()
                 },
                 onError = {
-                    // Simplemente regresa si hay un error
                     navController.popBackStack()
                 }
             )
@@ -254,7 +283,9 @@ fun AppNavegacion() {
             ImagePickerScreen(onBack = { navController.popBackStack() })
         }
 
+        // ------------------------------
         // RESERVAS
+        // ------------------------------
         composable("reservas") {
             ReservasScreen(onBack = { navController.popBackStack() })
         }

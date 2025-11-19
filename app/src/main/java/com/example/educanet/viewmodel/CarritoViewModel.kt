@@ -54,6 +54,7 @@ class CarritoViewModel : ViewModel() {
             }
 
             _uiState.value = _uiState.value.copy(isConfirming = true)
+
             try {
                 val itemsToReserve = _uiState.value.items
                 if (itemsToReserve.isEmpty()) {
@@ -62,39 +63,52 @@ class CarritoViewModel : ViewModel() {
                 }
 
                 var allSuccess = true
+
                 for (libro in itemsToReserve) {
+
+                    // 1️⃣ Si hay stock, descontamos
                     if (libro.cantidad > 0) {
                         val nuevoStock = libro.cantidad - 1
-                        // Actualizar el stock en la base de datos
                         val stockUpdated = libroRepository.actualizarStock(libro.id, nuevoStock)
 
-                        if (stockUpdated) {
-                            val reserva = Reserva(
-                                libroId = libro.id,
-                                userId = user.uid,
-                                userName = userName,
-                                libroNombre = libro.nombre
-                            )
-                            val reservaSuccess = reservaRepository.agregarReserva(reserva)
-                            if (!reservaSuccess) allSuccess = false
-                        } else {
+                        if (!stockUpdated) {
                             allSuccess = false
                         }
-                    } else {
-                        // Opcional: manejar el caso en que el libro ya no tiene stock al momento de confirmar
+                    }
+
+                    // 2️⃣ SIEMPRE crear la reserva (con o sin stock)
+                    val reserva = Reserva(
+                        libroId = libro.id,
+                        userId = user.uid,
+                        userName = userName,
+                        libroNombre = libro.nombre
+                    )
+
+                    val reservaSuccess = reservaRepository.agregarReserva(reserva)
+                    if (!reservaSuccess) {
                         allSuccess = false
                     }
                 }
 
+                // 3️⃣ Si todo salió bien → notificación + éxito
                 if (allSuccess) {
                     val bookNames = itemsToReserve.joinToString(", ") { it.nombre }
+
                     notificacionRepository.agregarNotificacion(
                         titulo = "Nuevas reservas creadas",
                         mensaje = "El usuario $userName ha reservado los siguientes libros: $bookNames"
                     )
-                    _uiState.value = CarritoUiState(confirmationSuccess = true, confirmationMessage = "¡Reservas confirmadas con éxito!")
+
+                    _uiState.value = CarritoUiState(
+                        confirmationSuccess = true,
+                        confirmationMessage = "¡Reservas confirmadas con éxito!"
+                    )
+
                 } else {
-                    _uiState.value = _uiState.value.copy(error = "Error al crear o actualizar una o más reservas.", isConfirming = false)
+                    _uiState.value = _uiState.value.copy(
+                        error = "Error al crear o actualizar una o más reservas.",
+                        isConfirming = false
+                    )
                 }
 
             } catch (e: Exception) {
@@ -102,6 +116,7 @@ class CarritoViewModel : ViewModel() {
             }
         }
     }
+
 
     fun messageShown() {
         _uiState.value = _uiState.value.copy(confirmationMessage = null, confirmationSuccess = false) // Resetear ambos estados

@@ -7,18 +7,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.educanet.model.Libro
 import com.example.educanet.ui.common.AppBackground
 import com.example.educanet.viewmodel.CarritoViewModel
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarritoScreen(
     onBack: () -> Unit,
@@ -27,62 +27,101 @@ fun CarritoScreen(
 ) {
     val uiState by carritoViewModel.uiState.collectAsState()
 
-    // Navegar hacia atrás cuando la confirmación sea exitosa
-    LaunchedEffect(uiState.confirmationSuccess) {
-        if (uiState.confirmationSuccess) {
-            onBack()
+    // Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 🟦 Mostrar mensaje de éxito
+    LaunchedEffect(uiState.confirmationMessage) {
+        uiState.confirmationMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            carritoViewModel.messageShown()   // ✔ limpiar mensaje
         }
     }
 
-    AppBackground {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(30.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+    // 🟦 Cuando termine la confirmación, volver atrás
+    LaunchedEffect(uiState.confirmationSuccess) {
+        if (uiState.confirmationSuccess) {
+            onBack()
+            carritoViewModel.messageShown()   // ✔ limpiar success (esta es la función correcta)
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { padding ->
+
+        AppBackground {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .padding(padding)
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Reservas", style = MaterialTheme.typography.headlineSmall)
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
-            if (uiState.items.isEmpty()) {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
+                // Encabezado
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Aún no has seleccionado libros para reservar.")
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Reservas", style = MaterialTheme.typography.headlineSmall)
                 }
-            } else {
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(uiState.items, key = { it.id }) { libro ->
-                        CarritoItem(
-                            libro = libro,
-                            onRemove = { carritoViewModel.removeFromCart(libro) }
-                        )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 🟦 Lista o mensaje vacío
+                if (uiState.items.isEmpty()) {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Aún no has seleccionado libros para reservar.")
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        items(uiState.items, key = { it.id }) { libro ->
+                            CarritoItem(
+                                libro = libro,
+                                onRemove = { carritoViewModel.removeFromCart(libro) }
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = { carritoViewModel.confirmReservations(userName) },
-                enabled = uiState.items.isNotEmpty() && !uiState.isConfirming,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (uiState.isConfirming) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Confirmar Todas las Reservas")
+                // 🟦 Botón confirmar reservas
+                val scope = rememberCoroutineScope()
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            try {
+                                carritoViewModel.confirmReservations(userName)
+                            } finally {
+                                // No necesitas manejar loading manualmente porque el ViewModel ya lo hace
+                            }
+                        }
+                    },
+                    enabled = uiState.items.isNotEmpty() && !uiState.isConfirming,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3881EC),
+                        contentColor = Color.White
+                    )
+                ) {
+                    if (uiState.isConfirming) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text("Confirmar Todas las Reservas")
+                    }
                 }
             }
         }

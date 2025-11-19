@@ -111,29 +111,28 @@ class LibroViewModel : ViewModel() {
         }
     }
 
-    fun reservarLibro(libro: Libro, nombreUsuario: String) {
+    fun reservarLibro(libro: Libro, nombreUsuario: String, rolUsuario: String) {
         viewModelScope.launch {
-            val user = auth.currentUser
-            if (user == null) {
-                _uiState.value = _uiState.value.copy(error = "Debes iniciar sesión para reservar.")
-                return@launch
-            }
+            if (libro.cantidad > 0) {
+                val nuevoStock = libro.cantidad - 1
+                val success = libroRepository.actualizarStock(libro.id, nuevoStock)
 
-            val reserva = Reserva(
-                libroId = libro.id,
-                userId = user.uid,
-                userName = nombreUsuario,
-                libroNombre = libro.nombre
-            )
-
-            val success = reservaRepository.agregarReserva(reserva)
-            if (success) {
-                notificacionRepository.agregarNotificacion(
-                    titulo = "Nueva reserva de libro",
-                    mensaje = "El usuario $nombreUsuario ha reservado el libro: ${libro.nombre}"
-                )
-            } else {
-                _uiState.value = _uiState.value.copy(error = "Error al crear la reserva.")
+                if (success) {
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "Reserva de libro",
+                        mensaje = "El usuario $nombreUsuario ($rolUsuario) ha reservado el libro: ${libro.nombre}"
+                    )
+                    val updatedLibros = _uiState.value.libros.map {
+                        if (it.id == libro.id) {
+                            it.copy(cantidad = nuevoStock)
+                        } else {
+                            it
+                        }
+                    }
+                    _uiState.value = _uiState.value.copy(libros = updatedLibros)
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "Error al reservar el libro.")
+                }
             }
         }
     }
