@@ -32,6 +32,7 @@ fun CarritoScreen(
 
     // Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // Mostrar mensaje de éxito
     LaunchedEffect(uiState.confirmationMessage) {
@@ -107,6 +108,12 @@ fun CarritoScreen(
                             isRequesting = true
                             try {
                                 carritoViewModel.confirmReservations(userName)
+
+                                // ⬇️ MOSTRAR MENSAJE DE RESERVA EXITOSA
+                                snackbarHostState.showSnackbar(
+                                    message = "¡Reserva exitosa!",
+                                    duration = SnackbarDuration.Short
+                                )
                             } finally {
                                 isRequesting = false
                             }
