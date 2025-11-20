@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.R
 import com.example.educanet.ui.common.FotoPerfil
 import com.example.educanet.viewmodel.MenuViewModel
+import androidx.compose.material.icons.filled.PhotoCamera
 
 @Composable
 fun MenuScreen(
@@ -209,6 +210,14 @@ fun MenuScreen(
                         shape = RoundedCornerShape(50)
                     )
             ) {
+                Icon(
+                    imageVector = Icons.Filled.PhotoCamera,
+                    contentDescription = "Cámara",
+                    modifier = Modifier.size(28.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text("Cámara", fontSize = 24.sp)
             }
 
