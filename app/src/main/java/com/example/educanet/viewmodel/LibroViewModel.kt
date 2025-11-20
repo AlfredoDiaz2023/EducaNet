@@ -39,7 +39,7 @@ class LibroViewModel : ViewModel() {
         escucharLibrosTiempoReal()   // 👈🔥 ahora sí en tiempo real
     }
 
-    // 🔥🔥🔥 CAMBIO IMPORTANTE: Listener en tiempo real
+    // CAMBIO IMPORTANTE: Listener en tiempo real
     private fun escucharLibrosTiempoReal() {
         _uiState.value = _uiState.value.copy(isLoading = true)
 
