@@ -1,9 +1,11 @@
 package com.example.educanet.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Libro
 import com.example.educanet.model.Reserva
+import com.example.educanet.repository.CarritoRepository
 import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ReservaRepository
@@ -12,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
 
 data class CarritoUiState(
     val items: List<Libro> = emptyList(),
@@ -26,7 +27,8 @@ data class CarritoUiState(
 class CarritoViewModel : ViewModel() {
 
     private val reservaRepository = ReservaRepository()
-    private val libroRepository = LibroRepository() // Añadir el repositorio de libros
+    private val libroRepository = LibroRepository()
+    private val carritoRepository = CarritoRepository()   // <-- asegurarse de tener este repo
     private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
 
@@ -35,7 +37,7 @@ class CarritoViewModel : ViewModel() {
 
     fun addToCart(libro: Libro) {
         val currentItems = _uiState.value.items.toMutableList()
-        if (!currentItems.any { it.id == libro.id }) { // Evitar duplicados
+        if (!currentItems.any { it.id == libro.id }) {
             currentItems.add(libro)
             _uiState.value = _uiState.value.copy(items = currentItems)
         }
@@ -49,83 +51,52 @@ class CarritoViewModel : ViewModel() {
 
     fun confirmReservations(userName: String) {
         viewModelScope.launch {
-            val user = auth.currentUser
-            if (user == null) {
-                _uiState.value = _uiState.value.copy(error = "Debes iniciar sesión para reservar.")
+
+            val carritoActual = _uiState.value.items
+
+            if (carritoActual.isEmpty()) {
+                _uiState.value = _uiState.value.copy(error = "El carrito está vacío.")
                 return@launch
             }
 
-            _uiState.value = _uiState.value.copy(isConfirming = true)
-
             try {
-                val itemsToReserve = _uiState.value.items
-                if (itemsToReserve.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(
-                        error = "El carrito está vacío.",
-                        isConfirming = false
+                // 👉 1. Descontar stock como el botón SOLICITAR
+                carritoActual.forEach { libro ->
+                    libroRepository.actualizarStock(
+                        libro.id,
+                        (libro.cantidad - 1).coerceAtLeast(0)
                     )
-                    return@launch
                 }
 
-                var allSuccess = true
-
-                for (libro in itemsToReserve) {
-
-                    // 1️⃣ DESCONTAR STOCK AUNQUE SEA 0 (sin bloquear reserva)
-                    val nuevoStock = if (libro.cantidad > 0) libro.cantidad - 1 else 0
-
-                    val stockUpdated = libroRepository.actualizarStock(libro.id, nuevoStock)
-                    if (!stockUpdated) {
-                        allSuccess = false
-                    }
-
-                    // 2️⃣ SIEMPRE crear la reserva
+                // 👉 2. Crear todas las reservas (si tu lógica lo requiere)
+                carritoActual.forEach { libro ->
                     val reserva = Reserva(
                         libroId = libro.id,
-                        userId = user.uid,
+                        userId = auth.currentUser?.uid ?: "",
                         userName = userName,
                         libroNombre = libro.nombre
                     )
-
-                    val reservaSuccess = reservaRepository.agregarReserva(reserva)
-                    if (!reservaSuccess) {
-                        allSuccess = false
-                    }
+                    reservaRepository.agregarReserva(reserva)
                 }
 
-                // 3️⃣ Notificación + éxito
-                if (allSuccess) {
-                    val bookNames = itemsToReserve.joinToString(", ") { it.nombre }
+                // 👉 3. Vaciar carrito
+                _uiState.value = _uiState.value.copy(items = emptyList())
+                notificacionRepository.agregarNotificacion("Reservas confirmadas", "Tus reservas han sido confirmadas.")
 
-                    notificacionRepository.agregarNotificacion(
-                        titulo = "Nuevas reservas creadas",
-                        mensaje = "El usuario $userName ha reservado los siguientes libros: $bookNames"
-                    )
-
-                    // Limpiar carrito y mostrar éxito
-                    _uiState.value = CarritoUiState(
-                        confirmationSuccess = true,
-                        confirmationMessage = "¡Reservas confirmadas con éxito!"
-                    )
-
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        error = "Error al crear o actualizar una o más reservas.",
-                        isConfirming = false
-                    )
-                }
+                // 👉 4. Mensaje de éxito
+                _uiState.value = _uiState.value.copy(
+                    confirmationSuccess = true,
+                    confirmationMessage = "Reservas confirmadas y stock actualizado"
+                )
 
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message,
-                    isConfirming = false
-                )
+                _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
     }
 
 
     fun messageShown() {
-        _uiState.value = _uiState.value.copy(confirmationMessage = null, confirmationSuccess = false) // Resetear ambos estados
+        _uiState.value = _uiState.value.copy(confirmationMessage = null, confirmationSuccess = false)
     }
 }

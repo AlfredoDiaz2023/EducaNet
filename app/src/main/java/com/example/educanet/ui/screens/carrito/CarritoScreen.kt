@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.educanet.model.Libro
+import com.example.educanet.repository.CarritoRepository
 import com.example.educanet.ui.common.AppBackground
 import com.example.educanet.viewmodel.CarritoViewModel
 import kotlinx.coroutines.launch
