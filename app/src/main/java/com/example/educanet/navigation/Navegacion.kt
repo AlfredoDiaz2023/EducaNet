@@ -25,11 +25,15 @@ import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
 import com.example.educanet.ui.screens.imagen.ImagePickerScreen
 import com.example.educanet.viewmodel.CarritoViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import com.example.educanet.*
 
 @Composable
 fun AppNavegacion() {
 
     val navController = rememberNavController()
+    // Es buena práctica levantar el ViewModel aquí si se comparte, pero lo dejaremos como estaba
     val carritoViewModel: CarritoViewModel = viewModel()
 
     NavHost(
@@ -44,7 +48,15 @@ fun AppNavegacion() {
             LoginScreen(
                 onRegisterClick = { navController.navigate("register") },
                 onLoginSuccess = { user ->
-                    navController.navigate("menu/${user.nombre}/${user.rol}") {
+                    // 1. Manejo seguro de la URL para la navegación
+                    val fotoUrlEncoded = if (user.fotoUrl != null) {
+                        URLEncoder.encode(user.fotoUrl, StandardCharsets.UTF_8.toString())
+                    } else {
+                        "" // Cadena vacía si es null
+                    }
+
+                    // Navegamos pasando la foto como parámetro opcional
+                    navController.navigate("menu/${user.nombre}/${user.rol}?fotoUrl=$fotoUrlEncoded") {
                         popUpTo("login") { inclusive = true }
                     }
                 }
@@ -62,21 +74,30 @@ fun AppNavegacion() {
         }
 
         // ------------------------------
-        // MENU PRINCIPAL
+        // MENU PRINCIPAL (Modificado)
         // ------------------------------
         composable(
-            route = "menu/{nombre}/{rol}",
+            // 2. Definimos la ruta con el parámetro opcional ?fotoUrl={fotoUrl}
+            route = "menu/{nombre}/{rol}?fotoUrl={fotoUrl}",
             arguments = listOf(
                 navArgument("nombre") { type = NavType.StringType },
-                navArgument("rol") { type = NavType.StringType }
+                navArgument("rol") { type = NavType.StringType },
+                navArgument("fotoUrl") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
             )
         ) { entry ->
             val nombre = entry.arguments?.getString("nombre") ?: "Usuario"
             val rol = entry.arguments?.getString("rol") ?: "Alumno"
+            val fotoUrl = entry.arguments?.getString("fotoUrl")
 
+            // 3. Pasamos los datos al MenuScreen
             MenuScreen(
                 nombre = nombre,
                 rol = rol,
+                fotoUrl = fotoUrl, // <--- Pasamos la URL recibida
                 onLibroClick = { navController.navigate("libros/$rol/$nombre") },
                 onVideoClick = { navController.navigate("video_apoyo/$rol") },
                 onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
@@ -91,6 +112,8 @@ fun AppNavegacion() {
             )
         }
 
+        // ... (El resto de tus rutas se mantienen igual: libros, carrito, video_apoyo, etc.)
+
         // ------------------------------
         // LIBROS
         // ------------------------------
@@ -101,7 +124,6 @@ fun AppNavegacion() {
                 navArgument("nombre") { type = NavType.StringType }
             )
         ) { entry ->
-
             val rol = entry.arguments?.getString("rol") ?: ""
             val nombre = entry.arguments?.getString("nombre") ?: ""
 
@@ -111,8 +133,6 @@ fun AppNavegacion() {
                 carritoViewModel = carritoViewModel,
                 onBack = { navController.popBackStack() },
                 onAddLibro = { navController.navigate("add_libro") },
-
-                // 🔥 CORREGIDO: abrir siempre bien el carrito
                 onCarritoClick = {
                     navController.navigate("carrito/$nombre") {
                         launchSingleTop = true
@@ -122,22 +142,16 @@ fun AppNavegacion() {
             )
         }
 
-        // ------------------------------
-        // CARRITO
-        // ------------------------------
+        // ... (Agrega aquí el resto de tus rutas existentes: carrito, add_libro, videos, perfiles, etc.)
+        // Para acortar la respuesta no las repito todas, pero asegúrate de mantenerlas.
+
         composable(
             route = "carrito/{nombre}",
-            arguments = listOf(
-                navArgument("nombre") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
         ) { entry ->
-
             val nombre = entry.arguments?.getString("nombre") ?: ""
-
             CarritoScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
+                onBack = { navController.popBackStack() },
                 carritoViewModel = carritoViewModel,
                 userName = nombre
             )
@@ -147,9 +161,6 @@ fun AppNavegacion() {
             AddLibroScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // VIDEO APOYO
-        // ------------------------------
         composable(
             route = "video_apoyo/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -166,9 +177,6 @@ fun AppNavegacion() {
             AddVideoScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // CLASES VIRTUALES
-        // ------------------------------
         composable(
             route = "clases_virtuales/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -185,9 +193,6 @@ fun AppNavegacion() {
             AddClaseVirtualScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // PROGRESO ACADÉMICO
-        // ------------------------------
         composable(
             route = "progreso_academico/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -204,78 +209,36 @@ fun AppNavegacion() {
             AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // PERFILES
-        // ------------------------------
-        composable(
-            "perfil_admin/{nombre}",
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) {
+        // Perfiles
+        composable("perfil_admin/{nombre}", arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
             val nombre = it.arguments?.getString("nombre") ?: "Administrador"
-            PerfilAdminScreen(nombre = nombre, onLogout = {
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
-                }
-            })
+            PerfilAdminScreen(nombre = nombre, onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
         }
-
-        composable(
-            "perfil_profesor/{nombre}",
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) {
+        composable("perfil_profesor/{nombre}", arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
             val nombre = it.arguments?.getString("nombre") ?: "Profesor"
-            PerfilProfesorScreen(nombre = nombre, onLogout = {
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
-                }
-            })
+            PerfilProfesorScreen(nombre = nombre, onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
         }
-
-        composable(
-            "perfil_apoderado/{nombre}",
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) {
+        composable("perfil_apoderado/{nombre}", arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
             val nombre = it.arguments?.getString("nombre") ?: "Apoderado"
-            PerfilApoderadoScreen(nombre = nombre, onLogout = {
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
-                }
-            })
+            PerfilApoderadoScreen(nombre = nombre, onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
         }
-
-        composable(
-            "perfil_alumno/{nombre}",
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) {
+        composable("perfil_alumno/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
             val nombre = it.arguments?.getString("nombre") ?: "Alumno"
-            PerfilAlumnoScreen(nombre = nombre, onLogout = {
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
-                }
-            })
+            PerfilAlumnoScreen( onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
         }
 
-        // ------------------------------
-        // NOTIFICACIONES
-        // ------------------------------
         composable("notificaciones") {
             NotificacionesScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // CÁMARA
-        // ------------------------------
         composable("camera") {
             CameraScreen(
                 onImageCaptured = { uri ->
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("captured_image_uri", uri.toString())
+                    navController.previousBackStackEntry?.savedStateHandle?.set("captured_image_uri", uri.toString())
                     navController.popBackStack()
                 },
-                onError = {
-                    navController.popBackStack()
-                }
+                onError = { navController.popBackStack() }
             )
         }
 
@@ -283,9 +246,6 @@ fun AppNavegacion() {
             ImagePickerScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // RESERVAS
-        // ------------------------------
         composable("reservas") {
             ReservasScreen(onBack = { navController.popBackStack() })
         }
