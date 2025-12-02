@@ -10,27 +10,28 @@ class ProfesorRepository {
 
     suspend fun registroProfesor(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
-
-            val querySnapshot = db.collection("Profesor")
+            // 1. Verificar si el correo ya existe en la colección unificada "usuario"
+            val querySnapshot = db.collection("usuario")
                 .whereEqualTo("correo", correo)
                 .get()
                 .await()
 
             if (!querySnapshot.isEmpty) {
-                return false
+                return false // El correo ya está registrado
             }
 
-
+            // 2. Preparamos los datos
             val userData = hashMapOf(
                 "correo" to correo,
                 "clave" to clave,
                 "nombre" to nombre,
                 "rol" to "Profesor",
-                "fechaRegistro" to getCurrentDate()
+                "fechaRegistro" to getCurrentDate(),
+                "fotoUrl" to null // <--- ¡ESTO ES LO QUE FALTABA!
             )
 
-
-            db.collection("Profesor").add(userData).await()
+            // 3. Guardamos en la colección "usuario"
+            db.collection("usuario").add(userData).await()
             true
         } catch (e: Exception) {
             false

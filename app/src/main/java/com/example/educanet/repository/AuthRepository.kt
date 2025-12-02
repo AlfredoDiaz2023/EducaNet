@@ -14,13 +14,13 @@ class AuthRepository {
             if (correo == "admin@educanet.cl") {
                 auth.signInWithEmailAndPassword(correo, clave).await()
 
-                // Se añade fotoUrl como null para el admin hardcodeado
+                // Se añade fotoUrl como cadena vacía para el admin hardcodeado
                 Administrador(
                     correo = correo,
                     clave = clave,
                     nombre = "Administrador",
                     rol = "Administrador",
-                    fotoUrl = null
+                    fotoUrl = "" // CORREGIDO: No puede ser null
                 )
             } else {
                 loginUsuarioDesdeFirestore(correo, clave)
@@ -33,17 +33,14 @@ class AuthRepository {
 
     private suspend fun loginUsuarioDesdeFirestore(correo: String, clave: String): Usuario? {
         return try {
-            // Nota: Asegúrate de que tu colección se llama "usuario" o la que corresponda (ej. "Alumno", "Profesor")
-            // Si usas una colección única para todos los usuarios:
-            val query = db.collection("usuario") // <--- CAMBIA ESTO si usas colecciones separadas por rol
+            // PRIMERO: Verificar si el usuario existe en Firestore
+            val query = db.collection("usuario")
                 .whereEqualTo("correo", correo)
                 .whereEqualTo("clave", clave)
                 .get()
                 .await()
 
             if (query.isEmpty || query.documents.isEmpty()) {
-                // Si no está en "usuario", podrías intentar buscar en "Alumno", "Profesor", etc. si están separadas
-                // Por ahora asumo la lógica que tenías.
                 return null
             }
 
@@ -55,6 +52,28 @@ class AuthRepository {
             val id = doc.id
             // 1. LEER LA FOTO URL
             val fotoUrl = doc.getString("fotoUrl")
+            
+            // AHORA: Autenticar con Firebase Auth DESPUÉS de verificar Firestore
+            try {
+                auth.signInWithEmailAndPassword(correo, clave).await()
+                android.util.Log.d("AuthRepository", "Login Firebase Auth exitoso para: $correo")
+            } catch (authError: Exception) {
+                android.util.Log.w("AuthRepository", "SignIn falló, intentando crear usuario: ${authError.message}")
+                // Si falla la autenticación, intentar crear el usuario en Auth
+                try {
+                    auth.createUserWithEmailAndPassword(correo, clave).await()
+                    android.util.Log.d("AuthRepository", "Usuario creado en Firebase Auth: $correo")
+                } catch (createError: Exception) {
+                    android.util.Log.e("AuthRepository", "No se pudo crear usuario en Auth: ${createError.message}")
+                    // Continuar aunque falle Auth - el usuario existe en Firestore
+                }
+            }
+            
+            // Guardar el UID de Firebase Auth en el documento si no existe
+            val uid = auth.currentUser?.uid
+            if (uid != null && doc.getString("uid") == null) {
+                db.collection("usuario").document(id).update("uid", uid)
+            }
 
             when (rol) {
                 "Profesor" -> Profesor(
@@ -62,33 +81,32 @@ class AuthRepository {
                     correo = email,
                     clave = pass,
                     nombre = nombre ?: "Profesor",
-                    rol = rol,
-                    fotoUrl = fotoUrl // <--- PASAR FOTO
+                    rol = rol ?: "Profesor",
+                    fotoUrl = fotoUrl ?: "" // CORREGIDO: Si es null, usa ""
                 )
                 "Apoderado" -> Apoderado(
                     id = id,
                     correo = email,
                     clave = pass,
                     nombre = nombre ?: "Apoderado",
-                    rol = rol,
-                    fotoUrl = fotoUrl // <--- PASAR FOTO
+                    rol = rol ?: "Apoderado",
+                    fotoUrl = fotoUrl ?: "" // CORREGIDO
                 )
                 "Alumno" -> Alumno(
                     id = id,
                     correo = email,
                     clave = pass,
                     nombre = nombre ?: "Alumno",
-                    rol = rol,
-                    fotoUrl = fotoUrl // <--- PASAR FOTO
+                    rol = rol ?: "Alumno",
+                    fotoUrl = fotoUrl ?: "" // CORREGIDO
                 )
-                // Caso Admin si existiera en BD
                 "Administrador" -> Administrador(
                     id = id,
                     correo = email,
                     clave = pass,
                     nombre = nombre ?: "Admin",
-                    rol = rol,
-                    fotoUrl = fotoUrl
+                    rol = rol ?: "Administrador",
+                    fotoUrl = fotoUrl ?: "" // CORREGIDO
                 )
                 else -> null
             }

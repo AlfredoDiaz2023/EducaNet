@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -87,10 +88,25 @@ class LibroViewModel : ViewModel() {
                 return@launch
             }
 
+            // Buscar el nombre del usuario en Firestore
+            var userName = "Usuario"
+            try {
+                val querySnapshot = db.collection("usuario")
+                    .whereEqualTo("correo", user.email)
+                    .get()
+                    .await()
+                
+                if (!querySnapshot.isEmpty) {
+                    userName = querySnapshot.documents[0].getString("nombre") ?: "Usuario"
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             val resena = Resena(
                 itemId = libroId,
                 userId = user.uid,
-                userName = user.displayName ?: "Anónimo",
+                userName = userName,
                 rating = rating,
                 comment = comment
             )

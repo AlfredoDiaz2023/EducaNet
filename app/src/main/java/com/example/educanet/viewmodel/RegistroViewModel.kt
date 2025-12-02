@@ -2,6 +2,7 @@ package com.example.educanet.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educanet.model.Usuario
 import com.example.educanet.repository.UsuarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,14 +20,21 @@ class RegistroViewModel : ViewModel() {
     private val _errorMensaje = MutableStateFlow("")
     val errorMensaje: StateFlow<String> = _errorMensaje
 
+    // Nuevo: almacena el usuario registrado para navegación automática
+    private val _usuarioRegistrado = MutableStateFlow<Usuario?>(null)
+    val usuarioRegistrado: StateFlow<Usuario?> = _usuarioRegistrado
+
     fun registroUsuario(correo: String, clave: String, confirmarClave: String, nombre: String, rol: String) {
+        // Limpiar error previo
+        _errorMensaje.value = ""
+        
         if (correo.isEmpty() || clave.isEmpty() || confirmarClave.isEmpty() || nombre.isEmpty() || rol.isEmpty()) {
             _errorMensaje.value = "Todos los campos son obligatorios"
             return
         }
 
-        if (clave != confirmarClave) {
-            _errorMensaje.value = "Las contraseñas no coinciden"
+        if (!correo.contains("@") || !correo.contains(".")) {
+            _errorMensaje.value = "Ingrese un correo electrónico válido"
             return
         }
 
@@ -35,21 +43,29 @@ class RegistroViewModel : ViewModel() {
             return
         }
 
+        if (clave != confirmarClave) {
+            _errorMensaje.value = "Las contraseñas no coinciden"
+            return
+        }
+
         _cargando.value = true
-        _errorMensaje.value = ""
 
         viewModelScope.launch {
-            val exitoso = repositorio.registroUsuario(correo, clave, nombre, rol)
+            val resultado = repositorio.registroUsuario(correo, clave, nombre, rol)
             _cargando.value = false
-            _registroExitoso.value = exitoso
-            if (!exitoso) {
-                _errorMensaje.value = "Error al registrar usuario"
+            
+            if (resultado.success) {
+                _usuarioRegistrado.value = resultado.usuario
+                _registroExitoso.value = true
+            } else {
+                _errorMensaje.value = resultado.errorMessage
             }
         }
     }
 
-    fun limpiarRegistro() {
+    fun resetEstado() {
         _registroExitoso.value = false
         _errorMensaje.value = ""
+        _usuarioRegistrado.value = null
     }
 }

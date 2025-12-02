@@ -1,12 +1,24 @@
 package com.example.educanet.navigation
 
+import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.educanet.model.*
 import com.example.educanet.ui.CameraScreen
 import com.example.educanet.ui.screens.carrito.CarritoScreen
 import com.example.educanet.ui.screens.clasesvirtuales.AddClaseVirtualScreen
@@ -23,17 +35,24 @@ import com.example.educanet.ui.screens.reservas.ReservasScreen
 import com.example.educanet.ui.screens.videoApoyo.AddVideoScreen
 import com.example.educanet.ui.screens.videoApoyo.VideoApoyoScreen
 import com.example.educanet.ui.screens.registro.RegistroScreen
+import com.example.educanet.ui.screens.registro.SeleccionarAlumnoScreen
 import com.example.educanet.ui.screens.imagen.ImagePickerScreen
+import com.example.educanet.ui.screens.admin.*
 import com.example.educanet.viewmodel.CarritoViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import com.example.educanet.*
 
 @Composable
 fun AppNavegacion() {
 
     val navController = rememberNavController()
-    // Es buena práctica levantar el ViewModel aquí si se comparte, pero lo dejaremos como estaba
+    // ViewModel compartido para el carrito
     val carritoViewModel: CarritoViewModel = viewModel()
 
     NavHost(
@@ -42,21 +61,32 @@ fun AppNavegacion() {
     ) {
 
         // ------------------------------
-        // LOGIN
+        // LOGIN (Con lógica de Foto)
         // ------------------------------
         composable("login") {
             LoginScreen(
                 onRegisterClick = { navController.navigate("register") },
                 onLoginSuccess = { user ->
-                    // 1. Manejo seguro de la URL para la navegación
+                    // Codificamos la URL de la foto para que pase bien por la navegación
                     val fotoUrlEncoded = if (user.fotoUrl != null) {
                         URLEncoder.encode(user.fotoUrl, StandardCharsets.UTF_8.toString())
                     } else {
-                        "" // Cadena vacía si es null
+                        ""
+                    }
+                    
+                    // Codificamos el correo del usuario
+                    val correoEncoded = URLEncoder.encode(user.correo, StandardCharsets.UTF_8.toString())
+
+                    // Navegamos pasando la foto y correo como parámetros opcionales
+                    val route = buildString {
+                        append("menu/${user.nombre}/${user.rol}")
+                        val params = mutableListOf<String>()
+                        if (fotoUrlEncoded.isNotEmpty()) params.add("fotoUrl=$fotoUrlEncoded")
+                        if (correoEncoded.isNotEmpty()) params.add("correo=$correoEncoded")
+                        if (params.isNotEmpty()) append("?${params.joinToString("&")}")
                     }
 
-                    // Navegamos pasando la foto como parámetro opcional
-                    navController.navigate("menu/${user.nombre}/${user.rol}?fotoUrl=$fotoUrlEncoded") {
+                    navController.navigate(route) {
                         popUpTo("login") { inclusive = true }
                     }
                 }
@@ -69,20 +99,81 @@ fun AppNavegacion() {
         composable("register") {
             RegistroScreen(
                 onBack = { navController.popBackStack() },
-                onRegisterSuccess = { navController.popBackStack() }
+                onRegisterSuccess = { navController.popBackStack() },
+                onRegisterSuccessWithUser = { user ->
+                    // Después del registro exitoso, navegar directamente al menú
+                    // El usuario ya está autenticado en Firebase Auth
+                    val fotoUrlEncoded = if (user.fotoUrl.isNotEmpty()) {
+                        URLEncoder.encode(user.fotoUrl, StandardCharsets.UTF_8.toString())
+                    } else {
+                        ""
+                    }
+                    
+                    val correoEncoded = URLEncoder.encode(user.correo, StandardCharsets.UTF_8.toString())
+
+                    val route = buildString {
+                        append("menu/${user.nombre}/${user.rol}")
+                        val params = mutableListOf<String>()
+                        if (fotoUrlEncoded.isNotEmpty()) params.add("fotoUrl=$fotoUrlEncoded")
+                        if (correoEncoded.isNotEmpty()) params.add("correo=$correoEncoded")
+                        if (params.isNotEmpty()) append("?${params.joinToString("&")}")
+                    }
+
+                    navController.navigate(route) {
+                        // Limpiar todo el back stack incluyendo login y register
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onApoderadoRegistrado = { correoApoderado ->
+                    // Navegar a la pantalla de selección de alumno
+                    val correoEncoded = URLEncoder.encode(correoApoderado, StandardCharsets.UTF_8.toString())
+                    navController.navigate("seleccionar_alumno/$correoEncoded") {
+                        popUpTo("register") { inclusive = true }
+                    }
+                }
             )
         }
 
         // ------------------------------
-        // MENU PRINCIPAL (Modificado)
+        // SELECCIONAR ALUMNO (PARA APODERADO)
         // ------------------------------
         composable(
-            // 2. Definimos la ruta con el parámetro opcional ?fotoUrl={fotoUrl}
-            route = "menu/{nombre}/{rol}?fotoUrl={fotoUrl}",
+            route = "seleccionar_alumno/{correoApoderado}",
+            arguments = listOf(
+                navArgument("correoApoderado") { type = NavType.StringType }
+            )
+        ) { entry ->
+            val correoApoderado = entry.arguments?.getString("correoApoderado") ?: ""
+            SeleccionarAlumnoScreen(
+                correoApoderado = correoApoderado,
+                onAlumnoSeleccionado = {
+                    // Después de vincular, ir al login
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onBack = {
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ------------------------------
+        // MENU PRINCIPAL (Recibe Foto)
+        // ------------------------------
+        composable(
+            route = "menu/{nombre}/{rol}?fotoUrl={fotoUrl}&correo={correo}",
             arguments = listOf(
                 navArgument("nombre") { type = NavType.StringType },
                 navArgument("rol") { type = NavType.StringType },
                 navArgument("fotoUrl") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("correo") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
@@ -92,27 +183,74 @@ fun AppNavegacion() {
             val nombre = entry.arguments?.getString("nombre") ?: "Usuario"
             val rol = entry.arguments?.getString("rol") ?: "Alumno"
             val fotoUrl = entry.arguments?.getString("fotoUrl")
+            val correo = entry.arguments?.getString("correo")
+            
+            // Estado para almacenar el correo del alumno vinculado (para apoderados)
+            var correoAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            
+            // Si es apoderado, buscar el correo del alumno vinculado
+            LaunchedEffect(rol, correo) {
+                if (rol == "Apoderado" && correo != null) {
+                    try {
+                        val db = FirebaseFirestore.getInstance()
+                        val decodedCorreo = java.net.URLDecoder.decode(correo, StandardCharsets.UTF_8.toString())
+                        val snapshot = db.collection("usuario")
+                            .whereEqualTo("correo", decodedCorreo)
+                            .get()
+                            .await()
+                        
+                        if (!snapshot.isEmpty) {
+                            val doc = snapshot.documents.first()
+                            correoAlumnoVinculado = doc.getString("alumnoVinculadoCorreo")
+                            Log.d("Navegacion", "Alumno vinculado encontrado: $correoAlumnoVinculado")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Navegacion", "Error buscando alumno vinculado: ${e.message}")
+                    }
+                }
+            }
 
-            // 3. Pasamos los datos al MenuScreen
             MenuScreen(
                 nombre = nombre,
                 rol = rol,
-                fotoUrl = fotoUrl, // <--- Pasamos la URL recibida
+                fotoUrl = fotoUrl,
                 onLibroClick = { navController.navigate("libros/$rol/$nombre") },
                 onVideoClick = { navController.navigate("video_apoyo/$rol") },
                 onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
-                onProgresoAcademicoClick = { navController.navigate("progreso_academico/$rol") },
+                onProgresoAcademicoClick = { 
+                    // Si es apoderado, usar el correo del alumno vinculado
+                    val correoParaProgreso = if (rol == "Apoderado" && correoAlumnoVinculado != null) {
+                        URLEncoder.encode(correoAlumnoVinculado, StandardCharsets.UTF_8.toString())
+                    } else {
+                        correo?.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) } ?: ""
+                    }
+                    // Para el apoderado, pasamos rol "Alumno" para que vea las estadísticas
+                    val rolParaProgreso = if (rol == "Apoderado") "Alumno" else rol
+                    navController.navigate("progreso_academico/$rolParaProgreso?correo=$correoParaProgreso") 
+                },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
                 onCameraClick = { navController.navigate("camera") },
+                onPerfilClick = {
+                    // Navegar al perfil según el rol
+                    val perfilRoute = when (rol) {
+                        "Administrador" -> "perfil_admin/$nombre"
+                        "Profesor" -> "perfil_profesor/$nombre"
+                        "Apoderado" -> "perfil_apoderado/$nombre"
+                        else -> "perfil_alumno/$nombre"
+                    }
+                    navController.navigate(perfilRoute)
+                },
+                onAdminPanelClick = { navController.navigate("admin_panel") },
+                onVerResenasClick = { navController.navigate("resenas_recientes") },
                 onLogout = {
+                    // Cerrar sesión de Firebase Auth
+                    FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
-
-        // ... (El resto de tus rutas se mantienen igual: libros, carrito, video_apoyo, etc.)
 
         // ------------------------------
         // LIBROS
@@ -142,9 +280,6 @@ fun AppNavegacion() {
             )
         }
 
-        // ... (Agrega aquí el resto de tus rutas existentes: carrito, add_libro, videos, perfiles, etc.)
-        // Para acortar la respuesta no las repito todas, pero asegúrate de mantenerlas.
-
         composable(
             route = "carrito/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
@@ -161,6 +296,9 @@ fun AppNavegacion() {
             AddLibroScreen(onBack = { navController.popBackStack() })
         }
 
+        // ------------------------------
+        // VIDEO APOYO
+        // ------------------------------
         composable(
             route = "video_apoyo/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -177,6 +315,9 @@ fun AppNavegacion() {
             AddVideoScreen(onBack = { navController.popBackStack() })
         }
 
+        // ------------------------------
+        // CLASES VIRTUALES
+        // ------------------------------
         composable(
             route = "clases_virtuales/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -193,13 +334,25 @@ fun AppNavegacion() {
             AddClaseVirtualScreen(onBack = { navController.popBackStack() })
         }
 
+        // ------------------------------
+        // PROGRESO ACADÉMICO
+        // ------------------------------
         composable(
-            route = "progreso_academico/{rol}",
-            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+            route = "progreso_academico/{rol}?correo={correo}",
+            arguments = listOf(
+                navArgument("rol") { type = NavType.StringType },
+                navArgument("correo") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { entry ->
             val rol = entry.arguments?.getString("rol") ?: "Alumno"
+            val correo = entry.arguments?.getString("correo")
             ProgresoAcademicoScreen(
                 rol = rol,
+                correoAlumno = correo,
                 onBack = { navController.popBackStack() },
                 onAddNota = { navController.navigate("add_progreso_academico") }
             )
@@ -209,27 +362,100 @@ fun AppNavegacion() {
             AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
         }
 
-        // Perfiles
-        composable("perfil_admin/{nombre}", arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
-            val nombre = it.arguments?.getString("nombre") ?: "Administrador"
-            PerfilAdminScreen(nombre = nombre, onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
-        }
-        composable("perfil_profesor/{nombre}", arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
-            val nombre = it.arguments?.getString("nombre") ?: "Profesor"
-            PerfilProfesorScreen(nombre = nombre, onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
-        }
-        composable("perfil_apoderado/{nombre}", arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
-            val nombre = it.arguments?.getString("nombre") ?: "Apoderado"
-            PerfilApoderadoScreen(nombre = nombre, onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
-        }
-        composable("perfil_alumno/{nombre}",
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })) {
-            val nombre = it.arguments?.getString("nombre") ?: "Alumno"
-            PerfilAlumnoScreen( onLogout = { navController.navigate("login") { popUpTo(0) { inclusive = true } } })
+        // ------------------------------
+        // PERFILES (Corrección: Sin pasar nombre al constructor)
+        // ------------------------------
+
+        composable(
+            "perfil_admin/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) {
+            // El nombre viene en la ruta, pero la pantalla lo carga sola del ViewModel
+            PerfilAdminScreen(
+                onLogout = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
+        composable(
+            "perfil_profesor/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // Obtener imagen capturada de la cámara si existe
+            val capturedImageUri = backStackEntry.savedStateHandle.get<String>("captured_image_uri")?.let {
+                android.net.Uri.parse(it)
+            }
+            
+            PerfilProfesorScreen(
+                onLogout = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                },
+                onCameraClick = { navController.navigate("camera_perfil") },
+                onBack = { navController.popBackStack() },
+                capturedImageUri = capturedImageUri
+            )
+        }
+
+        composable(
+            "perfil_apoderado/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) {
+            PerfilApoderadoScreen(
+                onLogout = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            "perfil_alumno/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // Obtener imagen capturada de la cámara si existe
+            val capturedImageUri = backStackEntry.savedStateHandle.get<String>("captured_image_uri")?.let {
+                android.net.Uri.parse(it)
+            }
+            
+            PerfilAlumnoScreen(
+                onLogout = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                },
+                onCameraClick = { navController.navigate("camera_perfil") },
+                onBack = { navController.popBackStack() },
+                capturedImageUri = capturedImageUri
+            )
+        }
+
+        // Ruta de cámara específica para perfil
+        composable("camera_perfil") {
+            CameraScreen(
+                onImageCaptured = { uri ->
+                    navController.previousBackStackEntry?.savedStateHandle?.set("captured_image_uri", uri.toString())
+                    navController.popBackStack()
+                },
+                onError = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ------------------------------
+        // EXTRAS
+        // ------------------------------
         composable("notificaciones") {
             NotificacionesScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("resenas_recientes") {
+            com.example.educanet.ui.screens.resenas.ResenasRecientesScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("camera") {
@@ -238,7 +464,8 @@ fun AppNavegacion() {
                     navController.previousBackStackEntry?.savedStateHandle?.set("captured_image_uri", uri.toString())
                     navController.popBackStack()
                 },
-                onError = { navController.popBackStack() }
+                onError = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -248,6 +475,35 @@ fun AppNavegacion() {
 
         composable("reservas") {
             ReservasScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ------------------------------
+        // PANEL DE ADMINISTRACIÓN
+        // ------------------------------
+        composable("admin_panel") {
+            AdminPanelScreen(
+                onBack = { navController.popBackStack() },
+                onGestionLibros = { navController.navigate("gestion_libros") },
+                onGestionUsuarios = { navController.navigate("gestion_usuarios") },
+                onHistorialReservas = { navController.navigate("historial_reservas") },
+                onEditarPerfil = { navController.navigate("editar_perfil_admin") }
+            )
+        }
+
+        composable("gestion_libros") {
+            GestionLibrosScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("gestion_usuarios") {
+            GestionUsuariosScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("historial_reservas") {
+            HistorialReservasScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("editar_perfil_admin") {
+            EditarPerfilAdminScreen(onBack = { navController.popBackStack() })
         }
     }
 }

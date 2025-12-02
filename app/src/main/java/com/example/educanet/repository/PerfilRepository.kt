@@ -1,58 +1,63 @@
 package com.example.educanet.repository
 
-
-import android.content.Context
-import android.net.Uri
+import android.util.Log
+import com.example.educanet.model.*
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import java.util.*
 
-class PerfilRepository {
+class PerfilRepository(
+    private val firestore: FirebaseFirestore
+) {
 
-    private val db = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+    // Cambiar a la colección correcta: "usuario"
+    private val usuariosCollection = firestore.collection("usuario")
 
-    // 1. Función para subir la imagen a Firebase Storage y obtener la URL
-    suspend fun subirImagenPerfil(context: Context, uri: Uri, userId: String): String {
+    suspend fun obtenerPerfil(authUid: String): Usuario? {
         return try {
-            // Creamos una referencia única en Firebase Storage
-            val storageRef = storage.reference.child("perfiles/$userId/${UUID.randomUUID()}.jpg")
+            Log.d("EDUCA_DEBUG", "PerfilRepository: Buscando usuario con uid=$authUid")
+            
+            // Buscamos por el campo "uid" que guardaste al registrarte
+            val snapshot = usuariosCollection
+                .whereEqualTo("uid", authUid)
+                .get()
+                .await()
 
-            // Subir el archivo
-            storageRef.putFile(uri).await()
+            Log.d("EDUCA_DEBUG", "PerfilRepository: Documentos encontrados: ${snapshot.size()}")
+            
+            if (snapshot.isEmpty) {
+                Log.w("EDUCA_DEBUG", "PerfilRepository: No se encontró documento con uid=$authUid")
+                return null
+            }
 
-            // Obtener la URL de descarga para guardarla en Firestore
-            val url = storageRef.downloadUrl.await().toString()
-            url
+            val doc = snapshot.documents[0]
+            val idDoc = doc.id // ID del documento (ej: AQna...)
+            
+            // Mapeo manual para evitar errores de nulos
+            val nombre = doc.getString("nombre") ?: ""
+            val correo = doc.getString("correo") ?: ""
+            val clave = doc.getString("clave") ?: ""
+            val rol = doc.getString("rol") ?: ""
+            val fotoUrl = doc.getString("fotoUrl") ?: ""
+            
+            Log.d("EDUCA_DEBUG", "PerfilRepository: Usuario encontrado - DocId=$idDoc, Nombre=$nombre, Correo=$correo, Rol=$rol")
+
+            // Devolvemos el objeto correcto según el rol, pero con el ID del documento
+            when (rol) {
+                "Alumno" -> Alumno(id = idDoc, nombre = nombre, correo = correo, clave = clave, rol = rol, fotoUrl = fotoUrl)
+                "Profesor" -> Profesor(id = idDoc, nombre = nombre, correo = correo, clave = clave, rol = rol, fotoUrl = fotoUrl)
+                "Apoderado" -> Apoderado(id = idDoc, nombre = nombre, correo = correo, clave = clave, rol = rol, fotoUrl = fotoUrl)
+                "Administrador" -> Administrador(id = idDoc, nombre = nombre, correo = correo, clave = clave, rol = rol, fotoUrl = fotoUrl)
+                else -> Usuario(id = idDoc, nombre = nombre, correo = correo, clave = clave, rol = rol, fotoUrl = fotoUrl)
+            }
         } catch (e: Exception) {
+            Log.e("EDUCA_DEBUG", "PerfilRepository: Error buscando perfil: ${e.message}", e)
             e.printStackTrace()
-            // Lanzamos una excepción para que el ViewModel pueda manejar el error
-            throw Exception("Error al subir la imagen a Storage: ${e.message}")
+            null
         }
     }
 
-    // 2. Función para actualizar la URL de la foto de perfil en Firestore
-    // docId es el ID del documento en la colección (ej. 'Alumno' o 'Apoderado')
-    suspend fun actualizarFotoUrl(rol: String, docId: String, nuevaFotoUrl: String): Boolean {
-        return try {
-            // Determinamos la colección según el rol
-            val collectionName = when (rol) {
-                "Alumno" -> "Alumno"
-                "Apoderado" -> "Apoderado"
-                "Profesor" -> "Profesor" // Asegúrate de que tienes una colección para Profesor
-                "Administrador" -> "Administrador" // Asegúrate de que tienes una colección para Administrador
-                else -> throw IllegalArgumentException("Rol de usuario desconocido")
-            }
-
-            db.collection(collectionName)
-                .document(docId)
-                .update("fotoUrl", nuevaFotoUrl) // ¡Asegúrate de que tus documentos tienen un campo "fotoUrl"!
-                .await()
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
+    suspend fun actualizarFotoPerfil(documentId: String, url: String) {
+        // Actualizamos el campo fotoUrl en el documento específico
+        usuariosCollection.document(documentId).update("fotoUrl", url).await()
     }
 }

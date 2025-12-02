@@ -55,4 +55,8 @@ class ReservaViewModel : ViewModel() {
     fun messageShown() {
         _uiState.value = _uiState.value.copy(confirmationMessage = null)
     }
+
+    fun refreshReservas() {
+        cargarReservas()
+    }
 }

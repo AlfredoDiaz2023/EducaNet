@@ -1,64 +1,40 @@
 package com.example.educanet.repository
 
-import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import java.io.InputStream
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
-/**
- * Repositorio encargado de la lógica de Firebase Storage (subir/descargar archivos).
- */
 class PhotoRepository {
-
+    // Usa el bucket por defecto del proyecto configurado por google-services.json
     private val storage = FirebaseStorage.getInstance()
 
-    /**
-     * Sube una imagen al Firebase Storage y retorna su URL pública.
-     *
-     * @param context Contexto de la aplicación.
-     * @param imageUri La URI local de la imagen seleccionada.
-     * @param path La ruta de destino en Firebase Storage (ej: "perfiles/uid/archivo.jpg").
-     * @return La URL de descarga de la imagen subida.
-     */
-    suspend fun uploadImage(context: Context, imageUri: Uri, path: String): String {
-        val storageRef = storage.getReference(path)
+    suspend fun subirFoto(uri: Uri, nombreArchivo: String): String {
+        Log.d("EDUCA_DEBUG", "PhotoRepository: Iniciando subida de: $uri")
+        Log.d("EDUCA_DEBUG", "PhotoRepository: Nombre archivo: $nombreArchivo")
+        
+        val pathCompleto = "usuario/$nombreArchivo"
+        val ref = storage.reference.child(pathCompleto)
 
-        // Usamos suspendCancellableCoroutine para manejar las tareas asíncronas de Firebase Storage
-        return suspendCancellableCoroutine { continuation ->
-            try {
-                // Abrir el InputStream de la URI
-                val inputStream: InputStream? = context.contentResolver.openInputStream(imageUri)
-                    ?: throw Exception("No se pudo abrir la imagen.")
-
-                // Subir el archivo
-                val uploadTask = storageRef.putStream(inputStream!!)
-
-                // 1. Esperar a que la subida esté completa
-                uploadTask.addOnSuccessListener {
-                    // 2. Obtener la URL de descarga
-                    storageRef.downloadUrl
-                        .addOnSuccessListener { uri ->
-                            // 3. Devolver la URL
-                            continuation.resume(uri.toString())
-                        }
-                        .addOnFailureListener { downloadException ->
-                            continuation.resumeWithException(downloadException)
-                        }
-                }.addOnFailureListener { uploadException ->
-                    continuation.resumeWithException(uploadException)
-                }
-
-                // Asegurar que la tarea se cancela si la corrutina se cancela
-                continuation.invokeOnCancellation {
-                    uploadTask.cancel()
-                }
-            } catch (e: Exception) {
-                continuation.resumeWithException(e)
+        return try {
+            // 1. Subir el archivo
+            Log.d("EDUCA_DEBUG", "PhotoRepository: Subiendo archivo...")
+            val uploadTask = ref.putFile(uri).await()
+            Log.d("EDUCA_DEBUG", "PhotoRepository: Archivo subido exitosamente")
+            
+            // 2. CRÍTICO: Obtener URL pública de descarga (https://)
+            val url = ref.downloadUrl.await().toString()
+            Log.d("EDUCA_DEBUG", "PhotoRepository: URL HTTPS generada -> $url")
+            
+            // 3. Verificar que la URL sea válida
+            if (!url.startsWith("https://")) {
+                throw Exception("URL inválida generada: $url")
             }
+            
+            url
+        } catch (e: Exception) {
+            Log.e("EDUCA_DEBUG", "PhotoRepository ERROR: ${e.message}", e)
+            throw Exception("Error al subir foto: ${e.message}", e)
         }
     }
 }

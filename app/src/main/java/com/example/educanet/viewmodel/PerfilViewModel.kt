@@ -1,22 +1,26 @@
 package com.example.educanet.viewmodel
 
-import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educanet.model.Alumno // Importa tu modelo Alumno
-import com.example.educanet.repository.AlumnoRepository
+import com.example.educanet.model.Usuario
+import com.example.educanet.repository.PerfilRepository
 import com.example.educanet.repository.PhotoRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 
+// Definimos el estado que esperan tus pantallas
 data class PerfilUiState(
-    val nombre: String = "Cargando...",
+    val usuario: Usuario? = null,
     val fotoUrl: String? = null,
+    val nombre: String = "",
     val isUploading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -24,85 +28,143 @@ data class PerfilUiState(
 class PerfilViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
-    private val alumnoRepository = AlumnoRepository()
-    private val photoRepository = PhotoRepository() // Usar el nuevo repositorio
+    private val firestore = FirebaseFirestore.getInstance()
+    private var userDocListener: ListenerRegistration? = null
+    private var ultimoUidCargado: String? = null  // Para detectar cambio de usuario
 
     private val _uiState = MutableStateFlow(PerfilUiState())
     val uiState: StateFlow<PerfilUiState> = _uiState.asStateFlow()
 
-    init {
-        loadUserData()
+    // Crear repositorios internamente (sin necesidad de Factory)
+    private val perfilRepository = PerfilRepository(firestore)
+    private val photoRepository = PhotoRepository()
+
+    // Limpiar estado (llamar al hacer logout)
+    fun limpiarEstado() {
+        userDocListener?.remove()
+        userDocListener = null
+        ultimoUidCargado = null
+        _uiState.value = PerfilUiState()
+        Log.d("EDUCA_DEBUG", "ViewModel: Estado limpiado")
     }
 
-    private fun loadUserData() {
-        viewModelScope.launch {
-            val userEmail = auth.currentUser?.email
-            if (userEmail != null) {
-                // Asumimos que obtendremos el perfil del alumno por email
-                val alumno = alumnoRepository.obtenerAlumnoPorEmail(userEmail)
-
-                if (alumno != null) {
-                    _uiState.value = _uiState.value.copy(
-                        nombre = alumno.nombre,
-                        fotoUrl = alumno.fotoUrl,
-                        errorMessage = null
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(errorMessage = "Datos de usuario no encontrados.")
-                }
-            } else {
-                _uiState.value = _uiState.value.copy(errorMessage = "Usuario no autenticado.")
-            }
+    fun cargarDatosIniciales() {
+        val authUid = auth.currentUser?.uid ?: run {
+            _uiState.update { it.copy(errorMessage = "No hay sesión activa") }
+            return
         }
-    }
-
-    fun onImageSelectedAndSave(context: Context, uri: Uri) {
+        
+        // Si el usuario cambió, limpiar estado anterior
+        if (ultimoUidCargado != null && ultimoUidCargado != authUid) {
+            Log.d("EDUCA_DEBUG", "ViewModel: Usuario cambió de $ultimoUidCargado a $authUid, limpiando...")
+            userDocListener?.remove()
+            userDocListener = null
+            _uiState.value = PerfilUiState()
+        }
+        
+        ultimoUidCargado = authUid
+        
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isUploading = true, errorMessage = null)
-            val uid = auth.currentUser?.uid
-            val userEmail = auth.currentUser?.email
-
-            if (uid == null || userEmail == null) {
-                _uiState.value = _uiState.value.copy(isUploading = false, errorMessage = "Error de autenticación.")
-                return@launch
-            }
-
+            _uiState.update { it.copy(isUploading = true, errorMessage = null) }
             try {
-                // 1. Subir la imagen a Firebase Storage
-                val path = "perfiles/$uid/profile_${UUID.randomUUID()}.jpg"
-                val urlImagen = photoRepository.uploadImage(context, uri, path)
-
-                // 2. Obtener el Document ID del alumno
-                val alumno = alumnoRepository.obtenerAlumnoPorEmail(userEmail)
-                val documentId = alumno?.id // Necesitas el ID de Firestore
-
-                if (documentId == null) {
-                    throw Exception("No se pudo encontrar el documento del alumno para actualizar.")
-                }
-
-                // 3. Guardar la URL pública en el documento de Firestore
-                val success = alumnoRepository.actualizarFotoPerfil(documentId, urlImagen)
-
-                if (success) {
-                    // Actualizar el estado con la nueva URL permanente
-                    _uiState.value = _uiState.value.copy(
-                        fotoUrl = urlImagen,
-                        isUploading = false,
-                        errorMessage = null
-                    )
+                Log.d("EDUCA_DEBUG", "ViewModel: Buscando perfil para uid: $authUid")
+                val usuario = perfilRepository.obtenerPerfil(authUid)
+                if (usuario != null) {
+                    Log.d("EDUCA_DEBUG", "ViewModel: Usuario cargado: ${usuario.nombre}, Correo: ${usuario.correo}, DocId: ${usuario.id}")
+                    _uiState.update {
+                        it.copy(
+                            usuario = usuario,
+                            fotoUrl = usuario.fotoUrl,
+                            nombre = usuario.nombre,
+                            isUploading = false
+                        )
+                    }
+                    // Observar cambios usando el ID del documento, no el authUid
+                    observarFotoUrl(usuario.id)
                 } else {
-                    _uiState.value = _uiState.value.copy(
-                        isUploading = false,
-                        errorMessage = "Error al guardar URL en Firestore."
-                    )
+                    Log.e("EDUCA_DEBUG", "ViewModel: No se encontró usuario para uid: $authUid")
+                    _uiState.update { it.copy(isUploading = false, errorMessage = "Usuario no encontrado") }
                 }
-
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isUploading = false,
-                    errorMessage = "Error al subir la foto: ${e.message}"
-                )
+                Log.e("EDUCA_DEBUG", "Error cargando datos: ${e.message}", e)
+                _uiState.update { it.copy(isUploading = false, errorMessage = e.message) }
             }
         }
+    }
+
+    // Subir a Storage usando PhotoRepository y guardar en Firestore
+    private suspend fun subirFotoYGuardar(imageUri: Uri) {
+        val uid = auth.currentUser?.uid ?: throw IllegalStateException("Usuario no autenticado")
+        Log.d("EDUCA_DEBUG", "ViewModel: Iniciando subida de foto para uid: $uid")
+        Log.d("EDUCA_DEBUG", "ViewModel: URI de imagen: $imageUri")
+        
+        // Nombre fijo para foto de perfil del usuario
+        val nombreArchivo = "$uid/profile_${System.currentTimeMillis()}.jpg"
+        
+        // Subir la foto a Firebase Storage
+        val url = photoRepository.subirFoto(imageUri, nombreArchivo)
+        Log.d("EDUCA_DEBUG", "ViewModel: Foto subida, URL: $url")
+        
+        // Cache-busting para evitar imagen vieja
+        val freshUrl = "$url?ts=${System.currentTimeMillis()}"
+
+        // Determinar el ID de documento correcto en colección "usuario"
+        val currentDocId = _uiState.value.usuario?.id ?: run {
+            Log.d("EDUCA_DEBUG", "ViewModel: DocId no disponible, buscando...")
+            // Si aún no tenemos el docID en UI, buscarlo por uid
+            val usuario = perfilRepository.obtenerPerfil(uid)
+            usuario?.id ?: throw IllegalStateException("No se encontró documento de usuario para uid=$uid")
+        }
+        
+        Log.d("EDUCA_DEBUG", "ViewModel: Actualizando Firestore con docId: $currentDocId")
+
+        // Guarda en colección "usuario" campo fotoUrl usando documentId
+        perfilRepository.actualizarFotoPerfil(currentDocId, freshUrl)
+        Log.d("EDUCA_DEBUG", "ViewModel: Firestore actualizado exitosamente")
+
+        // Actualiza UI al instante
+        val usuarioActualizado = _uiState.value.usuario?.copy(fotoUrl = freshUrl)
+        _uiState.update { it.copy(usuario = usuarioActualizado, fotoUrl = freshUrl) }
+    }
+
+    // Método que llaman tus pantallas
+    fun onImageSelectedAndSave(imageUri: Uri) {
+        Log.d("EDUCA_DEBUG", "ViewModel: onImageSelectedAndSave llamado con: $imageUri")
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploading = true, errorMessage = null) }
+            try {
+                subirFotoYGuardar(imageUri)
+                Log.d("EDUCA_DEBUG", "ViewModel: Foto guardada exitosamente")
+            } catch (e: Exception) {
+                Log.e("PerfilViewModel", "Error al subir/guardar foto: ${e.message}", e)
+                _uiState.update { it.copy(errorMessage = "Error al subir foto: ${e.message}") }
+            } finally {
+                _uiState.update { it.copy(isUploading = false) }
+            }
+        }
+    }
+
+    private fun observarFotoUrl(documentId: String) {
+        userDocListener?.remove()
+        Log.d("EDUCA_DEBUG", "ViewModel: Observando documento: $documentId")
+        userDocListener = firestore.collection("usuario")
+            .document(documentId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("EDUCA_DEBUG", "Error en listener: ${error.message}")
+                    return@addSnapshotListener
+                }
+                val nuevaFoto = snapshot?.getString("fotoUrl") ?: ""
+                Log.d("EDUCA_DEBUG", "ViewModel: Nueva foto detectada: $nuevaFoto")
+                if (nuevaFoto != _uiState.value.fotoUrl && nuevaFoto.isNotEmpty()) {
+                    _uiState.update { it.copy(fotoUrl = nuevaFoto) }
+                }
+            }
+    }
+
+    override fun onCleared() {
+        userDocListener?.remove()
+        userDocListener = null
+        super.onCleared()
     }
 }

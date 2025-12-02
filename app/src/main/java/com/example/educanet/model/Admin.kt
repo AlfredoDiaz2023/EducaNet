@@ -4,14 +4,12 @@ import com.google.firebase.firestore.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 data class Administrador(
-    // Campos obligatorios que se reescriben de Usuario
     override val id: String = "",
+    override val nombre: String = "", // El orden importa: id, nombre...
     override val correo: String = "",
     override val clave: String = "",
-    override val nombre: String = "",
     override val rol: String = "Administrador",
+    override val fotoUrl: String = "", // Faltaba este campo que está en Usuario
 
-    // Campos específicos de Administrador (si los hay)
-    val fechaRegistro: String = "", // Visto en tu AdministradorRepository
-    override val fotoUrl: String? = null // <-- CORRECCIÓN (Hereda)
-) : Usuario(id, correo, clave, nombre, rol) // Hereda de la clase base
+    val fechaRegistro: String = ""
+) : Usuario(id, nombre, correo, clave, rol, fotoUrl) // Pasamos todos

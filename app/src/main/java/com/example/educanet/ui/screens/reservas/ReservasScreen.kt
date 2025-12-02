@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.model.Reserva
 import com.example.educanet.ui.common.AppBackground
 import com.example.educanet.viewmodel.ReservaViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -26,6 +27,14 @@ fun ReservasScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(15000) // 15 segundos
+            viewModel.refreshReservas()
+        }
+    }
 
     // Muestra el snackbar para mensajes de confirmación o de error
     LaunchedEffect(uiState.confirmationMessage, uiState.error) {

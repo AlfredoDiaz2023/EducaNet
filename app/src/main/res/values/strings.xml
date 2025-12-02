@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">EducaNet</string>
+    <string name="upload_start">Starting upload...</string>
+    <string name="upload_progress">Uploading: %1$d%%</string>
+    <string name="upload_success">Upload complete</string>
+    <string name="upload_failed">Upload failed</string>
+    <string name="upload_url_error">Failed to get download URL</string>
 </resources>

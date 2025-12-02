@@ -1,6 +1,6 @@
 package com.example.educanet.viewmodel
 
-
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.ProgresoAcademico
@@ -46,14 +46,39 @@ class ProgresoAcademicoViewModel : ViewModel() {
 
 
             val currentUser = auth.currentUser
-            val uid = currentUser?.uid
+            val email = currentUser?.email
+            Log.d("ProgresoVM", "Usuario actual - Email: $email")
+            
             val role = fetchUserRole()
             _userRole.value = role
+            Log.d("ProgresoVM", "Rol del usuario: $role")
 
 
-            if (uid != null && role != null) {
-                listenForProgresos(uid, role)
+            if (email != null && role != null) {
+                // Usar el correo del usuario para buscar sus notas
+                listenForProgresos(email, role)
             } else {
+                Log.d("ProgresoVM", "No se pudo cargar - email o rol es null")
+                _cargando.value = false
+            }
+        }
+    }
+
+
+    // Nuevo método para cargar notas por correo del alumno
+    fun cargarNotasPorCorreo(correo: String, rol: String) {
+        viewModelScope.launch {
+            _cargando.value = true
+            Log.d("ProgresoVM", "cargarNotasPorCorreo - Correo: $correo, Rol: $rol")
+            try {
+                val resultado = progresoAcademicoRepository.obtenerNotas(correo, rol)
+                _progresos.value = resultado.progresoAcademico
+                Log.d("ProgresoVM", "Notas cargadas: ${resultado.progresoAcademico.size}")
+            } catch (e: Exception) {
+                Log.e("ProgresoVM", "Error: ${e.message}")
+                e.printStackTrace()
+                _progresos.value = emptyList()
+            } finally {
                 _cargando.value = false
             }
         }
@@ -68,8 +93,12 @@ class ProgresoAcademicoViewModel : ViewModel() {
 
 
         return try {
-            val userDoc = db.collection("users").document(currentUser.uid).get().await()
-            userDoc.getString("nombre")
+            // Buscar en la colección "usuario" por correo
+            val querySnapshot = db.collection("usuario")
+                .whereEqualTo("correo", currentUser.email)
+                .get()
+                .await()
+            querySnapshot.documents.firstOrNull()?.getString("nombre")
         } catch (e: Exception) {
             null
         }
@@ -84,21 +113,32 @@ class ProgresoAcademicoViewModel : ViewModel() {
 
 
         return try {
-            val userDoc = db.collection("users").document(currentUser.uid).get().await()
-            userDoc.getString("rol")
+            // Buscar en la colección "usuario" por correo
+            val querySnapshot = db.collection("usuario")
+                .whereEqualTo("correo", currentUser.email)
+                .get()
+                .await()
+            val rol = querySnapshot.documents.firstOrNull()?.getString("rol")
+            Log.d("ProgresoVM", "fetchUserRole - Email: ${currentUser.email}, Rol encontrado: $rol")
+            rol
         } catch (e: Exception) {
+            Log.e("ProgresoVM", "Error fetchUserRole: ${e.message}")
             null
         }
     }
 
 
-    private fun listenForProgresos(uid: String, userRole: String) {
+    private fun listenForProgresos(userEmail: String, userRole: String) {
         viewModelScope.launch {
             _cargando.value = true
+            Log.d("ProgresoVM", "listenForProgresos - Email: $userEmail, Rol: $userRole")
             try {
-                val resultado = progresoAcademicoRepository.obtenerNotas(uid, userRole)
+                // Pasar el correo para filtrar las notas del alumno
+                val resultado = progresoAcademicoRepository.obtenerNotas(userEmail, userRole)
                 _progresos.value = resultado.progresoAcademico
+                Log.d("ProgresoVM", "Progresos cargados: ${resultado.progresoAcademico.size}")
             } catch (e: Exception) {
+                Log.e("ProgresoVM", "Error listenForProgresos: ${e.message}")
                 e.printStackTrace()
             } finally {
                 _cargando.value = false

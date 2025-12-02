@@ -10,8 +10,7 @@ class ApoderadoRepository {
 
     suspend fun registroApoderado(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
-
-            val querySnapshot = db.collection("Apoderado")
+            val querySnapshot = db.collection("usuario") // Buscar en "usuario"
                 .whereEqualTo("correo", correo)
                 .get()
                 .await()
@@ -20,17 +19,16 @@ class ApoderadoRepository {
                 return false
             }
 
-
             val userData = hashMapOf(
                 "correo" to correo,
                 "clave" to clave,
                 "nombre" to nombre,
                 "rol" to "Apoderado",
-                "fechaRegistro" to getCurrentDate()
+                "fechaRegistro" to getCurrentDate(),
+                "fotoUrl" to null // <--- ¡ESTO ES LO QUE FALTABA!
             )
 
-
-            db.collection("Apoderado").add(userData).await()
+            db.collection("usuario").add(userData).await() // Guardar en "usuario"
             true
         } catch (e: Exception) {
             false

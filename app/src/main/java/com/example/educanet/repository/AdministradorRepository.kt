@@ -10,8 +10,7 @@ class AdministradorRepository {
 
     suspend fun registroAdministrador(correo: String, clave: String, nombre: String, rol: String): Boolean {
         return try {
-
-            val querySnapshot = db.collection("Administrador")
+            val querySnapshot = db.collection("usuario")
                 .whereEqualTo("correo", correo)
                 .get()
                 .await()
@@ -20,17 +19,16 @@ class AdministradorRepository {
                 return false
             }
 
-
             val userData = hashMapOf(
                 "correo" to correo,
                 "clave" to clave,
                 "nombre" to nombre,
                 "rol" to "Administrador",
-                "fechaRegistro" to getCurrentDate()
+                "fechaRegistro" to getCurrentDate(),
+                "fotoUrl" to null // <--- ¡ESTO ES LO QUE FALTABA!
             )
 
-
-            db.collection("Administrador").add(userData).await()
+            db.collection("usuario").add(userData).await()
             true
         } catch (e: Exception) {
             false

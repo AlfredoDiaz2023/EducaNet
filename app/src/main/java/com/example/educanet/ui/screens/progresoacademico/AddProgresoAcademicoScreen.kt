@@ -3,6 +3,7 @@ package com.example.educanet.ui.screens.progresoacademico
 import androidx.compose.foundation.layout.* // Column, Spacer, fillMaxWidth, fillMaxSize, padding, height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.* // Scaffold, Button, Text, OutlinedTextField, etc.
 import androidx.compose.runtime.* // remember, LaunchedEffect, collectAsState
 import androidx.compose.ui.Alignment
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp // Import necesario para usar 16.dp, 8.dp, etc.
 import com.example.educanet.viewmodel.AddProgresoAcademicoViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProgresoAcademicoScreen(
     onBack: () -> Unit,
@@ -56,19 +58,106 @@ fun AddProgresoAcademicoScreen(
 
             OutlinedTextField(
                 value = uiState.profesor,
-                onValueChange = viewModel::onProfesorChange,
+                onValueChange = {},
+                readOnly = true,
                 label = { Text("Profesor") },
-                modifier = Modifier.fillMaxWidth()
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color(0xFF2196F3)
+                    )
+                },
+                trailingIcon = {
+                    if (uiState.isLoadingProfesor) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF2196F3),
+                    unfocusedBorderColor = Color.Gray,
+                    disabledBorderColor = Color.Gray
+                )
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = uiState.alumno,
-                onValueChange = viewModel::onAlumnoChange,
-                label = { Text("Alumno") },
+            // Dropdown para seleccionar alumno
+            var expanded by remember { mutableStateOf(false) }
+            
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                OutlinedTextField(
+                    value = uiState.alumno,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Seleccionar Alumno") },
+                    trailingIcon = {
+                        if (uiState.isLoadingAlumnos) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                        } else {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4CAF50),
+                        focusedLabelColor = Color(0xFF4CAF50)
+                    )
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    if (uiState.alumnos.isEmpty() && !uiState.isLoadingAlumnos) {
+                        DropdownMenuItem(
+                            text = { Text("No hay alumnos registrados") },
+                            onClick = { expanded = false },
+                            enabled = false
+                        )
+                    } else {
+                        uiState.alumnos.forEach { alumno ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Column {
+                                        Text(alumno.nombre, style = MaterialTheme.typography.bodyLarge)
+                                        Text(
+                                            alumno.correo, 
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    viewModel.onAlumnoSelected(alumno)
+                                    expanded = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = Color(0xFF2196F3)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

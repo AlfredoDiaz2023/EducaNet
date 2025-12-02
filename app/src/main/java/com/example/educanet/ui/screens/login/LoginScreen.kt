@@ -2,18 +2,29 @@ package com.example.educanet.ui.screens.login
 
 import androidx.compose.runtime.Composable
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.example.educanet.model.Usuario
 
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,6 +46,7 @@ fun LoginScreen(
 
     //Variable para almacenar la clave del usuario
     var pass by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val viewModel: LoginViewModel = viewModel()
 
@@ -77,77 +89,135 @@ fun LoginScreen(
 
         }
     }
-    // Componente Column para configurar la organizacion visual de los componentes
-    Column (
+    
+    // Fondo con degradado suave
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFE3F2FD), // Azul muy claro
+                        Color(0xFFFFFFFF)
+                    )
+                )
+            )
     ) {
-        Logo(modifier = Modifier.size(150.dp))
-        // Componente Text para agregar un texto que indique en que vista me encuentro
-        Text("Iniciar Sesion",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color(0xFF59A45B)
-            )
-        // Espacio para alejar el text del input
-        Spacer(Modifier.height(16.dp))
-
-        // Componente OutlinedTextField para crear el input del usuario
-        OutlinedTextField(
-            value = correo, // Obtener el valor del input y guardarlo en la variable usuario
-            onValueChange = { correo = it}, // Actualizar la variable usuario con el nuevo ingreso del input
-            label = { Text("Usuario", color = Color(0xFF355FF6))}, // Agregar titulo Usuario al input
-            singleLine = true, // Permite que el texto del input quede en una sola linea
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            modifier = Modifier.fillMaxWidth() // El input rellena la pantalla segun su ancho
-
-        )
-
-        // Espacio para alejar los input
-        Spacer(Modifier.height(10.dp))
-
-        // Componente OutlinedTextField para crear el input de la password
-        OutlinedTextField(
-            value = pass, // Obtener el valor del input y guardarlo en la variable pass
-            onValueChange = { pass = it}, // Actualizar la variable usuario con el nuevo ingreso del input
-            label = { Text("Contraseña", color = Color(0xFF355FF6))}, // Agregar titulo Usuario al input
-            singleLine = true, // Permite que el texto del input quede en una sola linea
-            visualTransformation = PasswordVisualTransformation(), // Oculta la cpntraseña al escribirla
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Define un teclado para ingresar el dato al input
-            modifier = Modifier.fillMaxWidth() // El input rellena la pantalla segun su ancho
-        )
-        // Espacio para alejar el input del boton
-        Spacer(Modifier.height(14.dp))
-
-        // Componente Button para agregar un boton a la vista login
-        Button(
-            onClick = {
-                if (correo.isEmpty() || pass.isEmpty()) {
-                    Toast.makeText(context, "Completar todos los campos", Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-                viewModel.login(correo, pass)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3881EC), // Establecer el color de Fondo
-                contentColor = Color(0xFFFAFCFB) // Establece el color de texto
-            ),
-            enabled = !carga
+        // Componente Column para configurar la organizacion visual de los componentes
+        Column (
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (carga){
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
-            }else {
-                Text("Entrar")
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-            // Agregar boton de registro
-        TextButton(onClick = onRegisterClick){
-            Text("¿No tienes cuenta? Registrate aqui",
-                color = Color(0xFF9B1A2A)
+            Logo(modifier = Modifier.size(120.dp))
+            
+            Spacer(Modifier.height(24.dp))
+            
+            // Componente Text para agregar un texto que indique en que vista me encuentro
+            Text("Iniciar Sesión",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color(0xFF1565C0),
+                fontWeight = FontWeight.Bold
             )
+            // Espacio para alejar el text del input
+            Spacer(Modifier.height(32.dp))
+
+            // Tarjeta del Formulario
+            Card(
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Componente OutlinedTextField para crear el input del usuario
+                    OutlinedTextField(
+                        value = correo, // Obtener el valor del input y guardarlo en la variable usuario
+                        onValueChange = { correo = it}, // Actualizar la variable usuario con el nuevo ingreso del input
+                        label = { Text("Correo Electrónico")}, // Agregar titulo Usuario al input
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF1976D2)) },
+                        singleLine = true, // Permite que el texto del input quede en una sola linea
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth(), // El input rellena la pantalla segun su ancho
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF1976D2),
+                            focusedLabelColor = Color(0xFF1976D2)
+                        )
+                    )
+
+                    // Espacio para alejar los input
+                    Spacer(Modifier.height(16.dp))
+
+                    // Componente OutlinedTextField para crear el input de la password
+                    OutlinedTextField(
+                        value = pass, // Obtener el valor del input y guardarlo en la variable pass
+                        onValueChange = { pass = it}, // Actualizar la variable usuario con el nuevo ingreso del input
+                        label = { Text("Contraseña")}, // Agregar titulo Usuario al input
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF1976D2)) },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color.Gray
+                                )
+                            }
+                        },
+                        singleLine = true, // Permite que el texto del input quede en una sola linea
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(), // Oculta la cpntraseña al escribirla
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Define un teclado para ingresar el dato al input
+                        modifier = Modifier.fillMaxWidth(), // El input rellena la pantalla segun su ancho
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF1976D2),
+                            focusedLabelColor = Color(0xFF1976D2)
+                        )
+                    )
+                    // Espacio para alejar el input del boton
+                    Spacer(Modifier.height(24.dp))
+
+                    // Componente Button para agregar un boton a la vista login
+                    Button(
+                        onClick = {
+                            if (correo.isEmpty() || pass.isEmpty()) {
+                                Toast.makeText(context, "Completar todos los campos", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            viewModel.login(correo, pass)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1565C0), // Establecer el color de Fondo
+                            contentColor = Color.White // Establece el color de texto
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+                        enabled = !carga
+                    ) {
+                        if (carga){
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                        }else {
+                            Text("ENTRAR", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+            
+            Spacer(Modifier.height(24.dp))
+            
+            // Agregar boton de registro
+            TextButton(onClick = onRegisterClick){
+                Text("¿No tienes cuenta? ", color = Color.Gray)
+                Text("Regístrate aquí", color = Color(0xFF1565C0), fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

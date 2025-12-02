@@ -9,6 +9,6 @@ data class Apoderado(
     override val clave: String = "",
     override val nombre: String = "",
     override val rol: String = "Apoderado",
-    override val fotoUrl: String? = null ,// <-- CORRECCIÓN (Hereda)
+    override val fotoUrl: String = "",// <-- CORRECCIÓN (Hereda)
     val fechaRegistro: String = ""
-) : Usuario(id, correo, clave, nombre, rol)
+) : Usuario(id, nombre, correo, clave, rol, fotoUrl)

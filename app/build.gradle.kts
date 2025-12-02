@@ -34,11 +34,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -48,6 +48,7 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -64,7 +65,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+    
     //Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
@@ -74,20 +76,37 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
-    //Kotlix-Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
-
     //ViewModel - Lifecycle - Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
     //Navigation Compose
-    implementation("androidx.navigation:navigation-compose:2.7.6")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Material-Icons-Extended
     implementation("androidx.compose.material:material-icons-extended:1.7.7")
 
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    // Firebase (BoM maneja versiones)
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
+
+    // Coil (Imágenes)
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // CameraX
+    val camerax_version = "1.3.2"
+    implementation("androidx.camera:camera-core:${camerax_version}")
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    implementation("androidx.camera:camera-view:${camerax_version}")
+
+    // Iconos extendidos (para ArrowBack, etc si no los encuentra)
+    implementation("androidx.compose.material:material-icons-extended:1.6.4")
+    
     // CameraX
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
@@ -95,5 +114,4 @@ dependencies {
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.extensions)
-
 }

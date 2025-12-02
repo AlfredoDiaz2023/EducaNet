@@ -68,7 +68,7 @@ class CarritoViewModel : ViewModel() {
                     )
                 }
 
-                // 👉 2. Crear todas las reservas (si tu lógica lo requiere)
+                // 👉 2. Crear todas las reservas y notificaciones individuales
                 carritoActual.forEach { libro ->
                     val reserva = Reserva(
                         libroId = libro.id,
@@ -77,11 +77,16 @@ class CarritoViewModel : ViewModel() {
                         libroNombre = libro.nombre
                     )
                     reservaRepository.agregarReserva(reserva)
+                    
+                    // Notificación individual por cada libro reservado
+                    notificacionRepository.agregarNotificacion(
+                        titulo = "📚 Reserva de libro",
+                        mensaje = "$userName ha reservado: ${libro.nombre}"
+                    )
                 }
 
                 // 👉 3. Vaciar carrito
                 _uiState.value = _uiState.value.copy(items = emptyList())
-                notificacionRepository.agregarNotificacion("Reservas confirmadas", "Tus reservas han sido confirmadas.")
 
                 // 👉 4. Mensaje de éxito
                 _uiState.value = _uiState.value.copy(

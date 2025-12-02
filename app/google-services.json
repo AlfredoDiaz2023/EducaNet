@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "982214788099",
-    "project_id": "educanet-2468a",
-    "storage_bucket": "educanet-2468a.firebasestorage.app"
+    "project_number": "978325608446",
+    "project_id": "educanet-556f3",
+    "storage_bucket": "educanet-556f3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:982214788099:android:f63c520848c3e9fdcc7a36",
+        "mobilesdk_app_id": "1:978325608446:android:5bca72ae8200113c5492af",
         "android_client_info": {
           "package_name": "com.example.educanet"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDF-5OOgiJUhwvBZMFRLjyTOnWJCu9Tn3E"
+          "current_key": "AIzaSyA6VinNDej45TseFGRy5HE_gAJT0L4g60w"
         }
       ],
       "services": {
