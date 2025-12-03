@@ -31,6 +31,7 @@ import coil.request.ImageRequest
 import com.example.educanet.R
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.viewmodel.MenuViewModel
+import com.example.educanet.viewmodel.PerfilViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -48,13 +49,25 @@ fun MenuScreen(
     onAdminPanelClick: () -> Unit = {},
     onVerResenasClick: () -> Unit = {},
     onLogout: () -> Unit,
-    menuViewModel: MenuViewModel = viewModel()
+    menuViewModel: MenuViewModel = viewModel(),
+    perfilViewModel: PerfilViewModel = viewModel()
 ) {
     // Estado para badge de notificaciones
     var hayNotificacionesSinLeer by remember { mutableStateOf(false) }
     val notificacionRepo = remember { NotificacionRepository() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    
+    // Estado del perfil para obtener la foto actualizada
+    val perfilState by perfilViewModel.uiState.collectAsState()
+    
+    // Cargar datos del perfil al iniciar
+    LaunchedEffect(Unit) {
+        perfilViewModel.cargarDatosIniciales()
+    }
+    
+    // Usar la foto del ViewModel si está disponible, sino usar la que viene por parámetro
+    val fotoActualizada = perfilState.fotoUrl ?: fotoUrl
 
     // Verificar notificaciones sin leer al cargar
     LaunchedEffect(Unit) {
@@ -68,6 +81,7 @@ fun MenuScreen(
         while (true) {
             kotlinx.coroutines.delay(15000)
             hayNotificacionesSinLeer = notificacionRepo.hayNotificacionesSinLeer()
+            perfilViewModel.cargarDatosIniciales()
         }
     }
 
@@ -97,7 +111,7 @@ fun MenuScreen(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
-                        .data(if (!fotoUrl.isNullOrEmpty()) fotoUrl else R.drawable.ic_user_placeholder)
+                        .data(if (!fotoActualizada.isNullOrEmpty()) fotoActualizada else R.drawable.ic_user_placeholder)
                         .crossfade(true)
                         .build(),
                     placeholder = painterResource(R.drawable.ic_user_placeholder),
