@@ -44,7 +44,12 @@ android {
         compose = true
     }
 
-
+    // Habilitar JUnit 5 para tests de Kotest
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {

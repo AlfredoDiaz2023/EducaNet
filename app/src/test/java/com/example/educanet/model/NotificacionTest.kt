@@ -15,7 +15,8 @@ class NotificacionTest : BehaviorSpec({
                 noti.titulo shouldBe ""
                 noti.mensaje shouldBe ""
                 noti.isRead shouldBe false
-                noti.fecha shouldBe 0 shouldBe true
+                // fecha tiene valor por defecto de System.currentTimeMillis(), así que solo verificamos que sea mayor a 0
+                (noti.fecha > 0) shouldBe true
             }
         }
 
