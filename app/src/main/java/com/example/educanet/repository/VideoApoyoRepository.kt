@@ -15,7 +15,20 @@ class VideoApoyoRepository {
 
     suspend fun agregarVideo(video: VideoApoyo): Boolean {
         return try {
-            db.collection("video_apoyo").add(video).await()
+            // Crear estructura plana para Firestore
+            val videoData = hashMapOf(
+                "nombre" to video.nombre,
+                "descripcion" to video.descripcion,
+                "duracion" to video.duracion,
+                "nivel" to video.nivel,
+                "video" to video.video,
+                "profesor" to hashMapOf(
+                    "correo" to video.profesor.correo,
+                    "nombre" to video.profesor.nombre,
+                    "rol" to video.profesor.rol
+                )
+            )
+            db.collection("video_apoyo").add(videoData).await()
             true
         } catch (e: Exception) {
             e.printStackTrace()

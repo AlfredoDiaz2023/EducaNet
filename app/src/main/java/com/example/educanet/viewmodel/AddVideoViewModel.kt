@@ -2,7 +2,7 @@ package com.example.educanet.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educanet.model.Profesor
+import com.example.educanet.model.ProfesorSimple
 import com.example.educanet.model.VideoApoyo
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.VideoApoyoRepository
@@ -102,7 +102,11 @@ class AddVideoViewModel : ViewModel() {
                     _uiState.value = _uiState.value.copy(errorMessage = "El documento del profesor no tiene nombre.", isSaving = false)
                     return@launch
                 }
-                val profesor = Profesor(nombre = profesorNombre, correo = currentUser.email ?: "")
+                val profesorSimple = ProfesorSimple(
+                    correo = currentUser.email ?: "",
+                    nombre = profesorNombre,
+                    rol = "Profesor"
+                )
 
                 val videoId = getYouTubeId(_uiState.value.videoUrl)
                 if (videoId == null) {
@@ -118,7 +122,7 @@ class AddVideoViewModel : ViewModel() {
                     video = embedUrl, // Guardamos la URL de incrustación
                     descripcion = _uiState.value.descripcion,
                     duracion = _uiState.value.duracion,
-                    profesor = profesor
+                    profesor = profesorSimple
                 )
 
                 val success = videoApoyoRepository.agregarVideo(video)

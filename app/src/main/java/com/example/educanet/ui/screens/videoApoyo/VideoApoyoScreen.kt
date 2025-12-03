@@ -469,7 +469,7 @@ fun VideoApoyoItemModerno(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Profesor
-                    video.profesor?.let { profesor ->
+                    if (video.profesor.nombre.isNotEmpty()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
                                 shape = CircleShape,
@@ -478,7 +478,7 @@ fun VideoApoyoItemModerno(
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        profesor.nombre.firstOrNull()?.uppercase() ?: "P",
+                                        video.profesor.nombre.firstOrNull()?.uppercase() ?: "P",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFFE91E63)
@@ -487,7 +487,7 @@ fun VideoApoyoItemModerno(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                profesor.nombre,
+                                video.profesor.nombre,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -768,7 +768,7 @@ fun VideoPlayerDialog(
                         }
                     }
                     
-                    video.profesor?.let { profesor ->
+                    if (video.profesor.nombre.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
@@ -778,7 +778,7 @@ fun VideoPlayerDialog(
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        profesor.nombre.firstOrNull()?.uppercase() ?: "P",
+                                        video.profesor.nombre.firstOrNull()?.uppercase() ?: "P",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF2196F3)
@@ -793,7 +793,7 @@ fun VideoPlayerDialog(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    profesor.nombre,
+                                    video.profesor.nombre,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
