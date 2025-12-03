@@ -30,4 +30,8 @@ class VideoApoyoViewModel : ViewModel() {
             _cargando.value = false
         }
     }
+
+    fun cargarVideos() {
+        obtenerVideos()
+    }
 }

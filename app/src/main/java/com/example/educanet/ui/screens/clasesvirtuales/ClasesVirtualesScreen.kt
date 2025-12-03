@@ -48,6 +48,14 @@ fun ClasesVirtualesScreen(
         listOf("Todos") + clases.map { it.nivel }.distinct().sorted()
     }
     
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(15000)
+            claseVirtualViewModel.obtenerClases()
+        }
+    }
+
     // Filtrar clases por nivel
     val clasesFiltradas = remember(clases, selectedNivel) {
         if (selectedNivel == "Todos") clases

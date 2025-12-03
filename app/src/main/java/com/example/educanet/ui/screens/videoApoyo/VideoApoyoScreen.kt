@@ -58,6 +58,14 @@ fun VideoApoyoScreen(
         listOf("Todos") + videos.map { it.nivel }.distinct().sorted()
     }
     
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(15000)
+            videoApoyoViewModel.cargarVideos()
+        }
+    }
+
     // Filtrar videos por nivel
     val videosFiltrados = remember(videos, selectedNivel) {
         if (selectedNivel == "Todos") videos

@@ -63,6 +63,14 @@ fun MenuScreen(
         }
     }
 
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(15000)
+            hayNotificacionesSinLeer = notificacionRepo.hayNotificacionesSinLeer()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo con logo
         Image(
