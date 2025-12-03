@@ -168,45 +168,38 @@ class ApoderadoViewModel : ViewModel() {
     fun enviarSolicitudVinculacion(alumno: AlumnoVinculadoInfo) {
         viewModelScope.launch {
             try {
-                val state = _uiState.value
-                
-                // Verificar que tenemos el ID del apoderado
-                val apoderadoId = if (state.apoderadoDocId.isNotEmpty()) {
-                    state.apoderadoDocId
-                } else {
-                    // Buscar el ID del apoderado si no está disponible
-                    val currentUser = auth.currentUser
-                    if (currentUser == null) {
-                        _uiState.value = _uiState.value.copy(
-                            errorMessage = "Usuario no autenticado"
-                        )
-                        return@launch
-                    }
-                    
-                    val apoderadoSnapshot = db.collection("usuario")
-                        .whereEqualTo("correo", currentUser.email)
-                        .get()
-                        .await()
-                    
-                    if (apoderadoSnapshot.isEmpty) {
-                        _uiState.value = _uiState.value.copy(
-                            errorMessage = "No se encontró el apoderado"
-                        )
-                        return@launch
-                    }
-                    
-                    val docId = apoderadoSnapshot.documents.first().id
-                    // Actualizar el estado con el ID
-                    _uiState.value = _uiState.value.copy(apoderadoDocId = docId)
-                    docId
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Usuario no autenticado"
+                    )
+                    return@launch
                 }
+
+                // Siempre buscar los datos del apoderado frescos de Firestore
+                val apoderadoSnapshot = db.collection("usuario")
+                    .whereEqualTo("correo", currentUser.email)
+                    .get()
+                    .await()
                 
-                Log.d("ApoderadoVM", "Enviando solicitud con apoderadoId: $apoderadoId")
+                if (apoderadoSnapshot.isEmpty) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "No se encontró el apoderado"
+                    )
+                    return@launch
+                }
+
+                val apoderadoDoc = apoderadoSnapshot.documents.first()
+                val apoderadoId = apoderadoDoc.id
+                val apoderadoNombre = apoderadoDoc.getString("nombre") ?: ""
+                val apoderadoCorreo = apoderadoDoc.getString("correo") ?: currentUser.email ?: ""
+                
+                Log.d("ApoderadoVM", "Enviando solicitud - ID: $apoderadoId, Nombre: $apoderadoNombre, Correo: $apoderadoCorreo")
                 
                 val solicitud = hashMapOf(
                     "apoderadoId" to apoderadoId,
-                    "apoderadoNombre" to state.nombreApoderado,
-                    "apoderadoCorreo" to state.correoApoderado,
+                    "apoderadoNombre" to apoderadoNombre,
+                    "apoderadoCorreo" to apoderadoCorreo,
                     "alumnoId" to alumno.id,
                     "alumnoNombre" to alumno.nombre,
                     "alumnoCorreo" to alumno.correo,
@@ -219,8 +212,8 @@ class ApoderadoViewModel : ViewModel() {
                 val nuevaSolicitud = SolicitudVinculacion(
                     id = docRef.id,
                     apoderadoId = apoderadoId,
-                    apoderadoNombre = state.nombreApoderado,
-                    apoderadoCorreo = state.correoApoderado,
+                    apoderadoNombre = apoderadoNombre,
+                    apoderadoCorreo = apoderadoCorreo,
                     alumnoId = alumno.id,
                     alumnoNombre = alumno.nombre,
                     alumnoCorreo = alumno.correo,
@@ -228,6 +221,9 @@ class ApoderadoViewModel : ViewModel() {
                 )
 
                 _uiState.value = _uiState.value.copy(
+                    apoderadoDocId = apoderadoId,
+                    nombreApoderado = apoderadoNombre,
+                    correoApoderado = apoderadoCorreo,
                     solicitudPendiente = nuevaSolicitud,
                     showSolicitudDialog = false,
                     successMessage = "Solicitud enviada correctamente. El administrador la revisará pronto."

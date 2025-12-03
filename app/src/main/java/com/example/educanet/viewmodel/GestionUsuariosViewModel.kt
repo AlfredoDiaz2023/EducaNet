@@ -126,25 +126,53 @@ class GestionUsuariosViewModel : ViewModel() {
             try {
                 // Verificar que el apoderadoId no esté vacío
                 val apoderadoId = if (solicitud.apoderadoId.isNotEmpty()) {
-                    solicitud.apoderadoId
-                } else {
-                    // Buscar el apoderado por correo si el ID está vacío
-                    val apoderadoSnapshot = db.collection("usuario")
-                        .whereEqualTo("correo", solicitud.apoderadoCorreo)
-                        .get()
-                        .await()
-                    
-                    if (apoderadoSnapshot.isEmpty) {
-                        _uiState.value = _uiState.value.copy(
-                            error = "No se encontró el apoderado con correo: ${solicitud.apoderadoCorreo}"
-                        )
-                        return@launch
+                    // Verificar que el documento existe
+                    val docExists = db.collection("usuario").document(solicitud.apoderadoId).get().await()
+                    if (docExists.exists()) {
+                        solicitud.apoderadoId
+                    } else {
+                        // El ID no existe, buscar por correo
+                        null
                     }
-                    apoderadoSnapshot.documents.first().id
+                } else {
+                    null
+                }
+                
+                val finalApoderadoId = apoderadoId ?: run {
+                    // Buscar el apoderado por correo si el ID está vacío o no existe
+                    if (solicitud.apoderadoCorreo.isEmpty()) {
+                        // Buscar por nombre como último recurso
+                        val apoderadoSnapshot = db.collection("usuario")
+                            .whereEqualTo("nombre", solicitud.apoderadoNombre)
+                            .whereEqualTo("rol", "Apoderado")
+                            .get()
+                            .await()
+                        
+                        if (apoderadoSnapshot.isEmpty) {
+                            _uiState.value = _uiState.value.copy(
+                                error = "No se encontró el apoderado. Por favor, vincule manualmente desde la pestaña Apoderados."
+                            )
+                            return@launch
+                        }
+                        apoderadoSnapshot.documents.first().id
+                    } else {
+                        val apoderadoSnapshot = db.collection("usuario")
+                            .whereEqualTo("correo", solicitud.apoderadoCorreo)
+                            .get()
+                            .await()
+                        
+                        if (apoderadoSnapshot.isEmpty) {
+                            _uiState.value = _uiState.value.copy(
+                                error = "No se encontró el apoderado con correo: ${solicitud.apoderadoCorreo}"
+                            )
+                            return@launch
+                        }
+                        apoderadoSnapshot.documents.first().id
+                    }
                 }
 
                 // Actualizar el apoderado con la vinculación
-                db.collection("usuario").document(apoderadoId).update(
+                db.collection("usuario").document(finalApoderadoId).update(
                     mapOf(
                         "alumnoVinculadoId" to solicitud.alumnoId,
                         "alumnoVinculadoNombre" to solicitud.alumnoNombre,
