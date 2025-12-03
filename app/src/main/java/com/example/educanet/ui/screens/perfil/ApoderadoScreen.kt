@@ -184,36 +184,19 @@ fun PerfilApoderadoScreen(
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Foto de perfil con borde
+                            // Foto de perfil editable
                             Box(
                                 modifier = Modifier
-                                    .size(100.dp)
-                                    .shadow(8.dp, CircleShape)
-                                    .clip(CircleShape)
-                                    .background(Color.White)
-                                    .border(3.dp, Color.White, CircleShape),
+                                    .size(120.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (!uiState.fotoUrl.isNullOrEmpty()) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(context)
-                                            .data(uiState.fotoUrl)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "Foto de perfil",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Default.Person,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(50.dp),
-                                        tint = Color(0xFFD32F2F)
-                                    )
-                                }
+                                FotoPerfil(
+                                    fotoUrl = uiState.fotoUrl,
+                                    isUploading = uiState.isUploading,
+                                    onImageSelected = { uri ->
+                                        perfilViewModel.onImageSelectedAndSave(uri)
+                                    }
+                                )
                             }
                             
                             Spacer(modifier = Modifier.height(16.dp))
