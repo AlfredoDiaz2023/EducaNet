@@ -66,19 +66,32 @@ class AddClaseVirtualViewModel : ViewModel() {
                     return@launch
                 }
 
-                val userDoc = db.collection("users").document(currentUser.uid).get().await()
+                // Buscar usuario por correo en la colección "usuario"
+                val querySnapshot = db.collection("usuario")
+                    .whereEqualTo("correo", currentUser.email)
+                    .get()
+                    .await()
+
+                if (querySnapshot.isEmpty) {
+                    _uiState.value = _uiState.value.copy(errorMessage = "No se encontró el documento del usuario.", isSaving = false)
+                    return@launch
+                }
+
+                val userDoc = querySnapshot.documents[0]
                 val userRole = userDoc.getString("rol")
 
-                if (userRole != "Profesor") {
+                if (userRole?.equals("Profesor", ignoreCase = true) != true) {
                     _uiState.value = _uiState.value.copy(errorMessage = "Solo los profesores pueden agregar clases virtuales.", isSaving = false)
                     return@launch
                 }
                 
-                val profesor = userDoc.toObject(Profesor::class.java)
-                if (profesor == null) {
+                val profesorNombre = userDoc.getString("nombre")
+                if (profesorNombre == null) {
                     _uiState.value = _uiState.value.copy(errorMessage = "No se pudieron obtener los datos del profesor.", isSaving = false)
                     return@launch
                 }
+
+                val profesor = Profesor(nombre = profesorNombre, correo = currentUser.email ?: "")
 
                 val claseVirtual = ClaseVirtual(
                     nombre = _uiState.value.nombre,

@@ -23,7 +23,8 @@ data class AddVideoUiState(
     val duracion: Int = 0,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val successMessage: String? = null
 )
 
 class AddVideoViewModel : ViewModel() {
@@ -78,12 +79,18 @@ class AddVideoViewModel : ViewModel() {
                     return@launch
                 }
 
-                val userDoc = db.collection("users").document(currentUser.uid).get().await()
-                if (!userDoc.exists()) {
+                // Buscar usuario por correo en la colección "usuario"
+                val querySnapshot = db.collection("usuario")
+                    .whereEqualTo("correo", currentUser.email)
+                    .get()
+                    .await()
+
+                if (querySnapshot.isEmpty) {
                     _uiState.value = _uiState.value.copy(errorMessage = "No se encontró el documento del usuario.", isSaving = false)
                     return@launch
                 }
 
+                val userDoc = querySnapshot.documents[0]
                 val userRole = userDoc.getString("rol")
                 if (userRole?.equals("Profesor", ignoreCase = true) != true) {
                     _uiState.value = _uiState.value.copy(errorMessage = "Solo los profesores pueden agregar videos.", isSaving = false)
@@ -118,10 +125,14 @@ class AddVideoViewModel : ViewModel() {
 
                 if (success) {
                     notificacionRepository.agregarNotificacion(
-                        titulo = "Nuevo video de apoyo agregado",
-                        mensaje = "Se ha agregado el video: ${_uiState.value.nombre}"
+                        titulo = "📹 ¡Nuevo video de apoyo disponible!",
+                        mensaje = "El profesor $profesorNombre ha publicado: ${_uiState.value.nombre}. Nivel: ${_uiState.value.nivel}"
                     )
-                    _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false, 
+                        saveSuccess = true,
+                        successMessage = "¡Video publicado exitosamente!"
+                    )
                 } else {
                     _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Error al guardar el video.")
                 }

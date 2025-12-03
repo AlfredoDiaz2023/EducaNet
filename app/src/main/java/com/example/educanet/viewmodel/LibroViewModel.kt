@@ -21,7 +21,8 @@ data class LibroScreenUiState(
     val libros: List<Libro> = emptyList(),
     val resenas: List<Resena> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val successMessage: String? = null
 )
 
 class LibroViewModel : ViewModel() {
@@ -114,6 +115,7 @@ class LibroViewModel : ViewModel() {
             val success = resenaRepository.agregarResena(resena)
             if (success) {
                 obtenerResenas(libroId)
+                _uiState.value = _uiState.value.copy(successMessage = "¡Reseña agregada exitosamente!")
             } else {
                 _uiState.value = _uiState.value.copy(error = "Error al agregar la reseña.")
             }
@@ -149,10 +151,25 @@ class LibroViewModel : ViewModel() {
                         titulo = "Reserva de libro",
                         mensaje = "El usuario $nombreUsuario ($rolUsuario) ha reservado el libro: ${libro.nombre}"
                     )
+                    _uiState.value = _uiState.value.copy(successMessage = "¡Libro reservado exitosamente!")
                 } else {
                     _uiState.value = _uiState.value.copy(error = "Error al reservar el libro.")
                 }
+            } else {
+                _uiState.value = _uiState.value.copy(error = "Libro sin stock")
             }
         }
+    }
+
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(successMessage = null, error = null)
+    }
+
+    fun reservarLibroAlCarrito(libro: Libro) {
+        _uiState.value = _uiState.value.copy(successMessage = "¡Libro agregado al carrito!")
+    }
+
+    fun mostrarErrorSinStock() {
+        _uiState.value = _uiState.value.copy(error = "Libro sin stock")
     }
 }
