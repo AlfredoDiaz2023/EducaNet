@@ -1,96 +1,182 @@
 package com.example.educanet.ui.screens.splash
 
-import android.window.SplashScreen
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.educanet.R
 import kotlinx.coroutines.delay
-import kotlin.math.tan
 
 @Composable
 fun SplashScreen(
     modifier: Modifier = Modifier
 ) {
-    // Duración total en milisegundos
-    val duration = 800
-
-    // Animables para skewX y skewY
-    val skewX = remember { Animatable(0f) }
-    val skewY = remember { Animatable(0f) }
+    // Animación de escala para el logo
+    val scale = remember { Animatable(0f) }
+    
+    // Animación de opacidad para el texto
+    val textAlpha = remember { Animatable(0f) }
+    
+    // Animación de los puntos de carga
+    val infiniteTransition = rememberInfiniteTransition(label = "loading")
+    val dot1Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dot1"
+    )
+    val dot2Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, delayMillis = 150),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dot2"
+    )
+    val dot3Alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, delayMillis = 300),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dot3"
+    )
 
     LaunchedEffect(Unit) {
-        // Animación de skewX y skewY con valores de keyframes
-        // 0% (skew 0deg, 0deg)
-        skewX.snapTo(0f)
-        skewY.snapTo(0f)
-
-        // 30% (skew 25deg, 25deg)
-        skewX.animateTo(25f, animationSpec = tween(durationMillis = 240, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-        skewY.animateTo(25f, animationSpec = tween(durationMillis = 240, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-
-        delay(80) // Esperar para la siguiente transición (40% en el keyframe)
-
-        // 40% (skew -15deg, -15deg)
-        skewX.animateTo(-15f, animationSpec = tween(durationMillis = 80, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-        skewY.animateTo(-15f, animationSpec = tween(durationMillis = 80, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-
-        delay(80) // Esperar para la siguiente transición (50% en el keyframe)
-
-        // 50% (skew 15deg, 15deg)
-        skewX.animateTo(15f, animationSpec = tween(durationMillis = 120, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-        skewY.animateTo(15f, animationSpec = tween(durationMillis = 120, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-
-        delay(120) // Esperar para la siguiente transición (65% en el keyframe)
-
-        // 65% (skew -5deg, -5deg)
-        skewX.animateTo(-5f, animationSpec = tween(durationMillis = 150, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-        skewY.animateTo(-5f, animationSpec = tween(durationMillis = 150, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-
-        delay(120) // Esperar para la siguiente transición (75% en el keyframe)
-
-        // 75% (skew 5deg, 5deg)
-        skewX.animateTo(5f, animationSpec = tween(durationMillis = 120, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-        skewY.animateTo(5f, animationSpec = tween(durationMillis = 120, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-
-        delay(160) // Esperar para la siguiente transición (100% en el keyframe)
-
-        // 100% (skew 0deg, 0deg)
-        skewX.animateTo(0f, animationSpec = tween(durationMillis = 160, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
-        skewY.animateTo(0f, animationSpec = tween(durationMillis = 160, easing = CubicBezierEasing(0.55f, 0.085f, 0.68f, 0.53f)))
+        // Animación de entrada del logo con rebote
+        scale.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        )
+        delay(300)
+        // Fade in del texto
+        textAlpha.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(500)
+        )
     }
 
-    // Convertir grados a radianes para la función de tan
-    fun degToRad(deg: Float) = deg * (Math.PI / 180f).toFloat()
-
-    // Aplicar skew usando scaleX y scaleY
-    val skewXRad = tan(degToRad(skewX.value))
-    val skewYRad = tan(degToRad(skewY.value))
-
-    // Aplicamos la transformación a la imagen
     Box(
-        modifier = modifier.graphicsLayer(
-            transformOrigin = TransformOrigin(0.5f, 0.5f),
-            scaleX = 1 + skewXRad, // Aplicamos el efecto de skew en X
-            scaleY = 1 + skewYRad  // Aplicamos el efecto de skew en Y
-        )
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF1565C0), // Azul oscuro
+                        Color(0xFF42A5F5), // Azul medio
+                        Color(0xFF90CAF9)  // Azul claro
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo), // Cambia esto por tu logo
-            contentDescription = "Logo animado",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Logo con animación de escala
+            Box(
+                modifier = Modifier
+                    .size(180.dp)
+                    .scale(scale.value)
+                    .background(
+                        color = Color.White.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo EducaNet",
+                    modifier = Modifier
+                        .size(140.dp)
+                        .scale(scale.value),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Nombre de la app
+            Text(
+                text = "EducaNet",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.alpha(textAlpha.value)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Slogan
+            Text(
+                text = "Aprendiendo juntos",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Light,
+                color = Color.White.copy(alpha = 0.9f),
+                modifier = Modifier.alpha(textAlpha.value)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Indicador de carga con puntos animados
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.alpha(textAlpha.value)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .alpha(dot1Alpha)
+                        .background(Color.White, CircleShape)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .alpha(dot2Alpha)
+                        .background(Color.White, CircleShape)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .alpha(dot3Alpha)
+                        .background(Color.White, CircleShape)
+                )
+            }
+        }
+
+        // Versión en la parte inferior
+        Text(
+            text = "v1.0.0",
+            fontSize = 12.sp,
+            color = Color.White.copy(alpha = 0.6f),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 32.dp)
+                .alpha(textAlpha.value)
         )
     }
 }
