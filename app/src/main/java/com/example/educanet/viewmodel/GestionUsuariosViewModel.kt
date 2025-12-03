@@ -30,6 +30,7 @@ data class UsuarioAdmin(
 data class GestionUsuariosUiState(
     val usuarios: List<UsuarioAdmin> = emptyList(),
     val alumnos: List<UsuarioAdmin> = emptyList(),
+    val alumnosDisponibles: List<UsuarioAdmin> = emptyList(),
     val solicitudesPendientes: List<SolicitudVinculacion> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
@@ -60,6 +61,7 @@ class GestionUsuariosViewModel : ViewModel() {
 
                 val usuarios = mutableListOf<UsuarioAdmin>()
                 val alumnos = mutableListOf<UsuarioAdmin>()
+                val alumnosVinculadosIds = mutableSetOf<String>()
                 
                 snapshot?.documents?.forEach { doc ->
                     val rol = doc.getString("rol") ?: ""
@@ -83,11 +85,22 @@ class GestionUsuariosViewModel : ViewModel() {
                     if (rol == "Alumno") {
                         alumnos.add(usuario)
                     }
+                    
+                    // Registrar alumnos que ya están vinculados a apoderados
+                    if (rol == "Apoderado" && usuario.alumnoVinculadoId.isNotEmpty()) {
+                        alumnosVinculadosIds.add(usuario.alumnoVinculadoId)
+                    }
+                }
+
+                // Filtrar alumnos disponibles (no vinculados)
+                val alumnosDisponibles = alumnos.filter { alumno ->
+                    alumno.id !in alumnosVinculadosIds
                 }
 
                 _uiState.value = _uiState.value.copy(
                     usuarios = usuarios,
                     alumnos = alumnos,
+                    alumnosDisponibles = alumnosDisponibles,
                     isLoading = false
                 )
             }

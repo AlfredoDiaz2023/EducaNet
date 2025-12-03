@@ -139,22 +139,50 @@ class ApoderadoViewModel : ViewModel() {
     fun cargarAlumnosDisponibles() {
         viewModelScope.launch {
             try {
+                // Primero obtener todos los alumnos vinculados a apoderados
+                val apoderadosSnapshot = db.collection("usuario")
+                    .whereEqualTo("rol", "Apoderado")
+                    .get()
+                    .await()
+                
+                val alumnosVinculadosIds = apoderadosSnapshot.documents.mapNotNull { doc ->
+                    doc.getString("alumnoVinculadoId")
+                }.filter { it.isNotEmpty() }.toSet()
+
+                // También obtener alumnos con solicitudes pendientes
+                val solicitudesPendientes = db.collection("solicitudes_vinculacion")
+                    .whereEqualTo("estado", "pendiente")
+                    .get()
+                    .await()
+                
+                val alumnosConSolicitudPendiente = solicitudesPendientes.documents.mapNotNull { doc ->
+                    doc.getString("alumnoId")
+                }.filter { it.isNotEmpty() }.toSet()
+
+                // Obtener todos los alumnos
                 val alumnosSnapshot = db.collection("usuario")
                     .whereEqualTo("rol", "Alumno")
                     .get()
                     .await()
 
-                val alumnos = alumnosSnapshot.documents.mapNotNull { doc ->
-                    AlumnoVinculadoInfo(
-                        id = doc.id,
-                        nombre = doc.getString("nombre") ?: "",
-                        correo = doc.getString("correo") ?: "",
-                        fotoUrl = doc.getString("fotoUrl") ?: ""
-                    )
+                // Filtrar solo los que NO están vinculados y NO tienen solicitud pendiente
+                val alumnosDisponibles = alumnosSnapshot.documents.mapNotNull { doc ->
+                    val alumnoId = doc.id
+                    // Excluir si ya está vinculado o tiene solicitud pendiente
+                    if (alumnoId in alumnosVinculadosIds || alumnoId in alumnosConSolicitudPendiente) {
+                        null
+                    } else {
+                        AlumnoVinculadoInfo(
+                            id = alumnoId,
+                            nombre = doc.getString("nombre") ?: "",
+                            correo = doc.getString("correo") ?: "",
+                            fotoUrl = doc.getString("fotoUrl") ?: ""
+                        )
+                    }
                 }
 
                 _uiState.value = _uiState.value.copy(
-                    alumnosDisponibles = alumnos,
+                    alumnosDisponibles = alumnosDisponibles,
                     showSolicitudDialog = true
                 )
             } catch (e: Exception) {

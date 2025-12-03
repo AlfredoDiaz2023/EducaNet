@@ -149,7 +149,7 @@ fun GestionUsuariosScreen(
                         items(usuariosFiltrados, key = { it.id }) { usuario ->
                             UsuarioAdminCard(
                                 usuario = usuario,
-                                alumnos = if (usuario.rol == "Apoderado") uiState.alumnos else emptyList(),
+                                alumnos = if (usuario.rol == "Apoderado") uiState.alumnosDisponibles else emptyList(),
                                 onEdit = {
                                     selectedUsuario = usuario
                                     showEditDialog = true
@@ -264,7 +264,7 @@ fun GestionUsuariosScreen(
     if (showVincularDialog && selectedUsuario != null) {
         VincularAlumnoDialog(
             apoderado = selectedUsuario!!,
-            alumnos = uiState.alumnos,
+            alumnos = uiState.alumnosDisponibles,
             onDismiss = { showVincularDialog = false },
             onVincular = { alumno ->
                 viewModel.vincularAlumnoManual(
