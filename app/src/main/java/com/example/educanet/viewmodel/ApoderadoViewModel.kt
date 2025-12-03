@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Alumno
 import com.example.educanet.model.ProgresoAcademico
+import com.example.educanet.model.SolicitudVinculacion
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +15,17 @@ import kotlinx.coroutines.tasks.await
 
 data class ApoderadoUiState(
     val nombreApoderado: String = "",
+    val correoApoderado: String = "",
+    val apoderadoDocId: String = "",
     val fotoUrlApoderado: String = "",
     val alumnoVinculado: AlumnoVinculadoInfo? = null,
     val notasAlumno: List<ProgresoAcademico> = emptyList(),
+    val alumnosDisponibles: List<AlumnoVinculadoInfo> = emptyList(),
+    val solicitudPendiente: SolicitudVinculacion? = null,
     val cargando: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val successMessage: String? = null,
+    val showSolicitudDialog: Boolean = false
 )
 
 data class AlumnoVinculadoInfo(
@@ -36,14 +43,14 @@ class ApoderadoViewModel : ViewModel() {
     val uiState: StateFlow<ApoderadoUiState> = _uiState
 
     fun cargarDatosApoderado() {
-        val uid = auth.currentUser?.uid ?: return
+        val currentUser = auth.currentUser ?: return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(cargando = true)
             try {
-                // Buscar datos del apoderado
+                // Buscar datos del apoderado por correo
                 val apoderadoSnapshot = db.collection("usuario")
-                    .whereEqualTo("uid", uid)
+                    .whereEqualTo("correo", currentUser.email)
                     .get()
                     .await()
 
@@ -57,6 +64,7 @@ class ApoderadoViewModel : ViewModel() {
 
                 val apoderadoDoc = apoderadoSnapshot.documents.first()
                 val nombreApoderado = apoderadoDoc.getString("nombre") ?: ""
+                val correoApoderado = apoderadoDoc.getString("correo") ?: ""
                 val fotoUrlApoderado = apoderadoDoc.getString("fotoUrl") ?: ""
                 val alumnoVinculadoId = apoderadoDoc.getString("alumnoVinculadoId")
                 val alumnoVinculadoNombre = apoderadoDoc.getString("alumnoVinculadoNombre")
@@ -68,6 +76,8 @@ class ApoderadoViewModel : ViewModel() {
 
                 _uiState.value = _uiState.value.copy(
                     nombreApoderado = nombreApoderado,
+                    correoApoderado = correoApoderado,
+                    apoderadoDocId = apoderadoDoc.id,
                     fotoUrlApoderado = fotoUrlApoderado
                 )
 
@@ -83,6 +93,8 @@ class ApoderadoViewModel : ViewModel() {
                     // Cargar notas del alumno
                     cargarNotasAlumno(alumnoVinculadoCorreo)
                 } else {
+                    // No tiene alumno vinculado, verificar si hay solicitud pendiente
+                    verificarSolicitudPendiente(apoderadoDoc.id)
                     _uiState.value = _uiState.value.copy(cargando = false)
                 }
 
@@ -94,6 +106,135 @@ class ApoderadoViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    private suspend fun verificarSolicitudPendiente(apoderadoId: String) {
+        try {
+            val solicitudSnapshot = db.collection("solicitudes_vinculacion")
+                .whereEqualTo("apoderadoId", apoderadoId)
+                .whereEqualTo("estado", "pendiente")
+                .get()
+                .await()
+
+            if (!solicitudSnapshot.isEmpty) {
+                val doc = solicitudSnapshot.documents.first()
+                val solicitud = SolicitudVinculacion(
+                    id = doc.id,
+                    apoderadoId = doc.getString("apoderadoId") ?: "",
+                    apoderadoNombre = doc.getString("apoderadoNombre") ?: "",
+                    apoderadoCorreo = doc.getString("apoderadoCorreo") ?: "",
+                    alumnoId = doc.getString("alumnoId") ?: "",
+                    alumnoNombre = doc.getString("alumnoNombre") ?: "",
+                    alumnoCorreo = doc.getString("alumnoCorreo") ?: "",
+                    fechaSolicitud = doc.getLong("fechaSolicitud") ?: 0L,
+                    estado = doc.getString("estado") ?: "pendiente"
+                )
+                _uiState.value = _uiState.value.copy(solicitudPendiente = solicitud)
+            }
+        } catch (e: Exception) {
+            Log.e("ApoderadoVM", "Error verificando solicitud: ${e.message}")
+        }
+    }
+
+    fun cargarAlumnosDisponibles() {
+        viewModelScope.launch {
+            try {
+                val alumnosSnapshot = db.collection("usuario")
+                    .whereEqualTo("rol", "Alumno")
+                    .get()
+                    .await()
+
+                val alumnos = alumnosSnapshot.documents.mapNotNull { doc ->
+                    AlumnoVinculadoInfo(
+                        id = doc.id,
+                        nombre = doc.getString("nombre") ?: "",
+                        correo = doc.getString("correo") ?: "",
+                        fotoUrl = doc.getString("fotoUrl") ?: ""
+                    )
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    alumnosDisponibles = alumnos,
+                    showSolicitudDialog = true
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error al cargar alumnos: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun enviarSolicitudVinculacion(alumno: AlumnoVinculadoInfo) {
+        viewModelScope.launch {
+            try {
+                val state = _uiState.value
+                
+                val solicitud = hashMapOf(
+                    "apoderadoId" to state.apoderadoDocId,
+                    "apoderadoNombre" to state.nombreApoderado,
+                    "apoderadoCorreo" to state.correoApoderado,
+                    "alumnoId" to alumno.id,
+                    "alumnoNombre" to alumno.nombre,
+                    "alumnoCorreo" to alumno.correo,
+                    "fechaSolicitud" to System.currentTimeMillis(),
+                    "estado" to "pendiente"
+                )
+
+                val docRef = db.collection("solicitudes_vinculacion").add(solicitud).await()
+                
+                val nuevaSolicitud = SolicitudVinculacion(
+                    id = docRef.id,
+                    apoderadoId = state.apoderadoDocId,
+                    apoderadoNombre = state.nombreApoderado,
+                    apoderadoCorreo = state.correoApoderado,
+                    alumnoId = alumno.id,
+                    alumnoNombre = alumno.nombre,
+                    alumnoCorreo = alumno.correo,
+                    estado = "pendiente"
+                )
+
+                _uiState.value = _uiState.value.copy(
+                    solicitudPendiente = nuevaSolicitud,
+                    showSolicitudDialog = false,
+                    successMessage = "Solicitud enviada correctamente. El administrador la revisará pronto."
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error al enviar solicitud: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun cancelarSolicitud() {
+        viewModelScope.launch {
+            try {
+                val solicitud = _uiState.value.solicitudPendiente ?: return@launch
+                
+                db.collection("solicitudes_vinculacion").document(solicitud.id).delete().await()
+                
+                _uiState.value = _uiState.value.copy(
+                    solicitudPendiente = null,
+                    successMessage = "Solicitud cancelada"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error al cancelar solicitud: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun cerrarDialogoSolicitud() {
+        _uiState.value = _uiState.value.copy(showSolicitudDialog = false)
+    }
+
+    fun limpiarMensajes() {
+        _uiState.value = _uiState.value.copy(
+            errorMessage = null,
+            successMessage = null
+        )
     }
 
     private suspend fun cargarNotasAlumno(correoAlumno: String) {

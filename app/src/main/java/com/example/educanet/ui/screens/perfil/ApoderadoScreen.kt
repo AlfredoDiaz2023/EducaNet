@@ -17,9 +17,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +47,7 @@ import com.example.educanet.R
 import com.example.educanet.model.ProgresoAcademico
 import com.example.educanet.ui.common.FotoPerfil
 import com.example.educanet.viewmodel.ApoderadoViewModel
+import com.example.educanet.viewmodel.AlumnoVinculadoInfo
 import com.example.educanet.viewmodel.PerfilViewModel
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -367,34 +373,112 @@ fun PerfilApoderadoScreen(
                                                 .padding(32.dp),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(80.dp)
-                                                    .clip(CircleShape)
-                                                    .background(Color(0xFFFFB300).copy(alpha = 0.2f)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.PersonAdd,
-                                                    contentDescription = null,
-                                                    tint = Color(0xFFFF8F00),
-                                                    modifier = Modifier.size(40.dp)
+                                            // Verificar si hay solicitud pendiente
+                                            if (apoderadoState.solicitudPendiente != null) {
+                                                // Mostrar estado de solicitud pendiente
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(80.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFF2196F3).copy(alpha = 0.2f)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.HourglassTop,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFF1565C0),
+                                                        modifier = Modifier.size(40.dp)
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.height(16.dp))
+                                                Text(
+                                                    text = "Solicitud Pendiente",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFF1565C0)
                                                 )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = "Esperando aprobación para vincular a:",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = Color.Gray,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Surface(
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    color = Color(0xFF1565C0).copy(alpha = 0.1f)
+                                                ) {
+                                                    Text(
+                                                        text = apoderadoState.solicitudPendiente!!.alumnoNombre,
+                                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFF1565C0)
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.height(16.dp))
+                                                OutlinedButton(
+                                                    onClick = { apoderadoViewModel.cancelarSolicitud() },
+                                                    colors = ButtonDefaults.outlinedButtonColors(
+                                                        contentColor = Color.Red
+                                                    ),
+                                                    border = BorderStroke(1.dp, Color.Red)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Cancel,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text("Cancelar Solicitud")
+                                                }
+                                            } else {
+                                                // No hay solicitud, mostrar opción para crear una
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(80.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFFFFB300).copy(alpha = 0.2f)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.PersonAdd,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFFFF8F00),
+                                                        modifier = Modifier.size(40.dp)
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.height(16.dp))
+                                                Text(
+                                                    text = "Sin alumno vinculado",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFFE65100)
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = "Envía una solicitud al administrador para vincular a tu hijo/a y poder ver su progreso académico",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = Color.Gray,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                                Spacer(modifier = Modifier.height(16.dp))
+                                                Button(
+                                                    onClick = { apoderadoViewModel.cargarAlumnosDisponibles() },
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        containerColor = Color(0xFFFF8F00)
+                                                    ),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.AutoMirrored.Filled.Send,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text("Solicitar Vinculación")
+                                                }
                                             }
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            Text(
-                                                text = "Sin alumno vinculado",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color(0xFFE65100)
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = "Contacta al administrador para vincular a tu hijo/a y poder ver su progreso académico",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = Color.Gray,
-                                                textAlign = TextAlign.Center
-                                            )
                                         }
                                     }
                                 }
@@ -573,6 +657,147 @@ fun PerfilApoderadoScreen(
                                 color = Color(0xFFF5F5F5)
                             ) {
                                 Spacer(modifier = Modifier.height(100.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Snackbar para mensajes de éxito
+        apoderadoState.successMessage?.let { message ->
+            LaunchedEffect(message) {
+                delay(3000)
+                apoderadoViewModel.limpiarMensajes()
+            }
+            Snackbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                containerColor = Color(0xFF4CAF50)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(message, color = Color.White)
+                }
+            }
+        }
+
+        // Snackbar para mensajes de error
+        apoderadoState.errorMessage?.let { message ->
+            LaunchedEffect(message) {
+                delay(3000)
+                apoderadoViewModel.limpiarMensajes()
+            }
+            Snackbar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                containerColor = Color(0xFFF44336)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Error,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(message, color = Color.White)
+                }
+            }
+        }
+    }
+
+    // Diálogo para seleccionar alumno
+    if (apoderadoState.showSolicitudDialog) {
+        Dialog(onDismissRequest = { apoderadoViewModel.cerrarDialogoSolicitud() }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    // Título
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.PersonSearch,
+                                contentDescription = null,
+                                tint = Color(0xFFFF8F00),
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                "Seleccionar Alumno",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        IconButton(onClick = { apoderadoViewModel.cerrarDialogoSolicitud() }) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Selecciona el alumno que deseas vincular a tu cuenta:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (apoderadoState.alumnosDisponibles.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.SearchOff,
+                                    contentDescription = null,
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "No hay alumnos disponibles",
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            apoderadoState.alumnosDisponibles.forEach { alumno ->
+                                AlumnoSeleccionItem(
+                                    alumno = alumno,
+                                    onSelect = { 
+                                        apoderadoViewModel.enviarSolicitudVinculacion(alumno)
+                                    }
+                                )
                             }
                         }
                     }
@@ -852,5 +1077,75 @@ fun getColorForNotaApoderado(nota: Double): Color {
         nota >= 4.0 -> Color(0xFFFF9800)  // Naranja - Aprobado
         nota >= 3.0 -> Color(0xFFFF5722)  // Naranja oscuro - Regular
         else -> Color(0xFFF44336)          // Rojo - Reprobado
+    }
+}
+
+@Composable
+fun AlumnoSeleccionItem(
+    alumno: AlumnoVinculadoInfo,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Avatar del alumno
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF1565C0).copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (alumno.fotoUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = alumno.fotoUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = alumno.nombre.take(1).uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1565C0)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = alumno.nombre,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = alumno.correo,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFFFF8F00)
+            )
+        }
     }
 }

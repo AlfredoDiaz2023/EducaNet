@@ -2,6 +2,7 @@ package com.example.educanet.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educanet.model.SolicitudVinculacion
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -20,14 +21,20 @@ data class UsuarioAdmin(
     val correo: String = "",
     val clave: String = "",
     val rol: String = "",
-    val fotoUrl: String = ""
+    val fotoUrl: String = "",
+    val alumnoVinculadoId: String = "",
+    val alumnoVinculadoNombre: String = "",
+    val alumnoVinculadoCorreo: String = ""
 )
 
 data class GestionUsuariosUiState(
     val usuarios: List<UsuarioAdmin> = emptyList(),
+    val alumnos: List<UsuarioAdmin> = emptyList(),
+    val solicitudesPendientes: List<SolicitudVinculacion> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val showSolicitudes: Boolean = false
 )
 
 class GestionUsuariosViewModel : ViewModel() {
@@ -39,6 +46,7 @@ class GestionUsuariosViewModel : ViewModel() {
 
     init {
         escucharUsuarios()
+        escucharSolicitudes()
     }
 
     private fun escucharUsuarios() {
@@ -50,24 +58,167 @@ class GestionUsuariosViewModel : ViewModel() {
                     return@addSnapshotListener
                 }
 
-                val usuarios = snapshot?.documents?.mapNotNull { doc ->
+                val usuarios = mutableListOf<UsuarioAdmin>()
+                val alumnos = mutableListOf<UsuarioAdmin>()
+                
+                snapshot?.documents?.forEach { doc ->
                     val rol = doc.getString("rol") ?: ""
                     // Excluir administradores de la lista
-                    if (rol == "Administrador") return@mapNotNull null
+                    if (rol == "Administrador") return@forEach
                     
-                    UsuarioAdmin(
+                    val usuario = UsuarioAdmin(
                         id = doc.id,
                         uid = doc.getString("uid") ?: "",
                         nombre = doc.getString("nombre") ?: "",
                         correo = doc.getString("correo") ?: "",
                         clave = doc.getString("clave") ?: "",
                         rol = rol,
-                        fotoUrl = doc.getString("fotoUrl") ?: ""
+                        fotoUrl = doc.getString("fotoUrl") ?: "",
+                        alumnoVinculadoId = doc.getString("alumnoVinculadoId") ?: "",
+                        alumnoVinculadoNombre = doc.getString("alumnoVinculadoNombre") ?: "",
+                        alumnoVinculadoCorreo = doc.getString("alumnoVinculadoCorreo") ?: ""
+                    )
+                    
+                    usuarios.add(usuario)
+                    if (rol == "Alumno") {
+                        alumnos.add(usuario)
+                    }
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    usuarios = usuarios,
+                    alumnos = alumnos,
+                    isLoading = false
+                )
+            }
+    }
+
+    private fun escucharSolicitudes() {
+        db.collection("solicitudes_vinculacion")
+            .whereEqualTo("estado", "pendiente")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                
+                val solicitudes = snapshot?.documents?.mapNotNull { doc ->
+                    SolicitudVinculacion(
+                        id = doc.id,
+                        apoderadoId = doc.getString("apoderadoId") ?: "",
+                        apoderadoNombre = doc.getString("apoderadoNombre") ?: "",
+                        apoderadoCorreo = doc.getString("apoderadoCorreo") ?: "",
+                        alumnoId = doc.getString("alumnoId") ?: "",
+                        alumnoNombre = doc.getString("alumnoNombre") ?: "",
+                        alumnoCorreo = doc.getString("alumnoCorreo") ?: "",
+                        estado = doc.getString("estado") ?: "pendiente",
+                        fechaSolicitud = doc.getLong("fechaSolicitud") ?: 0L
                     )
                 } ?: emptyList()
 
-                _uiState.value = _uiState.value.copy(usuarios = usuarios, isLoading = false)
+                _uiState.value = _uiState.value.copy(solicitudesPendientes = solicitudes)
             }
+    }
+
+    fun toggleShowSolicitudes() {
+        _uiState.value = _uiState.value.copy(showSolicitudes = !_uiState.value.showSolicitudes)
+    }
+
+    fun aprobarSolicitud(solicitud: SolicitudVinculacion) {
+        viewModelScope.launch {
+            try {
+                // Actualizar el apoderado con la vinculación
+                db.collection("usuario").document(solicitud.apoderadoId).update(
+                    mapOf(
+                        "alumnoVinculadoId" to solicitud.alumnoId,
+                        "alumnoVinculadoNombre" to solicitud.alumnoNombre,
+                        "alumnoVinculadoCorreo" to solicitud.alumnoCorreo
+                    )
+                ).await()
+
+                // Actualizar estado de la solicitud
+                db.collection("solicitudes_vinculacion").document(solicitud.id).update(
+                    mapOf(
+                        "estado" to "aprobada",
+                        "fechaRespuesta" to System.currentTimeMillis()
+                    )
+                ).await()
+
+                _uiState.value = _uiState.value.copy(
+                    successMessage = "Vinculación aprobada: ${solicitud.apoderadoNombre} → ${solicitud.alumnoNombre}"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al aprobar solicitud: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun rechazarSolicitud(solicitud: SolicitudVinculacion) {
+        viewModelScope.launch {
+            try {
+                db.collection("solicitudes_vinculacion").document(solicitud.id).update(
+                    mapOf(
+                        "estado" to "rechazada",
+                        "fechaRespuesta" to System.currentTimeMillis()
+                    )
+                ).await()
+
+                _uiState.value = _uiState.value.copy(
+                    successMessage = "Solicitud rechazada"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al rechazar solicitud: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun vincularAlumnoManual(apoderadoId: String, alumnoId: String, alumnoNombre: String, alumnoCorreo: String) {
+        viewModelScope.launch {
+            try {
+                db.collection("usuario").document(apoderadoId).update(
+                    mapOf(
+                        "alumnoVinculadoId" to alumnoId,
+                        "alumnoVinculadoNombre" to alumnoNombre,
+                        "alumnoVinculadoCorreo" to alumnoCorreo
+                    )
+                ).await()
+
+                _uiState.value = _uiState.value.copy(
+                    successMessage = "Alumno vinculado correctamente"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al vincular alumno: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun desvincularAlumno(apoderadoId: String) {
+        viewModelScope.launch {
+            try {
+                db.collection("usuario").document(apoderadoId).update(
+                    mapOf(
+                        "alumnoVinculadoId" to "",
+                        "alumnoVinculadoNombre" to "",
+                        "alumnoVinculadoCorreo" to ""
+                    )
+                ).await()
+
+                _uiState.value = _uiState.value.copy(
+                    successMessage = "Alumno desvinculado correctamente"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al desvincular alumno: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun limpiarMensajes() {
+        _uiState.value = _uiState.value.copy(error = null, successMessage = null)
     }
 
     fun agregarUsuario(nombre: String, correo: String, clave: String, rol: String) {
