@@ -3,12 +3,6 @@ package com.example.educanet.ui.reserva
 import org.junit.Test
 import org.junit.Assert.assertTrue
 
-/**
- * Tests unitarios simples para la lógica relacionada con reservas.
- * 
- * Nota: Los tests de UI de Compose deben ejecutarse como androidTest
- * (instrumentación) ya que requieren un contexto de Android.
- */
 class ReservaScreenTest {
 
     /**

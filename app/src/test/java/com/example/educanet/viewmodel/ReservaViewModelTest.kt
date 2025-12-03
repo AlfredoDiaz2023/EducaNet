@@ -11,7 +11,6 @@ import kotlinx.coroutines.test.runTest
 
 class ReservaViewModelTest : BehaviorSpec({
 
-    // --- Mock del repositorio ---
     val mockRepo = mockk<ReservaRepository>()
 
     // Reservas de prueba

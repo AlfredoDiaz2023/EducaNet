@@ -52,7 +52,6 @@ import java.nio.charset.StandardCharsets
 fun AppNavegacion() {
 
     val navController = rememberNavController()
-    // ViewModel compartido para el carrito
     val carritoViewModel: CarritoViewModel = viewModel()
 
     NavHost(
@@ -60,24 +59,18 @@ fun AppNavegacion() {
         startDestination = "login"
     ) {
 
-        // ------------------------------
-        // LOGIN (Con lógica de Foto)
-        // ------------------------------
         composable("login") {
             LoginScreen(
                 onRegisterClick = { navController.navigate("register") },
                 onLoginSuccess = { user ->
-                    // Codificamos la URL de la foto para que pase bien por la navegación
                     val fotoUrlEncoded = if (user.fotoUrl != null) {
                         URLEncoder.encode(user.fotoUrl, StandardCharsets.UTF_8.toString())
                     } else {
                         ""
                     }
-                    
-                    // Codificamos el correo del usuario
+
                     val correoEncoded = URLEncoder.encode(user.correo, StandardCharsets.UTF_8.toString())
 
-                    // Navegamos pasando la foto y correo como parámetros opcionales
                     val route = buildString {
                         append("menu/${user.nombre}/${user.rol}")
                         val params = mutableListOf<String>()
@@ -93,16 +86,11 @@ fun AppNavegacion() {
             )
         }
 
-        // ------------------------------
-        // REGISTRO
-        // ------------------------------
         composable("register") {
             RegistroScreen(
                 onBack = { navController.popBackStack() },
                 onRegisterSuccess = { navController.popBackStack() },
                 onRegisterSuccessWithUser = { user ->
-                    // Después del registro exitoso, navegar directamente al menú
-                    // El usuario ya está autenticado en Firebase Auth
                     val fotoUrlEncoded = if (user.fotoUrl.isNotEmpty()) {
                         URLEncoder.encode(user.fotoUrl, StandardCharsets.UTF_8.toString())
                     } else {
@@ -120,12 +108,10 @@ fun AppNavegacion() {
                     }
 
                     navController.navigate(route) {
-                        // Limpiar todo el back stack incluyendo login y register
                         popUpTo("login") { inclusive = true }
                     }
                 },
                 onApoderadoRegistrado = { correoApoderado ->
-                    // Navegar a la pantalla de selección de alumno
                     val correoEncoded = URLEncoder.encode(correoApoderado, StandardCharsets.UTF_8.toString())
                     navController.navigate("seleccionar_alumno/$correoEncoded") {
                         popUpTo("register") { inclusive = true }
@@ -134,9 +120,6 @@ fun AppNavegacion() {
             )
         }
 
-        // ------------------------------
-        // SELECCIONAR ALUMNO (PARA APODERADO)
-        // ------------------------------
         composable(
             route = "seleccionar_alumno/{correoApoderado}",
             arguments = listOf(
@@ -160,9 +143,6 @@ fun AppNavegacion() {
             )
         }
 
-        // ------------------------------
-        // MENU PRINCIPAL (Recibe Foto)
-        // ------------------------------
         composable(
             route = "menu/{nombre}/{rol}?fotoUrl={fotoUrl}&correo={correo}",
             arguments = listOf(
@@ -184,11 +164,9 @@ fun AppNavegacion() {
             val rol = entry.arguments?.getString("rol") ?: "Alumno"
             val fotoUrl = entry.arguments?.getString("fotoUrl")
             val correo = entry.arguments?.getString("correo")
-            
-            // Estado para almacenar el correo del alumno vinculado (para apoderados)
+
             var correoAlumnoVinculado by remember { mutableStateOf<String?>(null) }
-            
-            // Si es apoderado, buscar el correo del alumno vinculado
+
             LaunchedEffect(rol, correo) {
                 if (rol == "Apoderado" && correo != null) {
                     try {
@@ -217,21 +195,18 @@ fun AppNavegacion() {
                 onLibroClick = { navController.navigate("libros/$rol/$nombre") },
                 onVideoClick = { navController.navigate("video_apoyo/$rol") },
                 onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
-                onProgresoAcademicoClick = { 
-                    // Si es apoderado, usar el correo del alumno vinculado
+                onProgresoAcademicoClick = {
                     val correoParaProgreso = if (rol == "Apoderado" && correoAlumnoVinculado != null) {
                         URLEncoder.encode(correoAlumnoVinculado, StandardCharsets.UTF_8.toString())
                     } else {
                         correo?.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) } ?: ""
                     }
-                    // Para el apoderado, pasamos rol "Alumno" para que vea las estadísticas
                     val rolParaProgreso = if (rol == "Apoderado") "Alumno" else rol
                     navController.navigate("progreso_academico/$rolParaProgreso?correo=$correoParaProgreso") 
                 },
                 onVerNotificaciones = { navController.navigate("notificaciones") },
                 onCameraClick = { navController.navigate("camera") },
                 onPerfilClick = {
-                    // Navegar al perfil según el rol
                     val perfilRoute = when (rol) {
                         "Administrador" -> "perfil_admin/$nombre"
                         "Profesor" -> "perfil_profesor/$nombre"
@@ -243,7 +218,6 @@ fun AppNavegacion() {
                 onAdminPanelClick = { navController.navigate("admin_panel") },
                 onVerResenasClick = { navController.navigate("resenas_recientes") },
                 onLogout = {
-                    // Cerrar sesión de Firebase Auth
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -252,9 +226,6 @@ fun AppNavegacion() {
             )
         }
 
-        // ------------------------------
-        // LIBROS
-        // ------------------------------
         composable(
             route = "libros/{rol}/{nombre}",
             arguments = listOf(
@@ -296,9 +267,6 @@ fun AppNavegacion() {
             AddLibroScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // VIDEO APOYO
-        // ------------------------------
         composable(
             route = "video_apoyo/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -315,9 +283,6 @@ fun AppNavegacion() {
             AddVideoScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // CLASES VIRTUALES
-        // ------------------------------
         composable(
             route = "clases_virtuales/{rol}",
             arguments = listOf(navArgument("rol") { type = NavType.StringType })
@@ -334,9 +299,6 @@ fun AppNavegacion() {
             AddClaseVirtualScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // PROGRESO ACADÉMICO
-        // ------------------------------
         composable(
             route = "progreso_academico/{rol}?correo={correo}",
             arguments = listOf(
@@ -361,10 +323,6 @@ fun AppNavegacion() {
         composable("add_progreso_academico") {
             AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
         }
-
-        // ------------------------------
-        // PERFILES (Corrección: Sin pasar nombre al constructor)
-        // ------------------------------
 
         composable(
             "perfil_admin/{nombre}",
@@ -433,7 +391,6 @@ fun AppNavegacion() {
             )
         }
 
-        // Ruta de cámara específica para perfil
         composable("camera_perfil") {
             CameraScreen(
                 onImageCaptured = { uri ->
@@ -445,9 +402,6 @@ fun AppNavegacion() {
             )
         }
 
-        // ------------------------------
-        // EXTRAS
-        // ------------------------------
         composable("notificaciones") {
             NotificacionesScreen(onBack = { navController.popBackStack() })
         }
@@ -477,9 +431,6 @@ fun AppNavegacion() {
             ReservasScreen(onBack = { navController.popBackStack() })
         }
 
-        // ------------------------------
-        // PANEL DE ADMINISTRACIÓN
-        // ------------------------------
         composable("admin_panel") {
             AdminPanelScreen(
                 onBack = { navController.popBackStack() },
