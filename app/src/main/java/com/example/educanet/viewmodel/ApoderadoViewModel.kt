@@ -170,8 +170,41 @@ class ApoderadoViewModel : ViewModel() {
             try {
                 val state = _uiState.value
                 
+                // Verificar que tenemos el ID del apoderado
+                val apoderadoId = if (state.apoderadoDocId.isNotEmpty()) {
+                    state.apoderadoDocId
+                } else {
+                    // Buscar el ID del apoderado si no está disponible
+                    val currentUser = auth.currentUser
+                    if (currentUser == null) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = "Usuario no autenticado"
+                        )
+                        return@launch
+                    }
+                    
+                    val apoderadoSnapshot = db.collection("usuario")
+                        .whereEqualTo("correo", currentUser.email)
+                        .get()
+                        .await()
+                    
+                    if (apoderadoSnapshot.isEmpty) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = "No se encontró el apoderado"
+                        )
+                        return@launch
+                    }
+                    
+                    val docId = apoderadoSnapshot.documents.first().id
+                    // Actualizar el estado con el ID
+                    _uiState.value = _uiState.value.copy(apoderadoDocId = docId)
+                    docId
+                }
+                
+                Log.d("ApoderadoVM", "Enviando solicitud con apoderadoId: $apoderadoId")
+                
                 val solicitud = hashMapOf(
-                    "apoderadoId" to state.apoderadoDocId,
+                    "apoderadoId" to apoderadoId,
                     "apoderadoNombre" to state.nombreApoderado,
                     "apoderadoCorreo" to state.correoApoderado,
                     "alumnoId" to alumno.id,
@@ -185,7 +218,7 @@ class ApoderadoViewModel : ViewModel() {
                 
                 val nuevaSolicitud = SolicitudVinculacion(
                     id = docRef.id,
-                    apoderadoId = state.apoderadoDocId,
+                    apoderadoId = apoderadoId,
                     apoderadoNombre = state.nombreApoderado,
                     apoderadoCorreo = state.correoApoderado,
                     alumnoId = alumno.id,
@@ -200,6 +233,7 @@ class ApoderadoViewModel : ViewModel() {
                     successMessage = "Solicitud enviada correctamente. El administrador la revisará pronto."
                 )
             } catch (e: Exception) {
+                Log.e("ApoderadoVM", "Error enviando solicitud: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "Error al enviar solicitud: ${e.message}"
                 )

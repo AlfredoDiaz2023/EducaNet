@@ -124,8 +124,27 @@ class GestionUsuariosViewModel : ViewModel() {
     fun aprobarSolicitud(solicitud: SolicitudVinculacion) {
         viewModelScope.launch {
             try {
+                // Verificar que el apoderadoId no esté vacío
+                val apoderadoId = if (solicitud.apoderadoId.isNotEmpty()) {
+                    solicitud.apoderadoId
+                } else {
+                    // Buscar el apoderado por correo si el ID está vacío
+                    val apoderadoSnapshot = db.collection("usuario")
+                        .whereEqualTo("correo", solicitud.apoderadoCorreo)
+                        .get()
+                        .await()
+                    
+                    if (apoderadoSnapshot.isEmpty) {
+                        _uiState.value = _uiState.value.copy(
+                            error = "No se encontró el apoderado con correo: ${solicitud.apoderadoCorreo}"
+                        )
+                        return@launch
+                    }
+                    apoderadoSnapshot.documents.first().id
+                }
+
                 // Actualizar el apoderado con la vinculación
-                db.collection("usuario").document(solicitud.apoderadoId).update(
+                db.collection("usuario").document(apoderadoId).update(
                     mapOf(
                         "alumnoVinculadoId" to solicitud.alumnoId,
                         "alumnoVinculadoNombre" to solicitud.alumnoNombre,
