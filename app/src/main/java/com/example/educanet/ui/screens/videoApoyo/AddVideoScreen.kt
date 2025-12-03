@@ -32,8 +32,10 @@ fun AddVideoScreen(
     val uiState by addVideoViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.saveSuccess) {
-        if (uiState.saveSuccess) {
+    // Mostrar mensaje de éxito y luego navegar
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
             onBack()
         }
     }

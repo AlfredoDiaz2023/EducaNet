@@ -46,6 +46,23 @@ fun LibroScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showAddResenaDialog by remember { mutableStateOf(false) }
     var selectedLibro by remember { mutableStateOf<Libro?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Mostrar mensaje de éxito
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearMessages()
+        }
+    }
+
+    // Mostrar mensaje de error
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearMessages()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo con logo
@@ -59,6 +76,7 @@ fun LibroScreen(
 
         Scaffold(
             containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -189,7 +207,14 @@ fun LibroScreen(
                         items(uiState.libros, key = { it.id }) { libro ->
                             LibroItemModerno(
                                 libro = libro,
-                                onReservar = { carritoViewModel.addToCart(libro) },
+                                onReservar = { 
+                                    if (libro.cantidad > 0) {
+                                        carritoViewModel.addToCart(libro)
+                                        viewModel.reservarLibroAlCarrito(libro)
+                                    } else {
+                                        viewModel.mostrarErrorSinStock()
+                                    }
+                                },
                                 onAddResena = {
                                     selectedLibro = libro
                                     showAddResenaDialog = true
