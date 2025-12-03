@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -126,7 +127,7 @@ fun LibroScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         EstadisticaLibro(
-                            icon = Icons.Default.MenuBook,
+                            icon = Icons.AutoMirrored.Filled.MenuBook,
                             valor = uiState.libros.size.toString(),
                             label = "Total Libros",
                             color = Color(0xFF2196F3)
@@ -166,7 +167,7 @@ fun LibroScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                Icons.Default.MenuBook,
+                                Icons.AutoMirrored.Filled.MenuBook,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
                                 tint = Color.Gray
@@ -305,7 +306,7 @@ fun LibroItemModerno(
                         )
                     } else {
                         Icon(
-                            Icons.Default.MenuBook,
+                            Icons.AutoMirrored.Filled.MenuBook,
                             contentDescription = null,
                             modifier = Modifier.size(40.dp),
                             tint = Color(0xFF1976D2)

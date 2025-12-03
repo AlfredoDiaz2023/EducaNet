@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -247,15 +250,15 @@ fun NotificacionItem(
 fun getIconoNotificacion(titulo: String): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
     return when {
         titulo.contains("libro", ignoreCase = true) || titulo.contains("📚") -> 
-            Pair(Icons.Default.MenuBook, Color(0xFF4CAF50))
+            Pair(Icons.AutoMirrored.Filled.MenuBook, Color(0xFF4CAF50))
         titulo.contains("reserva", ignoreCase = true) -> 
             Pair(Icons.Default.BookmarkAdded, Color(0xFF2196F3))
         titulo.contains("solicitud", ignoreCase = true) -> 
-            Pair(Icons.Default.Assignment, Color(0xFFFF9800))
+            Pair(Icons.AutoMirrored.Filled.Assignment, Color(0xFFFF9800))
         titulo.contains("clase", ignoreCase = true) -> 
             Pair(Icons.Default.Videocam, Color(0xFF9C27B0))
         titulo.contains("nota", ignoreCase = true) || titulo.contains("progreso", ignoreCase = true) -> 
-            Pair(Icons.Default.TrendingUp, Color(0xFFFF5722))
+            Pair(Icons.AutoMirrored.Filled.TrendingUp, Color(0xFFFF5722))
         else -> 
             Pair(Icons.Default.Notifications, Color(0xFF607D8B))
     }

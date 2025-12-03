@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ad-services-config>
+    <!-- Configuración de Google Mobile Ads SDK para Privacy Sandbox -->
+    <attribution allowAllToAccess="true"/>
+    <custom-audiences allowAllToAccess="true"/>
+    <topics allowAllToAccess="true"/>
+</ad-services-config>

@@ -14,6 +14,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
@@ -144,7 +147,7 @@ fun PerfilApoderadoScreen(
                 actions = {
                     IconButton(onClick = onLogout) {
                         Icon(
-                            Icons.Default.Logout,
+                            Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Cerrar Sesión",
                             tint = Color.White
                         )
@@ -456,7 +459,7 @@ fun PerfilApoderadoScreen(
                                     
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            Icons.Default.Assignment,
+                                            Icons.AutoMirrored.Filled.Assignment,
                                             contentDescription = null,
                                             tint = Color(0xFF4CAF50),
                                             modifier = Modifier.size(24.dp)
@@ -536,7 +539,7 @@ fun PerfilApoderadoScreen(
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
-                                                    Icons.Default.MenuBook,
+                                                    Icons.AutoMirrored.Filled.MenuBook,
                                                     contentDescription = null,
                                                     tint = Color(0xFF1565C0),
                                                     modifier = Modifier.size(50.dp)
