@@ -1,5 +1,6 @@
 package com.example.educanet.ui.screens.perfil
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,7 +36,9 @@ import com.example.educanet.viewmodel.PerfilViewModel
 @Composable
 fun PerfilAdminScreen(
     onLogout: () -> Unit = {},
+    onCameraClick: () -> Unit = {},
     onBack: () -> Unit = {},
+    capturedImageUri: Uri? = null,
     perfilViewModel: PerfilViewModel = viewModel()
 ) {
     val uiState by perfilViewModel.uiState.collectAsState()
@@ -48,6 +51,14 @@ fun PerfilAdminScreen(
     LaunchedEffect(Unit) { 
         Log.d("PerfilAdminScreen", "Cargando datos iniciales...")
         perfilViewModel.cargarDatosIniciales() 
+    }
+    
+    // Procesar imagen capturada de la cámara
+    LaunchedEffect(capturedImageUri) {
+        capturedImageUri?.let { uri ->
+            Log.d("PerfilAdminScreen", "Imagen capturada recibida: $uri")
+            perfilViewModel.onImageSelectedAndSave(uri)
+        }
     }
 
     Scaffold(
@@ -92,11 +103,12 @@ fun PerfilAdminScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Foto de perfil
+                // Foto de perfil con opción de cámara
                 FotoPerfil(
                     fotoUrl = uiState.fotoUrl,
                     isUploading = uiState.isUploading,
-                    onImageSelected = { uri -> perfilViewModel.onImageSelectedAndSave(uri) }
+                    onImageSelected = { uri -> perfilViewModel.onImageSelectedAndSave(uri) },
+                    onCameraClick = onCameraClick
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))

@@ -327,14 +327,23 @@ fun AppNavegacion() {
         composable(
             "perfil_admin/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) {
-            // El nombre viene en la ruta, pero la pantalla lo carga sola del ViewModel
+        ) { backStackEntry ->
+            // Obtener imagen capturada de la cámara si existe
+            val capturedImageUri = backStackEntry.savedStateHandle.get<String>("captured_image_uri")?.let {
+                android.net.Uri.parse(it)
+            }
+            
             PerfilAdminScreen(
                 onLogout = {
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") { popUpTo(0) { inclusive = true } }
                 },
-                onBack = { navController.popBackStack() }
+                onCameraClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set("return_route", "perfil_admin/${backStackEntry.arguments?.getString("nombre") ?: ""}")
+                    navController.navigate("camera")
+                },
+                onBack = { navController.popBackStack() },
+                capturedImageUri = capturedImageUri
             )
         }
 
