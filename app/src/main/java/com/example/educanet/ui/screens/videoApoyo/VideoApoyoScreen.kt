@@ -50,8 +50,22 @@ fun VideoApoyoScreen(
 ) {
     val videos by videoApoyoViewModel.videos.collectAsState()
     val cargando by videoApoyoViewModel.cargando.collectAsState()
+    val eliminando by videoApoyoViewModel.eliminando.collectAsState()
+    val mensajeEliminacion by videoApoyoViewModel.mensajeEliminacion.collectAsState()
     var selectedVideo by remember { mutableStateOf<VideoApoyo?>(null) }
     var selectedNivel by remember { mutableStateOf("Todos") }
+    var videoAEliminar by remember { mutableStateOf<VideoApoyo?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    val currentUserEmail = remember { videoApoyoViewModel.getCurrentUserEmail() }
+    
+    // Mostrar mensaje de eliminación
+    LaunchedEffect(mensajeEliminacion) {
+        mensajeEliminacion?.let {
+            snackbarHostState.showSnackbar(it)
+            videoApoyoViewModel.limpiarMensaje()
+        }
+    }
     
     // Obtener niveles únicos
     val niveles = remember(videos) {
@@ -70,6 +84,61 @@ fun VideoApoyoScreen(
     val videosFiltrados = remember(videos, selectedNivel) {
         if (selectedNivel == "Todos") videos
         else videos.filter { it.nivel == selectedNivel }
+    }
+    
+    // Diálogo de confirmación para eliminar
+    if (videoAEliminar != null) {
+        AlertDialog(
+            onDismissRequest = { videoAEliminar = null },
+            icon = {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = Color(0xFFE91E63),
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    "Eliminar Video",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("¿Estás seguro de que deseas eliminar el video \"${videoAEliminar?.nombre}\"? Esta acción no se puede deshacer.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        videoAEliminar?.let { video ->
+                            videoApoyoViewModel.eliminarVideo(video, rol) { }
+                        }
+                        videoAEliminar = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE91E63)
+                    ),
+                    enabled = !eliminando
+                ) {
+                    if (eliminando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Eliminar")
+                    }
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { videoAEliminar = null }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -98,6 +167,7 @@ fun VideoApoyoScreen(
         )
 
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent,
             topBar = {
                 CenterAlignedTopAppBar(
@@ -284,9 +354,14 @@ fun VideoApoyoScreen(
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
                         items(videosFiltrados, key = { it.id }) { video ->
+                            val puedeEliminar = rol.equals("Administrador", ignoreCase = true) ||
+                                (rol.equals("Profesor", ignoreCase = true) && video.profesor.correo == currentUserEmail)
+                            
                             VideoApoyoItemModerno(
                                 video = video,
-                                onPlayClick = { selectedVideo = video }
+                                onPlayClick = { selectedVideo = video },
+                                mostrarEliminar = puedeEliminar,
+                                onEliminarClick = { videoAEliminar = video }
                             )
                         }
                     }
@@ -344,7 +419,9 @@ fun EstadisticaVideo(
 @Composable
 fun VideoApoyoItemModerno(
     video: VideoApoyo,
-    onPlayClick: () -> Unit
+    onPlayClick: () -> Unit,
+    mostrarEliminar: Boolean = false,
+    onEliminarClick: () -> Unit = {}
 ) {
     // Extraer ID del video para la miniatura
     val videoId = remember(video.video) {
@@ -494,23 +571,44 @@ fun VideoApoyoItemModerno(
                         }
                     }
                     
-                    // Botón ver
-                    FilledTonalButton(
-                        onClick = onPlayClick,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Color(0xFFE91E63),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    // Botones de acción
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.PlayCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Ver", fontWeight = FontWeight.Bold)
+                        // Botón eliminar (solo si tiene permiso)
+                        if (mostrarEliminar) {
+                            IconButton(
+                                onClick = onEliminarClick,
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Eliminar",
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        
+                        // Botón ver
+                        FilledTonalButton(
+                            onClick = onPlayClick,
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = Color(0xFFE91E63),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.PlayCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Ver", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

@@ -134,4 +134,14 @@ class ClaseVirtualRepository {
             null
         }
     }
+
+    suspend fun eliminarClaseVirtual(claseId: String): Boolean {
+        return try {
+            db.collection("clases_virtuales").document(claseId).delete().await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }

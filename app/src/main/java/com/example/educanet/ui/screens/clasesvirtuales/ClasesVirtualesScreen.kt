@@ -2,6 +2,7 @@ package com.example.educanet.ui.screens.clasesvirtuales
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -41,7 +42,21 @@ fun ClasesVirtualesScreen(
 ) {
     val clases by claseVirtualViewModel.clases.collectAsState()
     val cargando by claseVirtualViewModel.cargando.collectAsState()
+    val eliminando by claseVirtualViewModel.eliminando.collectAsState()
+    val mensajeEliminacion by claseVirtualViewModel.mensajeEliminacion.collectAsState()
     var selectedNivel by remember { mutableStateOf("Todos") }
+    var claseAEliminar by remember { mutableStateOf<ClaseVirtual?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    val currentUserEmail = remember { claseVirtualViewModel.getCurrentUserEmail() }
+    
+    // Mostrar mensaje de eliminación
+    LaunchedEffect(mensajeEliminacion) {
+        mensajeEliminacion?.let {
+            snackbarHostState.showSnackbar(it)
+            claseVirtualViewModel.limpiarMensaje()
+        }
+    }
     
     // Obtener niveles únicos
     val niveles = remember(clases) {
@@ -60,6 +75,61 @@ fun ClasesVirtualesScreen(
     val clasesFiltradas = remember(clases, selectedNivel) {
         if (selectedNivel == "Todos") clases
         else clases.filter { it.nivel == selectedNivel }
+    }
+    
+    // Diálogo de confirmación para eliminar
+    if (claseAEliminar != null) {
+        AlertDialog(
+            onDismissRequest = { claseAEliminar = null },
+            icon = {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = Color(0xFF2196F3),
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    "Eliminar Clase Virtual",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("¿Estás seguro de que deseas eliminar la clase \"${claseAEliminar?.nombre}\"? Esta acción no se puede deshacer.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        claseAEliminar?.let { clase ->
+                            claseVirtualViewModel.eliminarClase(clase, rol) { }
+                        }
+                        claseAEliminar = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2196F3)
+                    ),
+                    enabled = !eliminando
+                ) {
+                    if (eliminando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Eliminar")
+                    }
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { claseAEliminar = null }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -89,6 +159,7 @@ fun ClasesVirtualesScreen(
 
         Scaffold(
             containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -272,7 +343,14 @@ fun ClasesVirtualesScreen(
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
                         items(clasesFiltradas, key = { it.id }) { clase ->
-                            ClaseVirtualItemModerno(clase = clase)
+                            val puedeEliminar = rol.equals("Administrador", ignoreCase = true) ||
+                                (rol.equals("Profesor", ignoreCase = true) && clase.profesor.correo == currentUserEmail)
+                            
+                            ClaseVirtualItemModerno(
+                                clase = clase,
+                                mostrarEliminar = puedeEliminar,
+                                onEliminarClick = { claseAEliminar = clase }
+                            )
                         }
                     }
                 }
@@ -319,7 +397,11 @@ fun EstadisticaClase(
 }
 
 @Composable
-fun ClaseVirtualItemModerno(clase: ClaseVirtual) {
+fun ClaseVirtualItemModerno(
+    clase: ClaseVirtual,
+    mostrarEliminar: Boolean = false,
+    onEliminarClick: () -> Unit = {}
+) {
     val context = LocalContext.current
     
     // Determinar el tipo de plataforma
@@ -522,30 +604,55 @@ fun ClaseVirtualItemModerno(clase: ClaseVirtual) {
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Botón de unirse
-                Button(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(clase.meet))
-                        context.startActivity(intent)
-                    },
+                // Botones de acción
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.VideoCall,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Unirse a la Clase",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    // Botón de unirse
+                    Button(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(clase.meet))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.VideoCall,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Unirse",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    // Botón eliminar (solo si tiene permiso)
+                    if (mostrarEliminar) {
+                        OutlinedButton(
+                            onClick = onEliminarClick,
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(16.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFFE91E63)
+                            ),
+                            border = BorderStroke(1.dp, Color(0xFFE91E63))
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Eliminar",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

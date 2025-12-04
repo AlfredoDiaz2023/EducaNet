@@ -132,4 +132,14 @@ class VideoApoyoRepository {
             null
         }
     }
+
+    suspend fun eliminarVideo(videoId: String): Boolean {
+        return try {
+            db.collection("video_apoyo").document(videoId).delete().await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }
