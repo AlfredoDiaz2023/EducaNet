@@ -63,6 +63,9 @@ fun PerfilApoderadoScreen(
     val uiState by perfilViewModel.uiState.collectAsState()
     val apoderadoState by apoderadoViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    
+    // Snackbar para mensajes
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         Log.d("ApoderadoScreen", "Cargando datos iniciales...")
@@ -75,6 +78,22 @@ fun PerfilApoderadoScreen(
         while (true) {
             delay(15000)
             apoderadoViewModel.refreshData()
+        }
+    }
+    
+    // Mostrar mensaje de éxito
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearSuccessMessage()
+        }
+    }
+    
+    // Mostrar mensaje de error
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearErrorMessage()
         }
     }
 
@@ -201,6 +220,7 @@ fun PerfilApoderadoScreen(
                             
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            // Nombre
                             Text(
                                 text = uiState.nombre.ifEmpty { apoderadoState.nombreApoderado },
                                 style = MaterialTheme.typography.headlineSmall,
@@ -787,6 +807,14 @@ fun PerfilApoderadoScreen(
                 }
             }
         }
+    }
+    
+    // Snackbar host
+    Box(modifier = Modifier.fillMaxSize()) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 

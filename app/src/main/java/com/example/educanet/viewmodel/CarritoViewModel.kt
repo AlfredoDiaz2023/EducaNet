@@ -10,13 +10,20 @@ import com.example.educanet.repository.LibroRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ReservaRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+
+data class CarritoItem(
+    val libro: Libro,
+    val cantidad: Int = 1
+)
 
 data class CarritoUiState(
-    val items: List<Libro> = emptyList(),
+    val items: List<CarritoItem> = emptyList(),
     val libros: List<Libro> = emptyList(),
     val isConfirming: Boolean = false,
     val confirmationSuccess: Boolean = false,
@@ -28,74 +35,75 @@ class CarritoViewModel : ViewModel() {
 
     private val reservaRepository = ReservaRepository()
     private val libroRepository = LibroRepository()
-    private val carritoRepository = CarritoRepository()   // <-- asegurarse de tener este repo
+    private val carritoRepository = CarritoRepository()
     private val notificacionRepository = NotificacionRepository()
     private val auth = FirebaseAuth.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     private val _uiState = MutableStateFlow(CarritoUiState())
     val uiState: StateFlow<CarritoUiState> = _uiState.asStateFlow()
 
     fun addToCart(libro: Libro) {
         val currentItems = _uiState.value.items.toMutableList()
-        if (!currentItems.any { it.id == libro.id }) {
-            currentItems.add(libro)
-            _uiState.value = _uiState.value.copy(items = currentItems)
+        val existingIndex = currentItems.indexOfFirst { it.libro.id == libro.id }
+        
+        if (existingIndex >= 0) {
+            // Si ya existe, incrementar la cantidad
+            val existingItem = currentItems[existingIndex]
+            currentItems[existingIndex] = existingItem.copy(cantidad = existingItem.cantidad + 1)
+        } else {
+            // Si no existe, agregar nuevo item con cantidad 1
+            currentItems.add(CarritoItem(libro = libro, cantidad = 1))
         }
+        _uiState.value = _uiState.value.copy(items = currentItems)
     }
 
     fun removeFromCart(libro: Libro) {
         val currentItems = _uiState.value.items.toMutableList()
-        currentItems.remove(libro)
+        currentItems.removeAll { it.libro.id == libro.id }
         _uiState.value = _uiState.value.copy(items = currentItems)
     }
 
     fun confirmReservations(userName: String) {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isConfirming = true)
 
             val carritoActual = _uiState.value.items
+            val userId = auth.currentUser?.uid ?: ""
 
             if (carritoActual.isEmpty()) {
-                _uiState.value = _uiState.value.copy(error = "El carrito está vacío.")
+                _uiState.value = _uiState.value.copy(error = "El carrito está vacío.", isConfirming = false)
                 return@launch
             }
 
             try {
-                // 👉 1. Descontar stock como el botón SOLICITAR
-                carritoActual.forEach { libro ->
-                    libroRepository.actualizarStock(
-                        libro.id,
-                        (libro.cantidad - 1).coerceAtLeast(0)
-                    )
+                // El stock ya se descontó al presionar "Solicitar"
+                // Solo crear las reservas en la base de datos
+                carritoActual.forEach { carritoItem ->
+                    // Crear una reserva por cada cantidad
+                    repeat(carritoItem.cantidad) {
+                        val reserva = Reserva(
+                            libroId = carritoItem.libro.id,
+                            userId = userId,
+                            userName = userName,
+                            libroNombre = carritoItem.libro.nombre
+                        )
+                        reservaRepository.agregarReserva(reserva)
+                    }
                 }
 
-                // 👉 2. Crear todas las reservas y notificaciones individuales
-                carritoActual.forEach { libro ->
-                    val reserva = Reserva(
-                        libroId = libro.id,
-                        userId = auth.currentUser?.uid ?: "",
-                        userName = userName,
-                        libroNombre = libro.nombre
-                    )
-                    reservaRepository.agregarReserva(reserva)
-                    
-                    // Notificación individual por cada libro reservado
-                    notificacionRepository.agregarNotificacion(
-                        titulo = "📚 Reserva de libro",
-                        mensaje = "$userName ha reservado: ${libro.nombre}"
-                    )
-                }
-
-                // 👉 3. Vaciar carrito
+                // Vaciar carrito
                 _uiState.value = _uiState.value.copy(items = emptyList())
 
-                // 👉 4. Mensaje de éxito
+                // Mensaje de éxito
                 _uiState.value = _uiState.value.copy(
+                    isConfirming = false,
                     confirmationSuccess = true,
-                    confirmationMessage = "Reservas confirmadas y stock actualizado"
+                    confirmationMessage = "¡Libros confirmados exitosamente!"
                 )
 
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = e.message, isConfirming = false)
             }
         }
     }

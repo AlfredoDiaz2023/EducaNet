@@ -37,6 +37,9 @@ fun PerfilAlumnoScreen(
 ) {
     val uiState by perfilViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    
+    // Snackbar para mensajes
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Forzar recarga cada vez que se muestra la pantalla
     LaunchedEffect(Unit) {
@@ -54,6 +57,22 @@ fun PerfilAlumnoScreen(
 
     LaunchedEffect(uiState.fotoUrl) {
         Log.d("AlumnoScreen", "Foto URL actualizada: ${uiState.fotoUrl}")
+    }
+    
+    // Mostrar mensaje de éxito
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearSuccessMessage()
+        }
+    }
+    
+    // Mostrar mensaje de error
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearErrorMessage()
+        }
     }
 
     Scaffold(
@@ -73,7 +92,8 @@ fun PerfilAlumnoScreen(
                     containerColor = Color.Transparent
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             // Fondo
@@ -152,7 +172,7 @@ fun PerfilAlumnoScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 "Nombre",
                                 style = MaterialTheme.typography.bodySmall,

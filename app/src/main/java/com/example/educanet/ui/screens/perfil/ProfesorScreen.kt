@@ -37,6 +37,9 @@ fun PerfilProfesorScreen(
 ) {
     val uiState by perfilViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    
+    // Snackbar para mensajes
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         Log.d("ProfesorScreen", "Cargando datos iniciales...")
@@ -48,6 +51,22 @@ fun PerfilProfesorScreen(
         capturedImageUri?.let { uri ->
             Log.d("ProfesorScreen", "Imagen capturada recibida: $uri")
             perfilViewModel.onImageSelectedAndSave(uri)
+        }
+    }
+    
+    // Mostrar mensaje de éxito
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearSuccessMessage()
+        }
+    }
+    
+    // Mostrar mensaje de error
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearErrorMessage()
         }
     }
 
@@ -68,7 +87,8 @@ fun PerfilProfesorScreen(
                     containerColor = Color.Transparent
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             // Fondo
@@ -147,7 +167,7 @@ fun PerfilProfesorScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 "Nombre",
                                 style = MaterialTheme.typography.bodySmall,

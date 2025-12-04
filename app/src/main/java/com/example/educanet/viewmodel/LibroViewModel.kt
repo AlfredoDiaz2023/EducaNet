@@ -122,20 +122,30 @@ class LibroViewModel : ViewModel() {
         }
     }
 
-    fun solicitarLibro(libro: Libro, nombreUsuario: String, rolUsuario: String) {
+    fun solicitarLibro(libro: Libro, nombreUsuario: String, rolUsuario: String, userId: String) {
         viewModelScope.launch {
             if (libro.cantidad > 0) {
                 val nuevoStock = libro.cantidad - 1
                 val success = libroRepository.actualizarStock(libro.id, nuevoStock)
 
                 if (success) {
-                    notificacionRepository.agregarNotificacion(
-                        titulo = "Solicitud de libro",
-                        mensaje = "El usuario $nombreUsuario ($rolUsuario) ha solicitado el libro: ${libro.nombre}"
+                    // Notificación para el usuario que solicitó
+                    notificacionRepository.agregarNotificacionParaUsuario(
+                        titulo = "📚 Libro solicitado exitosamente",
+                        mensaje = "Has solicitado el libro: ${libro.nombre}. ¡Recógelo en biblioteca!",
+                        userId = userId
                     )
+                    // Notificación para el administrador
+                    notificacionRepository.agregarNotificacionParaAdmin(
+                        titulo = "📚 Nueva solicitud de libro",
+                        mensaje = "$nombreUsuario ($rolUsuario) ha solicitado: ${libro.nombre}"
+                    )
+                    _uiState.value = _uiState.value.copy(successMessage = "¡Libro solicitado exitosamente!")
                 } else {
                     _uiState.value = _uiState.value.copy(error = "Error al solicitar el libro.")
                 }
+            } else {
+                _uiState.value = _uiState.value.copy(error = "Libro sin stock")
             }
         }
     }

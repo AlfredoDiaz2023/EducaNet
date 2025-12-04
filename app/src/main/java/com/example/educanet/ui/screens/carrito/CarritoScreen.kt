@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.educanet.model.Libro
 import com.example.educanet.repository.CarritoRepository
 import com.example.educanet.ui.common.AppBackground
+import com.example.educanet.viewmodel.CarritoItem
 import com.example.educanet.viewmodel.CarritoViewModel
 import kotlinx.coroutines.launch
 
@@ -74,7 +75,7 @@ fun CarritoScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Reservas", style = MaterialTheme.typography.headlineSmall)
+                    Text("Libros Solicitados", style = MaterialTheme.typography.headlineSmall)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -85,14 +86,14 @@ fun CarritoScreen(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Aún no has seleccionado libros para reservar.")
+                        Text("Aún no has seleccionado libros para solicitar.")
                     }
                 } else {
                     LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(uiState.items, key = { it.id }) { libro ->
-                            CarritoItem(
-                                libro = libro,
-                                onRemove = { carritoViewModel.removeFromCart(libro) }
+                        items(uiState.items, key = { it.libro.id }) { carritoItem ->
+                            CarritoItemCard(
+                                carritoItem = carritoItem,
+                                onRemove = { carritoViewModel.removeFromCart(carritoItem.libro) }
                             )
                         }
                     }
@@ -110,9 +111,9 @@ fun CarritoScreen(
                             try {
                                 carritoViewModel.confirmReservations(userName)
 
-                                // ⬇️ MOSTRAR MENSAJE DE RESERVA EXITOSA
+                                // ⬇️ MOSTRAR MENSAJE DE SOLICITUD EXITOSA
                                 snackbarHostState.showSnackbar(
-                                    message = "¡Reserva exitosa!",
+                                    message = "¡Libros solicitados exitosamente!",
                                     duration = SnackbarDuration.Short
                                 )
                             } finally {
@@ -132,7 +133,7 @@ fun CarritoScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     } else {
-                        Text("Confirmar Todas las Reservas")
+                        Text("Confirmar Todos los Libros")
                     }
                 }
             }
@@ -141,8 +142,8 @@ fun CarritoScreen(
 }
 
 @Composable
-fun CarritoItem(
-    libro: Libro,
+fun CarritoItemCard(
+    carritoItem: CarritoItem,
     onRemove: () -> Unit
 ) {
     Card(
@@ -157,11 +158,9 @@ fun CarritoItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(libro.nombre, fontWeight = FontWeight.Bold)
-                Text("Nivel: ${libro.nivel}")
-
-                // AGREGAR ESTO PARA VER LIBRO.cantidad EN TIEMPO REAL
-                Text("Stock: ${libro.cantidad}")
+                Text(carritoItem.libro.nombre, fontWeight = FontWeight.Bold)
+                Text("Nivel: ${carritoItem.libro.nivel}")
+                Text("Cantidad: ${carritoItem.cantidad}")
             }
 
             IconButton(onClick = onRemove) {

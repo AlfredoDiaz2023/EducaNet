@@ -31,6 +31,7 @@ import com.example.educanet.model.Libro
 import com.example.educanet.model.Resena
 import com.example.educanet.viewmodel.CarritoViewModel
 import com.example.educanet.viewmodel.LibroViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +48,9 @@ fun LibroScreen(
     var showAddResenaDialog by remember { mutableStateOf(false) }
     var selectedLibro by remember { mutableStateOf<Libro?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Obtener userId del usuario actual
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     // Mostrar mensaje de éxito
     LaunchedEffect(uiState.successMessage) {
@@ -95,11 +99,11 @@ fun LibroScreen(
                         }
                     },
                     actions = {
-                        // Badge del carrito
+                        // Badge del carrito de libros
                         IconButton(onClick = onCarritoClick) {
                             Icon(
-                                Icons.Default.ShoppingCart,
-                                contentDescription = "Carrito",
+                                Icons.Default.CollectionsBookmark,
+                                contentDescription = "Libros Solicitados",
                                 tint = Color(0xFFFF9800)
                             )
                         }
@@ -209,8 +213,9 @@ fun LibroScreen(
                                 libro = libro,
                                 onReservar = { 
                                     if (libro.cantidad > 0) {
+                                        // Descontar stock inmediatamente y agregar al carrito
+                                        viewModel.solicitarLibro(libro, nombre, rol, userId)
                                         carritoViewModel.addToCart(libro)
-                                        viewModel.reservarLibroAlCarrito(libro)
                                     } else {
                                         viewModel.mostrarErrorSinStock()
                                     }
@@ -426,12 +431,12 @@ fun LibroItemModerno(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                     ) {
                         Icon(
-                            Icons.Default.ShoppingCart,
+                            Icons.Default.BookmarkAdd,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Reservar", style = MaterialTheme.typography.labelMedium)
+                        Text("Solicitar", style = MaterialTheme.typography.labelMedium)
                     }
 
                     // Botón Reseña

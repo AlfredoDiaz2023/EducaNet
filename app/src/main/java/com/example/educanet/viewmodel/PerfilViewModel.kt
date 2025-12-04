@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 // Definimos el estado que esperan tus pantallas
 data class PerfilUiState(
@@ -22,7 +23,9 @@ data class PerfilUiState(
     val fotoUrl: String? = null,
     val nombre: String = "",
     val isUploading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val successMessage: String? = null,
+    val isEditingName: Boolean = false
 )
 
 class PerfilViewModel : ViewModel() {
@@ -155,11 +158,57 @@ class PerfilViewModel : ViewModel() {
                     return@addSnapshotListener
                 }
                 val nuevaFoto = snapshot?.getString("fotoUrl") ?: ""
+                val nuevoNombre = snapshot?.getString("nombre") ?: ""
                 Log.d("EDUCA_DEBUG", "ViewModel: Nueva foto detectada: $nuevaFoto")
                 if (nuevaFoto != _uiState.value.fotoUrl && nuevaFoto.isNotEmpty()) {
                     _uiState.update { it.copy(fotoUrl = nuevaFoto) }
                 }
+                if (nuevoNombre != _uiState.value.nombre && nuevoNombre.isNotEmpty()) {
+                    _uiState.update { it.copy(nombre = nuevoNombre) }
+                }
             }
+    }
+
+    // Función para actualizar el nombre del usuario
+    fun actualizarNombre(nuevoNombre: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isEditingName = true, errorMessage = null) }
+            try {
+                val documentId = _uiState.value.usuario?.id
+                if (documentId.isNullOrEmpty()) {
+                    _uiState.update { it.copy(isEditingName = false, errorMessage = "No se encontró el usuario") }
+                    return@launch
+                }
+                
+                firestore.collection("usuario")
+                    .document(documentId)
+                    .update("nombre", nuevoNombre)
+                    .await()
+                
+                // Actualizar UI
+                val usuarioActualizado = _uiState.value.usuario?.copy(nombre = nuevoNombre)
+                _uiState.update { 
+                    it.copy(
+                        usuario = usuarioActualizado,
+                        nombre = nuevoNombre,
+                        isEditingName = false,
+                        successMessage = "Nombre actualizado correctamente"
+                    ) 
+                }
+                Log.d("EDUCA_DEBUG", "ViewModel: Nombre actualizado a: $nuevoNombre")
+            } catch (e: Exception) {
+                Log.e("EDUCA_DEBUG", "Error al actualizar nombre: ${e.message}", e)
+                _uiState.update { it.copy(isEditingName = false, errorMessage = "Error al actualizar: ${e.message}") }
+            }
+        }
+    }
+
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
+    }
+
+    fun clearErrorMessage() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 
     override fun onCleared() {

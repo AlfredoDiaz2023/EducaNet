@@ -1,5 +1,8 @@
 package com.example.educanet.ui.screens.menu
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,6 +61,25 @@ fun MenuScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     
+    // Estado para diálogo de editar nombre
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var nuevoNombre by remember { mutableStateOf(nombre) }
+    
+    // Estado para diálogo de cambiar foto
+    var showPhotoDialog by remember { mutableStateOf(false) }
+    
+    // Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Launcher para galería
+    val launcherGaleria = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            perfilViewModel.onImageSelectedAndSave(it)
+        }
+    }
+    
     // Estado del perfil para obtener la foto actualizada
     val perfilState by perfilViewModel.uiState.collectAsState()
     
@@ -68,6 +90,17 @@ fun MenuScreen(
     
     // Usar la foto del ViewModel si está disponible, sino usar la que viene por parámetro
     val fotoActualizada = perfilState.fotoUrl ?: fotoUrl
+    
+    // Usar el nombre del ViewModel si está disponible
+    val nombreActualizado = if (perfilState.nombre.isNotEmpty()) perfilState.nombre else nombre
+    
+    // Mostrar mensaje de éxito
+    LaunchedEffect(perfilState.successMessage) {
+        perfilState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearSuccessMessage()
+        }
+    }
 
     // Verificar notificaciones sin leer al cargar
     LaunchedEffect(Unit) {
@@ -85,7 +118,11 @@ fun MenuScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent
+    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
         // Fondo con logo
         Image(
             painter = painterResource(id = R.drawable.logo),
@@ -104,10 +141,10 @@ fun MenuScreen(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Foto de perfil clickeable - solo navega al perfil, NO abre galería
+            // Foto de perfil clickeable - abre diálogo para cambiar foto
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.clickable { onPerfilClick() }
+                modifier = Modifier.clickable { showPhotoDialog = true }
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -149,11 +186,30 @@ fun MenuScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "Bienvenido, $nombre",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            // Nombre con botón de editar
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Bienvenido, $nombreActualizado",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(
+                    onClick = {
+                        nuevoNombre = nombreActualizado
+                        showEditNameDialog = true
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Editar nombre",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
             Text(
                 text = "Rol: $rol",
                 style = MaterialTheme.typography.bodyMedium,
@@ -298,6 +354,102 @@ fun MenuScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+    }
+    
+    // Diálogo para editar nombre
+    if (showEditNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditNameDialog = false },
+            title = { Text("Editar Nombre") },
+            text = {
+                OutlinedTextField(
+                    value = nuevoNombre,
+                    onValueChange = { nuevoNombre = it },
+                    label = { Text("Nuevo nombre") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (nuevoNombre.isNotBlank()) {
+                            perfilViewModel.actualizarNombre(nuevoNombre.trim())
+                            showEditNameDialog = false
+                        }
+                    },
+                    enabled = nuevoNombre.isNotBlank()
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditNameDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
+    // Diálogo para cambiar foto de perfil
+    if (showPhotoDialog) {
+        AlertDialog(
+            onDismissRequest = { showPhotoDialog = false },
+            title = { Text("Cambiar foto de perfil") },
+            text = { Text("¿Cómo deseas agregar tu foto?") },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // Botón Cámara
+                    ElevatedButton(
+                        onClick = {
+                            showPhotoDialog = false
+                            onCameraClick()
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Cámara")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Botón Galería
+                    ElevatedButton(
+                        onClick = {
+                            showPhotoDialog = false
+                            launcherGaleria.launch("image/*")
+                        },
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.PhotoLibrary,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Galería")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPhotoDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
