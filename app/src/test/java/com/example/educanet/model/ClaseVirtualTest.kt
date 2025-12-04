@@ -2,7 +2,6 @@ package com.example.educanet.model
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 
 class ClaseVirtualTest : BehaviorSpec({
 

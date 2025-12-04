@@ -3,7 +3,7 @@ package com.example.educanet
 import com.example.educanet.model.Reserva
 import com.example.educanet.model.Libro
 import com.example.educanet.model.ClaseVirtual
-import com.example.educanet.model.Profesor
+import com.example.educanet.model.ProfesorSimple
 import com.example.educanet.model.ProgresoAcademico
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
