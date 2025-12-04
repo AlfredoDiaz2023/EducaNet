@@ -215,6 +215,10 @@ fun AppNavegacion() {
                     }
                     navController.navigate(perfilRoute)
                 },
+                onProgresoHijoClick = {
+                    // Navegar a la pantalla de Mi Familia (progreso del hijo)
+                    navController.navigate("mi_familia_apoderado/$nombre")
+                },
                 onAdminPanelClick = { navController.navigate("admin_panel") },
                 onVerResenasClick = { navController.navigate("resenas_recientes") },
                 onLogout = {
@@ -369,6 +373,30 @@ fun AppNavegacion() {
 
         composable(
             "perfil_apoderado/{nombre}",
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // Obtener imagen capturada de la cámara si existe
+            val capturedImageUri = backStackEntry.savedStateHandle.get<String>("captured_image_uri")?.let {
+                android.net.Uri.parse(it)
+            }
+            
+            PerfilApoderadoSimpleScreen(
+                onLogout = {
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                },
+                onCameraClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set("return_route", "perfil_apoderado/${backStackEntry.arguments?.getString("nombre") ?: ""}")
+                    navController.navigate("camera")
+                },
+                onBack = { navController.popBackStack() },
+                capturedImageUri = capturedImageUri
+            )
+        }
+
+        // Pantalla Mi Familia (Progreso del Hijo) para Apoderado
+        composable(
+            "mi_familia_apoderado/{nombre}",
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
         ) {
             PerfilApoderadoScreen(

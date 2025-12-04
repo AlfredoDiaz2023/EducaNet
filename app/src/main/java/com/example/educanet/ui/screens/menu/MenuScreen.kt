@@ -49,6 +49,7 @@ fun MenuScreen(
     onVerNotificaciones: () -> Unit,
     onCameraClick: () -> Unit,
     onPerfilClick: () -> Unit = {},
+    onProgresoHijoClick: () -> Unit = {},
     onAdminPanelClick: () -> Unit = {},
     onVerResenasClick: () -> Unit = {},
     onLogout: () -> Unit,
@@ -271,7 +272,7 @@ fun MenuScreen(
                             icon = Icons.Default.FamilyRestroom,
                             text = "Progreso de mi Hijo/a",
                             color = Color(0xFFFF9800),
-                            onClick = onPerfilClick,
+                            onClick = onProgresoHijoClick,
                             modifier = Modifier.weight(1f)
                         )
                     }
