@@ -1,5 +1,6 @@
 package com.example.educanet.repository
 
+import com.example.educanet.model.ProfesorSimple
 import com.example.educanet.model.VideoApoyo
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -36,6 +37,38 @@ class VideoApoyoRepository {
         }
     }
 
+    // Función auxiliar para mapear documento a VideoApoyo de forma segura
+    private fun documentToVideoApoyo(doc: com.google.firebase.firestore.DocumentSnapshot): VideoApoyo? {
+        return try {
+            val data = doc.data ?: return null
+            
+            // Extraer profesor de forma segura
+            val profesorData = data["profesor"] as? Map<*, *>
+            val profesorSimple = if (profesorData != null) {
+                ProfesorSimple(
+                    correo = profesorData["correo"]?.toString() ?: "",
+                    nombre = profesorData["nombre"]?.toString() ?: "",
+                    rol = profesorData["rol"]?.toString() ?: ""
+                )
+            } else {
+                ProfesorSimple()
+            }
+            
+            VideoApoyo(
+                id = doc.id,
+                nombre = data["nombre"]?.toString() ?: "",
+                nivel = data["nivel"]?.toString() ?: "",
+                video = data["video"]?.toString() ?: "",
+                descripcion = data["descripcion"]?.toString() ?: "",
+                duracion = (data["duracion"] as? Number)?.toInt() ?: 0,
+                profesor = profesorSimple
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     suspend fun obtenerVideosDeApoyo(limite: Int = 10): ResultadoVideosApoyo {
         return try {
             val query = db.collection("video_apoyo")
@@ -43,7 +76,9 @@ class VideoApoyoRepository {
                 .limit(limite.toLong())
 
             val querySnapshot = query.get().await()
-            val videos = querySnapshot.toObjects(VideoApoyo::class.java)
+            val videos = querySnapshot.documents.mapNotNull { doc ->
+                documentToVideoApoyo(doc)
+            }
 
             val ultimoDocumento = if (querySnapshot.documents.isNotEmpty()) {
                 querySnapshot.documents.last()
@@ -68,7 +103,9 @@ class VideoApoyoRepository {
                 .limit(limite.toLong())
 
             val querySnapshot = query.get().await()
-            val videos = querySnapshot.toObjects(VideoApoyo::class.java)
+            val videos = querySnapshot.documents.mapNotNull { doc ->
+                documentToVideoApoyo(doc)
+            }
 
             val nuevoUltimoDocumento = if (querySnapshot.documents.isNotEmpty()) {
                 querySnapshot.documents.last()
@@ -85,11 +122,11 @@ class VideoApoyoRepository {
 
     suspend fun obtenerVideoDeApoyoPorId(videoId: String): VideoApoyo? {
         return try {
-            db.collection("video_apoyo")
+            val doc = db.collection("video_apoyo")
                 .document(videoId)
                 .get()
                 .await()
-                .toObject(VideoApoyo::class.java)
+            documentToVideoApoyo(doc)
         } catch (e: Exception) {
             e.printStackTrace()
             null

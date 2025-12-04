@@ -14,7 +14,7 @@ class ClaseVirtualTest : BehaviorSpec({
             then("los campos deben estar vacíos y duración en 0") {
                 clase.id shouldBe ""
                 clase.nombre shouldBe ""
-                clase.profesor shouldBe null
+                clase.profesor.nombre shouldBe ""
                 clase.nivel shouldBe ""
                 clase.clase shouldBe ""
                 clase.descripcion shouldBe ""
@@ -24,19 +24,16 @@ class ClaseVirtualTest : BehaviorSpec({
         }
 
         `when`("se crea con un profesor asignado") {
-            val profesor = Profesor(
-                id = "prof001",
-                nombre = "María García",
+            val profesorSimple = ProfesorSimple(
                 correo = "maria@educanet.com",
-                clave = "123456",
-                fotoUrl = "",
-                fechaRegistro = "2024-01-15"
+                nombre = "María García",
+                rol = "Profesor"
             )
 
             val clase = ClaseVirtual(
                 id = "clase001",
                 nombre = "Álgebra Básica",
-                profesor = profesor,
+                profesor = profesorSimple,
                 nivel = "7mo Básico",
                 clase = "7A",
                 descripcion = "Introducción al álgebra",
@@ -45,8 +42,8 @@ class ClaseVirtualTest : BehaviorSpec({
             )
 
             then("la clase debe tener el profesor asignado") {
-                clase.profesor shouldNotBe null
-                clase.profesor?.nombre shouldBe "María García"
+                clase.profesor.nombre.isNotEmpty() shouldBe true
+                clase.profesor.nombre shouldBe "María García"
             }
 
             then("los demás valores deben coincidir") {
@@ -60,7 +57,7 @@ class ClaseVirtualTest : BehaviorSpec({
             val clase = ClaseVirtual(
                 id = "clase002",
                 nombre = "Geometría",
-                profesor = null,
+                profesor = ProfesorSimple(),
                 nivel = "8vo Básico",
                 clase = "8B",
                 descripcion = "Figuras geométricas",
@@ -77,7 +74,7 @@ class ClaseVirtualTest : BehaviorSpec({
             val clase = ClaseVirtual(
                 id = "clase003",
                 nombre = "Historia",
-                profesor = null,
+                profesor = ProfesorSimple(),
                 nivel = "6to Básico",
                 clase = "6A",
                 descripcion = "Historia de Chile",
@@ -92,9 +89,9 @@ class ClaseVirtualTest : BehaviorSpec({
 
         `when`("se filtran clases por nivel") {
             val clases = listOf(
-                ClaseVirtual(id = "1", nombre = "Matemáticas 7mo", profesor = null, nivel = "7mo Básico", clase = "7A", descripcion = "", meet = "", duracion = 45),
-                ClaseVirtual(id = "2", nombre = "Lenguaje 7mo", profesor = null, nivel = "7mo Básico", clase = "7B", descripcion = "", meet = "", duracion = 45),
-                ClaseVirtual(id = "3", nombre = "Matemáticas 8vo", profesor = null, nivel = "8vo Básico", clase = "8A", descripcion = "", meet = "", duracion = 45)
+                ClaseVirtual(id = "1", nombre = "Matemáticas 7mo", profesor = ProfesorSimple(), nivel = "7mo Básico", clase = "7A", descripcion = "", meet = "", duracion = 45),
+                ClaseVirtual(id = "2", nombre = "Lenguaje 7mo", profesor = ProfesorSimple(), nivel = "7mo Básico", clase = "7B", descripcion = "", meet = "", duracion = 45),
+                ClaseVirtual(id = "3", nombre = "Matemáticas 8vo", profesor = ProfesorSimple(), nivel = "8vo Básico", clase = "8A", descripcion = "", meet = "", duracion = 45)
             )
 
             then("debe retornar solo las clases del nivel especificado") {
@@ -105,9 +102,9 @@ class ClaseVirtualTest : BehaviorSpec({
 
         `when`("se verifica la duración de clases") {
             val clases = listOf(
-                ClaseVirtual(id = "1", nombre = "Clase corta", profesor = null, nivel = "", clase = "", descripcion = "", meet = "", duracion = 30),
-                ClaseVirtual(id = "2", nombre = "Clase normal", profesor = null, nivel = "", clase = "", descripcion = "", meet = "", duracion = 45),
-                ClaseVirtual(id = "3", nombre = "Clase larga", profesor = null, nivel = "", clase = "", descripcion = "", meet = "", duracion = 90)
+                ClaseVirtual(id = "1", nombre = "Clase corta", profesor = ProfesorSimple(), nivel = "", clase = "", descripcion = "", meet = "", duracion = 30),
+                ClaseVirtual(id = "2", nombre = "Clase normal", profesor = ProfesorSimple(), nivel = "", clase = "", descripcion = "", meet = "", duracion = 45),
+                ClaseVirtual(id = "3", nombre = "Clase larga", profesor = ProfesorSimple(), nivel = "", clase = "", descripcion = "", meet = "", duracion = 90)
             )
 
             then("debe identificar clases con duración mayor a 60 minutos") {
@@ -121,7 +118,7 @@ class ClaseVirtualTest : BehaviorSpec({
             val claseOriginal = ClaseVirtual(
                 id = "clase001",
                 nombre = "Álgebra",
-                profesor = null,
+                profesor = ProfesorSimple(),
                 nivel = "7mo Básico",
                 clase = "7A",
                 descripcion = "Clase de álgebra",

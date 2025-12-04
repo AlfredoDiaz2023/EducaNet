@@ -61,21 +61,17 @@ class ReservaIntegrationTest : BehaviorSpec({
 
     // Test de flujo de clases virtuales
     given("un flujo de gestión de clases virtuales") {
-        val profesor = Profesor(
-            id = "prof001",
-            nombre = "María García",
+        val profesorSimple = ProfesorSimple(
             correo = "maria@educanet.com",
-            clave = "123456",
-            rol = "Profesor",
-            fotoUrl = "",
-            fechaRegistro = "2025-01-15"
+            nombre = "María García",
+            rol = "Profesor"
         )
 
         val clasesVirtuales = listOf(
             ClaseVirtual(
                 id = "clase001",
                 nombre = "Álgebra Básica",
-                profesor = profesor,
+                profesor = profesorSimple,
                 nivel = "7mo Básico",
                 clase = "7A",
                 descripcion = "Introducción al álgebra",
@@ -85,7 +81,7 @@ class ReservaIntegrationTest : BehaviorSpec({
             ClaseVirtual(
                 id = "clase002",
                 nombre = "Geometría",
-                profesor = profesor,
+                profesor = profesorSimple,
                 nivel = "8vo Básico",
                 clase = "8B",
                 descripcion = "Figuras geométricas",
@@ -115,9 +111,9 @@ class ReservaIntegrationTest : BehaviorSpec({
             val clase = clasesVirtuales.first()
 
             then("el profesor debe estar asignado correctamente") {
-                clase.profesor shouldNotBe null
-                clase.profesor?.nombre shouldBe "María García"
-                clase.profesor?.rol shouldBe "Profesor"
+                clase.profesor.nombre.isNotEmpty() shouldBe true
+                clase.profesor.nombre shouldBe "María García"
+                clase.profesor.rol shouldBe "Profesor"
             }
         }
     }

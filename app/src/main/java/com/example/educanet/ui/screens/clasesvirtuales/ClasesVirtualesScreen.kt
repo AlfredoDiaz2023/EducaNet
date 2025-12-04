@@ -458,7 +458,7 @@ fun ClaseVirtualItemModerno(clase: ClaseVirtual) {
                 }
                 
                 // Profesor
-                clase.profesor?.let { profesor ->
+                if (clase.profesor.nombre.isNotEmpty()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -470,7 +470,7 @@ fun ClaseVirtualItemModerno(clase: ClaseVirtual) {
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    profesor.nombre.firstOrNull()?.uppercase() ?: "P",
+                                    clase.profesor.nombre.firstOrNull()?.uppercase() ?: "P",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF4CAF50)
@@ -485,7 +485,7 @@ fun ClaseVirtualItemModerno(clase: ClaseVirtual) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                profesor.nombre,
+                                clase.profesor.nombre,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )

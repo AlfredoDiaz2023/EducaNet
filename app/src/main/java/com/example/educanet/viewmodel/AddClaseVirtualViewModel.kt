@@ -3,7 +3,7 @@ package com.example.educanet.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.ClaseVirtual
-import com.example.educanet.model.Profesor
+import com.example.educanet.model.ProfesorSimple
 import com.example.educanet.repository.ClaseVirtualRepository
 import com.example.educanet.repository.NotificacionRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -91,7 +91,11 @@ class AddClaseVirtualViewModel : ViewModel() {
                     return@launch
                 }
 
-                val profesor = Profesor(nombre = profesorNombre, correo = currentUser.email ?: "")
+                val profesorSimple = ProfesorSimple(
+                    correo = currentUser.email ?: "",
+                    nombre = profesorNombre,
+                    rol = "Profesor"
+                )
 
                 val claseVirtual = ClaseVirtual(
                     nombre = _uiState.value.nombre,
@@ -99,7 +103,7 @@ class AddClaseVirtualViewModel : ViewModel() {
                     meet = _uiState.value.meetUrl,
                     descripcion = _uiState.value.descripcion,
                     duracion = _uiState.value.duracion,
-                    profesor = profesor
+                    profesor = profesorSimple
                 )
 
                 val success = claseVirtualRepository.agregarClaseVirtual(claseVirtual)
