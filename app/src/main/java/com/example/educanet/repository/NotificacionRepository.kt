@@ -22,7 +22,7 @@ class NotificacionRepository {
         }
     }
 
-    // Obtener notificaciones para un usuario específico (las suyas + las de admin/todos)
+    // Obtener notificaciones para un usuario específico (solo las suyas + las generales "todos")
     suspend fun obtenerNotificacionesPorUsuario(userId: String): List<Notificacion> {
         return try {
             val snapshot = db.collection("notificaciones")
@@ -31,10 +31,27 @@ class NotificacionRepository {
                 .await()
             snapshot.documents.mapNotNull { doc ->
                 val notif = doc.toObject(Notificacion::class.java)?.copy(id = doc.id)
-                // Filtrar: mostrar si es para este usuario, para admin, o para todos
-                if (notif != null && (notif.userId == userId || notif.tipoDestinatario == "todos" || notif.tipoDestinatario == "admin")) {
+                // Filtrar: mostrar si es para este usuario específico o para todos
+                // Solo muestra notificaciones donde el userId coincide o son generales
+                if (notif != null && (notif.userId == userId || notif.tipoDestinatario == "todos")) {
                     notif
                 } else null
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // Obtener notificaciones para administrador (ve TODAS las notificaciones de todos los usuarios)
+    suspend fun obtenerNotificacionesParaAdmin(): List<Notificacion> {
+        return try {
+            val snapshot = db.collection("notificaciones")
+                .orderBy("fecha", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+            // Admin ve absolutamente todas las notificaciones (alumnos, apoderados, profesores, etc.)
+            snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Notificacion::class.java)?.copy(id = doc.id)
             }
         } catch (e: Exception) {
             emptyList()

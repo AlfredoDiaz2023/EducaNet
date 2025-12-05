@@ -23,8 +23,11 @@ import androidx.compose.ui.unit.dp
 import com.example.educanet.R
 import com.example.educanet.model.Notificacion
 import com.example.educanet.repository.NotificacionRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,20 +39,55 @@ fun NotificacionesScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var notificaciones by remember { mutableStateOf<List<Notificacion>>(emptyList()) }
     var cargando by remember { mutableStateOf(true) }
+    
+    // Obtener usuario actual y su rol
+    val auth = FirebaseAuth.getInstance()
+    val currentUserId = auth.currentUser?.uid ?: ""
+    var esAdmin by remember { mutableStateOf(false) }
+    
+    // Determinar si el usuario es admin
+    LaunchedEffect(currentUserId) {
+        if (currentUserId.isNotEmpty()) {
+            try {
+                val userDoc = FirebaseFirestore.getInstance()
+                    .collection("usuario")
+                    .document(currentUserId)
+                    .get()
+                    .await()
+                val rol = userDoc.getString("rol") ?: ""
+                esAdmin = rol.equals("admin", ignoreCase = true) || rol.equals("administrador", ignoreCase = true)
+            } catch (e: Exception) {
+                esAdmin = false
+            }
+        }
+    }
 
-    LaunchedEffect(Unit) {
-        scope.launch {
-            notificaciones = repo.obtenerNotificaciones()
-            repo.marcarTodasComoLeidas()
-            cargando = false
+    // Cargar notificaciones según el tipo de usuario
+    LaunchedEffect(currentUserId, esAdmin) {
+        if (currentUserId.isNotEmpty()) {
+            scope.launch {
+                notificaciones = if (esAdmin) {
+                    repo.obtenerNotificacionesParaAdmin()
+                } else {
+                    repo.obtenerNotificacionesPorUsuario(currentUserId)
+                }
+                repo.marcarTodasComoLeidas()
+                cargando = false
+            }
         }
     }
 
     // Auto-refresh cada 15 segundos
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentUserId, esAdmin) {
         while (true) {
             delay(15000) // 15 segundos
-            notificaciones = repo.obtenerNotificaciones()
+            if (currentUserId.isNotEmpty()) {
+                notificaciones = if (esAdmin) {
+                    repo.obtenerNotificacionesParaAdmin()
+                } else {
+                    repo.obtenerNotificacionesPorUsuario(currentUserId)
+                }
+            }
         }
     }
 

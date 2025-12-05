@@ -59,9 +59,27 @@ class CarritoViewModel : ViewModel() {
     }
 
     fun removeFromCart(libro: Libro) {
-        val currentItems = _uiState.value.items.toMutableList()
-        currentItems.removeAll { it.libro.id == libro.id }
-        _uiState.value = _uiState.value.copy(items = currentItems)
+        viewModelScope.launch {
+            val currentItems = _uiState.value.items.toMutableList()
+            val itemToRemove = currentItems.find { it.libro.id == libro.id }
+            
+            if (itemToRemove != null) {
+                // Devolver el stock al libro (cantidad de items en carrito)
+                try {
+                    val libroActual = libroRepository.obtenerLibroPorId(libro.id)
+                    if (libroActual != null) {
+                        val nuevoStock = libroActual.cantidad + itemToRemove.cantidad
+                        libroRepository.actualizarStock(libro.id, nuevoStock)
+                    }
+                } catch (e: Exception) {
+                    Log.e("CarritoViewModel", "Error devolviendo stock: ${e.message}")
+                }
+                
+                // Remover del carrito
+                currentItems.removeAll { it.libro.id == libro.id }
+                _uiState.value = _uiState.value.copy(items = currentItems)
+            }
+        }
     }
 
     fun confirmReservations(userName: String) {
