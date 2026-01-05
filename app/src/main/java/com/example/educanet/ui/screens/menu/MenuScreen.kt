@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
@@ -52,6 +53,9 @@ fun MenuScreen(
     onProgresoHijoClick: () -> Unit = {},
     onAdminPanelClick: () -> Unit = {},
     onVerResenasClick: () -> Unit = {},
+    onAsistenciaClick: () -> Unit = {},
+    onVerAsistenciaHijoClick: () -> Unit = {}, // Callback para apoderado
+    onVerMiAsistenciaClick: () -> Unit = {}, // Nuevo callback para alumno
     onLogout: () -> Unit,
     menuViewModel: MenuViewModel = viewModel(),
     perfilViewModel: PerfilViewModel = viewModel()
@@ -324,7 +328,40 @@ fun MenuScreen(
                     )
                 }
 
-                // Fila 5: Panel de Administración (solo para admin)
+                // Fila 5: Asistencia (solo para profesores)
+                if (rol == "Profesor") {
+                    MenuButton(
+                        icon = Icons.AutoMirrored.Filled.FactCheck,
+                        text = "Control de Asistencia",
+                        color = Color(0xFF4CAF50),
+                        onClick = onAsistenciaClick,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Fila: Ver Asistencia del hijo (solo para apoderados)
+                if (rol == "Apoderado") {
+                    MenuButton(
+                        icon = Icons.AutoMirrored.Filled.FactCheck,
+                        text = "Ver Asistencia de mi Hijo/a",
+                        color = Color(0xFF4CAF50),
+                        onClick = onVerAsistenciaHijoClick,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Fila: Ver Mi Asistencia (solo para alumnos)
+                if (rol == "Alumno") {
+                    MenuButton(
+                        icon = Icons.AutoMirrored.Filled.FactCheck,
+                        text = "Ver Mi Asistencia",
+                        color = Color(0xFF4CAF50),
+                        onClick = onVerMiAsistenciaClick,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Fila 6: Panel de Administración (solo para admin)
                 if (rol == "Administrador") {
                     MenuButton(
                         icon = Icons.Default.AdminPanelSettings,

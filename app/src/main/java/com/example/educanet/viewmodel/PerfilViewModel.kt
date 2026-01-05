@@ -25,7 +25,11 @@ data class PerfilUiState(
     val isUploading: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null,
-    val isEditingName: Boolean = false
+    val isEditingName: Boolean = false,
+    // Campos adicionales para alumnos
+    val curso: String = "",
+    val apoderadoNombre: String = "",
+    val apoderadoCorreo: String = ""
 )
 
 class PerfilViewModel : ViewModel() {
@@ -84,6 +88,11 @@ class PerfilViewModel : ViewModel() {
                     }
                     // Observar cambios usando el ID del documento, no el authUid
                     observarFotoUrl(usuario.id)
+                    
+                    // Si es alumno, cargar curso y apoderado
+                    if (usuario.rol == "Alumno") {
+                        cargarDatosAlumno(usuario.id)
+                    }
                 } else {
                     Log.e("EDUCA_DEBUG", "ViewModel: No se encontró usuario para uid: $authUid")
                     _uiState.update { it.copy(isUploading = false, errorMessage = "Usuario no encontrado") }
@@ -209,6 +218,59 @@ class PerfilViewModel : ViewModel() {
 
     fun clearErrorMessage() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+    
+    // Cargar datos adicionales del alumno (curso y apoderado)
+    private fun cargarDatosAlumno(alumnoDocId: String) {
+        viewModelScope.launch {
+            try {
+                // Obtener el documento del alumno para el curso
+                val alumnoDoc = firestore.collection("usuario")
+                    .document(alumnoDocId)
+                    .get()
+                    .await()
+                
+                val curso = alumnoDoc.getString("curso") ?: ""
+                Log.d("EDUCA_DEBUG", "ViewModel: Curso del alumno: $curso")
+                
+                _uiState.update { it.copy(curso = curso) }
+                
+                // Buscar apoderado vinculado a este alumno
+                val apoderadosSnapshot = firestore.collection("usuario")
+                    .whereEqualTo("rol", "Apoderado")
+                    .whereEqualTo("alumnoVinculadoId", alumnoDocId)
+                    .get()
+                    .await()
+                
+                if (!apoderadosSnapshot.isEmpty) {
+                    val apoderadoDoc = apoderadosSnapshot.documents.first()
+                    val apoderadoNombre = apoderadoDoc.getString("nombre") ?: ""
+                    val apoderadoCorreo = apoderadoDoc.getString("correo") ?: ""
+                    Log.d("EDUCA_DEBUG", "ViewModel: Apoderado encontrado: $apoderadoNombre")
+                    
+                    _uiState.update { 
+                        it.copy(
+                            apoderadoNombre = apoderadoNombre,
+                            apoderadoCorreo = apoderadoCorreo
+                        ) 
+                    }
+                } else {
+                    Log.d("EDUCA_DEBUG", "ViewModel: No se encontró apoderado vinculado")
+                    _uiState.update { 
+                        it.copy(
+                            apoderadoNombre = "",
+                            apoderadoCorreo = ""
+                        ) 
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("EDUCA_DEBUG", "Error cargando datos del alumno: ${e.message}", e)
+            }
+        }
+    }
+    
+    fun refreshPerfil() {
+        cargarDatosIniciales()
     }
 
     override fun onCleared() {

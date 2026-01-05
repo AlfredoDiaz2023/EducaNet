@@ -42,4 +42,8 @@ class ResenasRecientesViewModel : ViewModel() {
             }
         }
     }
+    
+    fun refreshResenas() {
+        cargarResenasRecientes()
+    }
 }

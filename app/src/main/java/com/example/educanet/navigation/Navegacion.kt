@@ -28,6 +28,7 @@ import com.example.educanet.ui.screens.libro.LibroScreen
 import com.example.educanet.ui.screens.login.LoginScreen
 import com.example.educanet.ui.screens.progresoacademico.AddProgresoAcademicoScreen
 import com.example.educanet.ui.screens.progresoacademico.ProgresoAcademicoScreen
+import com.example.educanet.ui.screens.progresoacademico.TablaNotasScreen
 import com.example.educanet.ui.screens.menu.MenuScreen
 import com.example.educanet.ui.screens.notificaciones.NotificacionesScreen
 import com.example.educanet.ui.screens.perfil.*
@@ -166,11 +167,18 @@ fun AppNavegacion() {
             val correo = entry.arguments?.getString("correo")
 
             var correoAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            var idAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            var nombreAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            
+            // Variables para el alumno actual (cuando el rol es Alumno)
+            var idAlumnoActual by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(rol, correo) {
+                val db = FirebaseFirestore.getInstance()
+                
+                // Si es Apoderado, obtener datos del alumno vinculado
                 if (rol == "Apoderado" && correo != null) {
                     try {
-                        val db = FirebaseFirestore.getInstance()
                         val decodedCorreo = java.net.URLDecoder.decode(correo, StandardCharsets.UTF_8.toString())
                         val snapshot = db.collection("usuario")
                             .whereEqualTo("correo", decodedCorreo)
@@ -180,10 +188,30 @@ fun AppNavegacion() {
                         if (!snapshot.isEmpty) {
                             val doc = snapshot.documents.first()
                             correoAlumnoVinculado = doc.getString("alumnoVinculadoCorreo")
-                            Log.d("Navegacion", "Alumno vinculado encontrado: $correoAlumnoVinculado")
+                            idAlumnoVinculado = doc.getString("alumnoVinculadoId")
+                            nombreAlumnoVinculado = doc.getString("alumnoVinculadoNombre")
+                            Log.d("Navegacion", "Alumno vinculado encontrado: $nombreAlumnoVinculado (ID: $idAlumnoVinculado)")
                         }
                     } catch (e: Exception) {
                         Log.e("Navegacion", "Error buscando alumno vinculado: ${e.message}")
+                    }
+                }
+                
+                // Si es Alumno, obtener su propio ID de documento
+                if (rol == "Alumno" && correo != null) {
+                    try {
+                        val decodedCorreo = java.net.URLDecoder.decode(correo, StandardCharsets.UTF_8.toString())
+                        val snapshot = db.collection("usuario")
+                            .whereEqualTo("correo", decodedCorreo)
+                            .get()
+                            .await()
+                        
+                        if (!snapshot.isEmpty) {
+                            idAlumnoActual = snapshot.documents.first().id
+                            Log.d("Navegacion", "ID del alumno actual: $idAlumnoActual")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Navegacion", "Error obteniendo ID del alumno: ${e.message}")
                     }
                 }
             }
@@ -221,6 +249,24 @@ fun AppNavegacion() {
                 },
                 onAdminPanelClick = { navController.navigate("admin_panel") },
                 onVerResenasClick = { navController.navigate("resenas_recientes") },
+                onAsistenciaClick = { navController.navigate("asistencia") },
+                onVerAsistenciaHijoClick = {
+                    // Navegar a ver asistencia del hijo vinculado (para apoderados)
+                    if (idAlumnoVinculado != null && nombreAlumnoVinculado != null) {
+                        val nombreEncoded = URLEncoder.encode(nombreAlumnoVinculado, StandardCharsets.UTF_8.toString())
+                        navController.navigate("ver_asistencia/$idAlumnoVinculado/$nombreEncoded")
+                    } else {
+                        // Si no hay alumno vinculado, ir a Mi Familia para vincular
+                        navController.navigate("mi_familia_apoderado/$nombre")
+                    }
+                },
+                onVerMiAsistenciaClick = {
+                    // Navegar a ver mi propia asistencia (para alumnos)
+                    if (idAlumnoActual != null) {
+                        val nombreEncoded = URLEncoder.encode(nombre, StandardCharsets.UTF_8.toString())
+                        navController.navigate("ver_asistencia/$idAlumnoActual/$nombreEncoded")
+                    }
+                },
                 onLogout = {
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") {
@@ -325,7 +371,17 @@ fun AppNavegacion() {
         }
 
         composable("add_progreso_academico") {
-            AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
+            AddProgresoAcademicoScreen(
+                onBack = { navController.popBackStack() },
+                onVerTablaNotas = { navController.navigate("tabla_notas") }
+            )
+        }
+        
+        // Tabla de conversión de notas (solo profesores)
+        composable("tabla_notas") {
+            TablaNotasScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(
@@ -404,7 +460,11 @@ fun AppNavegacion() {
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") { popUpTo(0) { inclusive = true } }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onVerAsistencia = { alumnoId, alumnoNombre ->
+                    val nombreEncoded = URLEncoder.encode(alumnoNombre, StandardCharsets.UTF_8.toString())
+                    navController.navigate("ver_asistencia/$alumnoId/$nombreEncoded")
+                }
             )
         }
 
@@ -492,6 +552,76 @@ fun AppNavegacion() {
 
         composable("editar_perfil_admin") {
             EditarPerfilAdminScreen(onBack = { navController.popBackStack() })
+        }
+
+        // Pantallas de Asistencia
+        composable("asistencia") {
+            com.example.educanet.ui.screens.asistencia.AsistenciaScreen(
+                onBack = { navController.popBackStack() },
+                onTomarAsistencia = { curso ->
+                    val cursoEncoded = URLEncoder.encode(curso, StandardCharsets.UTF_8.toString())
+                    navController.navigate("tomar_asistencia/$cursoEncoded")
+                }
+            )
+        }
+
+        composable(
+            route = "tomar_asistencia/{curso}",
+            arguments = listOf(
+                navArgument("curso") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val curso = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("curso") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            // Obtener nombre del profesor desde el estado guardado o Firebase
+            var profesorNombre by remember { mutableStateOf("Profesor") }
+            
+            LaunchedEffect(Unit) {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                if (uid != null) {
+                    try {
+                        val snapshot = FirebaseFirestore.getInstance()
+                            .collection("usuario")
+                            .whereEqualTo("uid", uid)
+                            .get()
+                            .await()
+                        if (!snapshot.isEmpty) {
+                            profesorNombre = snapshot.documents.first().getString("nombre") ?: "Profesor"
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Navegacion", "Error obteniendo nombre profesor: ${e.message}")
+                    }
+                }
+            }
+
+            com.example.educanet.ui.screens.asistencia.TomarAsistenciaScreen(
+                curso = curso,
+                profesorNombre = profesorNombre,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Ver asistencia de un alumno (para apoderados/alumnos)
+        composable(
+            route = "ver_asistencia/{alumnoId}/{alumnoNombre}",
+            arguments = listOf(
+                navArgument("alumnoId") { type = NavType.StringType },
+                navArgument("alumnoNombre") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val alumnoId = backStackEntry.arguments?.getString("alumnoId") ?: ""
+            val alumnoNombre = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("alumnoNombre") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            
+            com.example.educanet.ui.screens.asistencia.VerAsistenciaAlumnoScreen(
+                alumnoId = alumnoId,
+                alumnoNombre = alumnoNombre,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

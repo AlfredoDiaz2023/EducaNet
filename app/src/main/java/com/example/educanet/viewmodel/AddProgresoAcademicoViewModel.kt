@@ -3,6 +3,7 @@ package com.example.educanet.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.ProgresoAcademico
+import com.example.educanet.model.SistemaNotas
 import com.example.educanet.repository.NotificacionRepository
 import com.example.educanet.repository.ProgresoAcademicoRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -15,7 +16,8 @@ import kotlinx.coroutines.tasks.await
 
 data class AlumnoInfo(
     val nombre: String = "",
-    val correo: String = ""
+    val correo: String = "",
+    val curso: String = ""
 )
 
 data class AddProgresoAcademicoUiState(
@@ -25,6 +27,11 @@ data class AddProgresoAcademicoUiState(
     val asignatura: String = "",
     val curso: String = "",
     val notas: String = "",
+    val porcentaje: String = "",
+    val notaCalculada: Double = 0.0,
+    val modoIngreso: ModoIngresoNota = ModoIngresoNota.PORCENTAJE,
+    val puntajeObtenido: String = "",
+    val puntajeTotal: String = "",
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val errorMessage: String? = null,
@@ -32,6 +39,12 @@ data class AddProgresoAcademicoUiState(
     val isLoadingAlumnos: Boolean = false,
     val isLoadingProfesor: Boolean = false
 )
+
+enum class ModoIngresoNota {
+    PORCENTAJE,    // Ingresar porcentaje directo
+    PUNTAJE,       // Ingresar puntaje obtenido / puntaje total
+    NOTA_DIRECTA   // Ingresar nota directamente
+}
 
 class AddProgresoAcademicoViewModel : ViewModel() {
     private val repo = ProgresoAcademicoRepository()
@@ -87,7 +100,8 @@ class AddProgresoAcademicoViewModel : ViewModel() {
                 val listaAlumnos = snapshot.documents.mapNotNull { doc ->
                     val nombre = doc.getString("nombre") ?: return@mapNotNull null
                     val correo = doc.getString("correo") ?: return@mapNotNull null
-                    AlumnoInfo(nombre = nombre, correo = correo)
+                    val curso = doc.getString("curso") ?: ""
+                    AlumnoInfo(nombre = nombre, correo = correo, curso = curso)
                 }.sortedBy { it.nombre }
                 
                 _uiState.value = _uiState.value.copy(
@@ -108,12 +122,83 @@ class AddProgresoAcademicoViewModel : ViewModel() {
     fun onAlumnoSelected(alumno: AlumnoInfo) {
         _uiState.value = _uiState.value.copy(
             alumno = alumno.nombre,
-            alumnoCorreo = alumno.correo
+            alumnoCorreo = alumno.correo,
+            curso = alumno.curso // Auto-seleccionar el curso del alumno
         )
     }
     fun onAsignaturaChange(value: String) = update { copy(asignatura = value) }
     fun onCursoChange(value: String) = update { copy(curso = value) }
-    fun onNotasChange(value: String) = update { copy(notas = value) }
+    fun onNotasChange(value: String) {
+        val nota = value.toDoubleOrNull()
+        if (nota != null) {
+            val notaValidada = nota.coerceIn(SistemaNotas.NOTA_MINIMA, SistemaNotas.NOTA_MAXIMA)
+            _uiState.value = _uiState.value.copy(
+                notas = value,
+                notaCalculada = notaValidada
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(notas = value)
+        }
+    }
+    
+    fun onPorcentajeChange(value: String) {
+        val porcentaje = value.toDoubleOrNull()
+        if (porcentaje != null) {
+            val porcentajeValidado = porcentaje.coerceIn(0.0, 100.0)
+            val notaCalculada = SistemaNotas.porcentajeANota(porcentajeValidado)
+            _uiState.value = _uiState.value.copy(
+                porcentaje = value,
+                notaCalculada = notaCalculada,
+                notas = String.format("%.1f", notaCalculada)
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(porcentaje = value)
+        }
+    }
+    
+    fun onPuntajeObtenidoChange(value: String) {
+        _uiState.value = _uiState.value.copy(puntajeObtenido = value)
+        calcularNotaDesdePuntaje()
+    }
+    
+    fun onPuntajeTotalChange(value: String) {
+        _uiState.value = _uiState.value.copy(puntajeTotal = value)
+        calcularNotaDesdePuntaje()
+    }
+    
+    private fun calcularNotaDesdePuntaje() {
+        val obtenido = _uiState.value.puntajeObtenido.toDoubleOrNull() ?: return
+        val total = _uiState.value.puntajeTotal.toDoubleOrNull() ?: return
+        if (total > 0) {
+            val porcentaje = (obtenido / total) * 100.0
+            val notaCalculada = SistemaNotas.porcentajeANota(porcentaje)
+            _uiState.value = _uiState.value.copy(
+                porcentaje = String.format("%.1f", porcentaje),
+                notaCalculada = notaCalculada,
+                notas = String.format("%.1f", notaCalculada)
+            )
+        }
+    }
+    
+    fun onModoIngresoChange(modo: ModoIngresoNota) {
+        _uiState.value = _uiState.value.copy(
+            modoIngreso = modo,
+            // Limpiar valores al cambiar de modo
+            porcentaje = "",
+            puntajeObtenido = "",
+            puntajeTotal = "",
+            notas = "",
+            notaCalculada = 0.0
+        )
+    }
+    
+    fun getDescripcionNota(): String {
+        return SistemaNotas.getDescripcion(_uiState.value.notaCalculada)
+    }
+    
+    fun esNotaAprobatoria(): Boolean {
+        return SistemaNotas.esAprobado(_uiState.value.notaCalculada)
+    }
 
     private fun update(block: AddProgresoAcademicoUiState.() -> AddProgresoAcademicoUiState) {
         _uiState.value = _uiState.value.block()
@@ -124,7 +209,16 @@ class AddProgresoAcademicoViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(isSaving = true)
 
             try {
-                val nota = _uiState.value.notas.toDoubleOrNull() ?: 0.0
+                // Validar que la nota esté en rango válido
+                val nota = _uiState.value.notaCalculada
+                if (nota < SistemaNotas.NOTA_MINIMA || nota > SistemaNotas.NOTA_MAXIMA) {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        errorMessage = "La nota debe estar entre ${SistemaNotas.NOTA_MINIMA} y ${SistemaNotas.NOTA_MAXIMA}"
+                    )
+                    return@launch
+                }
+                
                 val data = ProgresoAcademico(
                     profesor = _uiState.value.profesor,
                     alumno = _uiState.value.alumnoCorreo.ifEmpty { _uiState.value.alumno },
@@ -135,9 +229,11 @@ class AddProgresoAcademicoViewModel : ViewModel() {
 
                 val ok = repo.agregarNota(data)
                 if (ok) {
+                    val descripcion = SistemaNotas.getDescripcion(nota)
+                    val estado = if (SistemaNotas.esAprobado(nota)) "Aprobado" else "Reprobado"
                     notificacionRepository.agregarNotificacion(
                         titulo = "Nueva nota agregada",
-                        mensaje = "Se agregó una nota de ${_uiState.value.notas} para el alumno ${_uiState.value.alumno} en la asignatura ${_uiState.value.asignatura}."
+                        mensaje = "Nota: ${String.format("%.1f", nota)} ($descripcion - $estado) para ${_uiState.value.alumno} en ${_uiState.value.asignatura}."
                     )
                     _uiState.value = _uiState.value.copy(
                         isSaving = false,

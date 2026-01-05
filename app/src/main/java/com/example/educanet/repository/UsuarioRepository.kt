@@ -17,7 +17,7 @@ class UsuarioRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-    suspend fun registroUsuario(correo: String, clave: String, nombre: String, rol: String): RegistroResult {
+    suspend fun registroUsuario(correo: String, clave: String, nombre: String, rol: String, curso: String = ""): RegistroResult {
         return try {
             // 1. Crear usuario en Firebase Authentication
             val authResult = auth.createUserWithEmailAndPassword(correo, clave).await()
@@ -42,7 +42,8 @@ class UsuarioRepository {
                 "nombre" to nombre,
                 "rol" to rolFinal,
                 "fotoUrl" to "",
-                "fechaRegistro" to getCurrentDate()
+                "fechaRegistro" to getCurrentDate(),
+                "curso" to if (rolFinal == "Alumno") curso else "" // Solo alumnos tienen curso
             )
 
             // 3. Guardar en Firestore en la colección "usuario"
@@ -84,7 +85,8 @@ class UsuarioRepository {
                     clave = clave,
                     rol = rolFinal,
                     fotoUrl = "",
-                    fechaRegistro = getCurrentDate()
+                    fechaRegistro = getCurrentDate(),
+                    curso = curso
                 )
             }
 

@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.R
 import com.example.educanet.ui.common.FotoPerfil
 import com.example.educanet.viewmodel.PerfilViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +52,14 @@ fun PerfilAdminScreen(
     LaunchedEffect(Unit) { 
         Log.d("PerfilAdminScreen", "Cargando datos iniciales...")
         perfilViewModel.cargarDatosIniciales() 
+    }
+    
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(15000)
+            perfilViewModel.refreshPerfil()
+        }
     }
     
     // Procesar imagen capturada de la cámara

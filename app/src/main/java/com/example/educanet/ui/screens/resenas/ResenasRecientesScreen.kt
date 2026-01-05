@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.R
 import com.example.educanet.repository.ResenaConLibro
 import com.example.educanet.viewmodel.ResenasRecientesViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,6 +35,14 @@ fun ResenasRecientesScreen(
     viewModel: ResenasRecientesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(15000)
+            viewModel.refreshResenas()
+        }
+    }
 
     Scaffold(
         topBar = {
