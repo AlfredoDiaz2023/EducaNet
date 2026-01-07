@@ -245,11 +245,12 @@ fun AsistenciaScreen(
                         }
                     }
                 } else {
-                    // Agrupar por fecha y curso
+                    // Agrupar por fecha, curso y asignatura
                     val historialAgrupado = uiState.historialAsistencia
                         .groupBy { 
-                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                                .format(Date(it.fecha)) + " - " + it.curso 
+                            val fecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it.fecha))
+                            val asignatura = if (it.asignaturaNombre.isNotEmpty()) " - ${it.asignaturaNombre}" else ""
+                            "$fecha - ${it.curso}$asignatura"
                         }
 
                     LazyColumn(
@@ -271,11 +272,14 @@ fun AsistenciaScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text(
-                                                grupo,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF1565C0)
-                                            )
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    grupo,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFF1565C0),
+                                                    fontSize = 14.sp
+                                                )
+                                            }
                                             val presentes = asistencias.count { it.presente }
                                             val total = asistencias.size
                                             Surface(

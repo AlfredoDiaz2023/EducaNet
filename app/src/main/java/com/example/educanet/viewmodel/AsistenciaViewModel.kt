@@ -4,8 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.Alumno
+import com.example.educanet.model.Asignatura
 import com.example.educanet.model.Asistencia
 import com.example.educanet.model.Cursos
+import com.example.educanet.repository.AsignaturaRepository
 import com.example.educanet.repository.AsistenciaRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -17,6 +19,8 @@ import kotlinx.coroutines.tasks.await
 
 data class AsistenciaUiState(
     val cursoSeleccionado: String = "",
+    val asignaturaSeleccionada: Asignatura? = null,
+    val asignaturasPorCurso: List<Asignatura> = emptyList(),
     val alumnos: List<Alumno> = emptyList(),
     val asistenciaMap: Map<String, Boolean> = emptyMap(), // alumnoId -> presente
     val justificacionMap: Map<String, String> = emptyMap(), // alumnoId -> justificación
@@ -30,6 +34,7 @@ data class AsistenciaUiState(
 
 class AsistenciaViewModel : ViewModel() {
     private val repository = AsistenciaRepository()
+    private val asignaturaRepository = AsignaturaRepository()
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
@@ -41,8 +46,8 @@ class AsistenciaViewModel : ViewModel() {
     fun seleccionarCurso(curso: String) {
         _uiState.value = _uiState.value.copy(cursoSeleccionado = curso, cargando = true)
         viewModelScope.launch {
-            // Verificar si ya se tomó asistencia hoy
-            val yaTomoAsistencia = repository.yaSeTomoAsistenciaHoy(curso)
+            // Cargar asignaturas del curso
+            val asignaturas = asignaturaRepository.obtenerAsignaturasPorCurso(curso)
             
             // Cargar alumnos del curso
             val alumnos = repository.obtenerAlumnosPorCurso(curso)
@@ -53,11 +58,24 @@ class AsistenciaViewModel : ViewModel() {
 
             _uiState.value = _uiState.value.copy(
                 alumnos = alumnos,
+                asignaturasPorCurso = asignaturas,
                 asistenciaMap = asistenciaInicial,
                 justificacionMap = justificacionInicial,
                 cargando = false,
-                yaSeTomoAsistencia = yaTomoAsistencia
+                yaSeTomoAsistencia = false
             )
+        }
+    }
+
+    fun seleccionarAsignatura(asignatura: Asignatura) {
+        _uiState.value = _uiState.value.copy(asignaturaSeleccionada = asignatura)
+        viewModelScope.launch {
+            // Verificar si ya se tomó asistencia hoy para este curso y asignatura
+            val yaTomoAsistencia = repository.yaSeTomoAsistenciaHoy(
+                _uiState.value.cursoSeleccionado,
+                asignatura.id
+            )
+            _uiState.value = _uiState.value.copy(yaSeTomoAsistencia = yaTomoAsistencia)
         }
     }
 
@@ -84,6 +102,12 @@ class AsistenciaViewModel : ViewModel() {
     }
 
     fun guardarAsistencia(profesorNombre: String) {
+        val asignatura = _uiState.value.asignaturaSeleccionada
+        if (asignatura == null) {
+            _uiState.value = _uiState.value.copy(mensaje = "❌ Selecciona una asignatura primero")
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(guardando = true)
 
@@ -92,7 +116,7 @@ class AsistenciaViewModel : ViewModel() {
                 val curso = _uiState.value.cursoSeleccionado
                 val fechaActual = System.currentTimeMillis()
                 
-                Log.d("AsistenciaVM", "Guardando asistencia - profesorId: $profesorId, profesorNombre: $profesorNombre, curso: $curso")
+                Log.d("AsistenciaVM", "Guardando asistencia - profesorId: $profesorId, profesorNombre: $profesorNombre, curso: $curso, asignatura: ${asignatura.nombre}")
                 Log.d("AsistenciaVM", "Cantidad de alumnos: ${_uiState.value.alumnos.size}")
 
                 val listaAsistencia = _uiState.value.alumnos.map { alumno ->
@@ -102,6 +126,8 @@ class AsistenciaViewModel : ViewModel() {
                         alumnoId = alumno.id,
                         alumnoNombre = alumno.nombre,
                         curso = curso,
+                        asignaturaId = asignatura.id,
+                        asignaturaNombre = asignatura.nombre,
                         fecha = fechaActual,
                         presente = _uiState.value.asistenciaMap[alumno.id] ?: true,
                         justificacion = _uiState.value.justificacionMap[alumno.id] ?: ""

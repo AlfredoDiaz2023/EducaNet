@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -31,6 +33,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.educanet.R
 import com.example.educanet.model.Alumno
+import com.example.educanet.model.Asignatura
 import com.example.educanet.viewmodel.AsistenciaViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -46,6 +49,7 @@ fun TomarAsistenciaScreen(
     val uiState by asistenciaViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var showAsignaturaSelector by remember { mutableStateOf(false) }
 
     // Cargar alumnos del curso
     LaunchedEffect(curso) {
@@ -116,8 +120,56 @@ fun TomarAsistenciaScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
             ) {
+                // Selector de Asignatura
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showAsignaturaSelector = true },
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (uiState.asignaturaSeleccionada != null) 
+                            Color(0xFFE8F5E9) else Color(0xFFFFF8E1)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                if (uiState.asignaturaSeleccionada != null) Icons.Default.Book else Icons.Default.School,
+                                contentDescription = null,
+                                tint = if (uiState.asignaturaSeleccionada != null) Color(0xFF4CAF50) else Color(0xFFFF9800)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    if (uiState.asignaturaSeleccionada != null) "Asignatura seleccionada" else "Seleccionar Asignatura",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    uiState.asignaturaSeleccionada?.nombre ?: "Toca para seleccionar",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (uiState.asignaturaSeleccionada != null) Color(0xFF4CAF50) else Color(0xFFE65100)
+                                )
+                            }
+                        }
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = Color.Gray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // Verificar si ya se tomó asistencia
-                if (uiState.yaSeTomoAsistencia) {
+                if (uiState.yaSeTomoAsistencia && uiState.asignaturaSeleccionada != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
@@ -134,7 +186,7 @@ fun TomarAsistenciaScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                "⚠️ Ya se registró la asistencia de este curso hoy",
+                                "⚠️ Ya se registró la asistencia de ${uiState.asignaturaSeleccionada?.nombre} hoy",
                                 color = Color(0xFFE65100),
                                 fontWeight = FontWeight.Medium
                             )
@@ -271,7 +323,7 @@ fun TomarAsistenciaScreen(
                 if (uiState.alumnos.isNotEmpty()) {
                     Button(
                         onClick = { asistenciaViewModel.guardarAsistencia(profesorNombre) },
-                        enabled = !uiState.guardando && !uiState.yaSeTomoAsistencia,
+                        enabled = !uiState.guardando && !uiState.yaSeTomoAsistencia && uiState.asignaturaSeleccionada != null,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 16.dp),
@@ -289,11 +341,30 @@ fun TomarAsistenciaScreen(
                         } else {
                             Icon(Icons.Default.Save, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Guardar Asistencia", fontWeight = FontWeight.Bold)
+                            Text(
+                                if (uiState.asignaturaSeleccionada == null) 
+                                    "Selecciona una asignatura" 
+                                else 
+                                    "Guardar Asistencia", 
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             }
+        }
+        
+        // Modal de selección de asignatura
+        if (showAsignaturaSelector) {
+            AsignaturaSelectorModal(
+                asignaturas = uiState.asignaturasPorCurso,
+                asignaturaSeleccionada = uiState.asignaturaSeleccionada,
+                onAsignaturaSelected = { asignatura ->
+                    asistenciaViewModel.seleccionarAsignatura(asignatura)
+                    showAsignaturaSelector = false
+                },
+                onDismiss = { showAsignaturaSelector = false }
+            )
         }
     }
 }
@@ -455,5 +526,146 @@ private fun AlumnoAsistenciaItem(
                 }
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AsignaturaSelectorModal(
+    asignaturas: List<Asignatura>,
+    asignaturaSeleccionada: Asignatura?,
+    onAsignaturaSelected: (Asignatura) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Seleccionar Asignatura",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                }
+            }
+            
+            Text(
+                "Elige la asignatura para la cual tomarás asistencia",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (asignaturas.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.School,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "No hay asignaturas disponibles para este curso",
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(asignaturas, key = { it.id }) { asignatura ->
+                        val isSelected = asignaturaSeleccionada?.id == asignatura.id
+                        
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onAsignaturaSelected(asignatura) },
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) Color(0xFFE8F5E9) else Color(0xFFF5F5F5)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(
+                                2.dp, Color(0xFF4CAF50)
+                            ) else null
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    modifier = Modifier.size(44.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) Color(0xFF4CAF50) else Color(0xFF2196F3).copy(alpha = 0.15f)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                        Icon(
+                                            Icons.Default.Book,
+                                            contentDescription = null,
+                                            tint = if (isSelected) Color.White else Color(0xFF2196F3),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.width(12.dp))
+                                
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        asignatura.nombre,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color(0xFF4CAF50) else Color.Black
+                                    )
+                                    if (asignatura.descripcion.isNotEmpty()) {
+                                        Text(
+                                            asignatura.descripcion,
+                                            fontSize = 12.sp,
+                                            color = Color.Gray,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                                
+                                if (isSelected) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4CAF50)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -28,6 +28,7 @@ fun AdminPanelScreen(
     onBack: () -> Unit,
     onGestionLibros: () -> Unit,
     onGestionUsuarios: () -> Unit,
+    onGestionAsignaturas: () -> Unit,
     onHistorialReservas: () -> Unit,
     onEditarPerfil: () -> Unit
 ) {
@@ -90,6 +91,15 @@ fun AdminPanelScreen(
                     onClick = onGestionUsuarios
                 )
 
+                // Gestión de Asignaturas
+                AdminOptionCard(
+                    icon = Icons.Default.School,
+                    title = "Gestión de Asignaturas",
+                    description = "Crear, editar y eliminar asignaturas del currículo",
+                    color = Color(0xFF9C27B0),
+                    onClick = onGestionAsignaturas
+                )
+
                 // Historial de Reservas
                 AdminOptionCard(
                     icon = Icons.Default.History,
@@ -104,7 +114,7 @@ fun AdminPanelScreen(
                     icon = Icons.Default.Edit,
                     title = "Editar Mi Perfil",
                     description = "Modificar nombre de usuario y datos personales",
-                    color = Color(0xFF9C27B0),
+                    color = Color(0xFFFF5722),
                     onClick = onEditarPerfil
                 )
             }

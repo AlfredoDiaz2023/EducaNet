@@ -48,6 +48,8 @@ class AsistenciaRepository {
                 "alumnoId" to asistencia.alumnoId,
                 "alumnoNombre" to asistencia.alumnoNombre,
                 "curso" to asistencia.curso,
+                "asignaturaId" to asistencia.asignaturaId,
+                "asignaturaNombre" to asistencia.asignaturaNombre,
                 "fecha" to asistencia.fecha,
                 "presente" to asistencia.presente,
                 "justificacion" to asistencia.justificacion
@@ -72,11 +74,13 @@ class AsistenciaRepository {
                     "alumnoId" to asistencia.alumnoId,
                     "alumnoNombre" to asistencia.alumnoNombre,
                     "curso" to asistencia.curso,
+                    "asignaturaId" to asistencia.asignaturaId,
+                    "asignaturaNombre" to asistencia.asignaturaNombre,
                     "fecha" to asistencia.fecha,
                     "presente" to asistencia.presente,
                     "justificacion" to asistencia.justificacion
                 )
-                Log.d("AsistenciaRepo", "Guardando: alumnoId=${asistencia.alumnoId}, nombre=${asistencia.alumnoNombre}, presente=${asistencia.presente}")
+                Log.d("AsistenciaRepo", "Guardando: alumnoId=${asistencia.alumnoId}, nombre=${asistencia.alumnoNombre}, asignatura=${asistencia.asignaturaNombre}, presente=${asistencia.presente}")
                 batch.set(docRef, data)
             }
             batch.commit().await()
@@ -135,6 +139,8 @@ class AsistenciaRepository {
                 alumnoId = doc.getString("alumnoId") ?: "",
                 alumnoNombre = doc.getString("alumnoNombre") ?: "",
                 curso = doc.getString("curso") ?: "",
+                asignaturaId = doc.getString("asignaturaId") ?: "",
+                asignaturaNombre = doc.getString("asignaturaNombre") ?: "",
                 fecha = doc.getLong("fecha") ?: 0L,
                 presente = doc.getBoolean("presente") ?: false,
                 justificacion = doc.getString("justificacion") ?: ""
@@ -162,8 +168,8 @@ class AsistenciaRepository {
         }
     }
 
-    // Verificar si ya se pasó asistencia hoy para un curso
-    suspend fun yaSeTomoAsistenciaHoy(curso: String): Boolean {
+    // Verificar si ya se pasó asistencia hoy para un curso y asignatura específica
+    suspend fun yaSeTomoAsistenciaHoy(curso: String, asignaturaId: String = ""): Boolean {
         return try {
             val calendar = Calendar.getInstance()
             calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -175,14 +181,22 @@ class AsistenciaRepository {
             calendar.add(Calendar.DAY_OF_MONTH, 1)
             val finDelDia = calendar.timeInMillis
 
-            val snapshot = asistenciaCollection
-                .whereEqualTo("curso", curso)
-                .whereGreaterThanOrEqualTo("fecha", inicioDelDia)
-                .whereLessThan("fecha", finDelDia)
-                .limit(1)
-                .get()
-                .await()
-            
+            val query = if (asignaturaId.isNotEmpty()) {
+                asistenciaCollection
+                    .whereEqualTo("curso", curso)
+                    .whereEqualTo("asignaturaId", asignaturaId)
+                    .whereGreaterThanOrEqualTo("fecha", inicioDelDia)
+                    .whereLessThan("fecha", finDelDia)
+                    .limit(1)
+            } else {
+                asistenciaCollection
+                    .whereEqualTo("curso", curso)
+                    .whereGreaterThanOrEqualTo("fecha", inicioDelDia)
+                    .whereLessThan("fecha", finDelDia)
+                    .limit(1)
+            }
+
+            val snapshot = query.get().await()
             !snapshot.isEmpty
         } catch (e: Exception) {
             false

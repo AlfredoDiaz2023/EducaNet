@@ -7,6 +7,8 @@ data class Asistencia(
     val alumnoId: String = "",
     val alumnoNombre: String = "",
     val curso: String = "",
+    val asignaturaId: String = "",
+    val asignaturaNombre: String = "",
     val fecha: Long = System.currentTimeMillis(),
     val presente: Boolean = false,
     val justificacion: String = "" // Para ausencias justificadas

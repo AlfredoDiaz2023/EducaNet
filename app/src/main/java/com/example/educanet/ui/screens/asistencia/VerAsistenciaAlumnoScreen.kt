@@ -277,6 +277,14 @@ fun VerAsistenciaAlumnoScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF333333)
                                         )
+                                        if (asistencia.asignaturaNombre.isNotEmpty()) {
+                                            Text(
+                                                "📚 ${asistencia.asignaturaNombre}",
+                                                fontSize = 12.sp,
+                                                color = Color(0xFF2196F3),
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
                                         Text(
                                             "Curso: ${asistencia.curso}",
                                             fontSize = 12.sp,

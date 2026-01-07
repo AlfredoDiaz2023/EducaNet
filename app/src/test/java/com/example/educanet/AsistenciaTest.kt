@@ -21,6 +21,8 @@ class AsistenciaTest : BehaviorSpec({
             alumnoId = "alumno456",
             alumnoNombre = "Juan Pérez",
             curso = "3° Básico",
+            asignaturaId = "asig123",
+            asignaturaNombre = "Matemática",
             fecha = System.currentTimeMillis(),
             presente = true,
             justificacion = ""
@@ -34,6 +36,8 @@ class AsistenciaTest : BehaviorSpec({
                 asistencia.alumnoId shouldBe "alumno456"
                 asistencia.alumnoNombre shouldBe "Juan Pérez"
                 asistencia.curso shouldBe "3° Básico"
+                asistencia.asignaturaId shouldBe "asig123"
+                asistencia.asignaturaNombre shouldBe "Matemática"
                 asistencia.presente shouldBe true
                 asistencia.justificacion shouldBe ""
             }
@@ -45,6 +49,18 @@ class AsistenciaTest : BehaviorSpec({
             then("debe marcar ausente con justificación") {
                 ausente.presente shouldBe false
                 ausente.justificacion shouldBe "Enfermedad"
+            }
+        }
+
+        `when`("se asocia a una asignatura diferente") {
+            val otraAsignatura = asistencia.copy(
+                asignaturaId = "asig456",
+                asignaturaNombre = "Lenguaje y Comunicación"
+            )
+            
+            then("debe tener la nueva asignatura") {
+                otraAsignatura.asignaturaId shouldBe "asig456"
+                otraAsignatura.asignaturaNombre shouldBe "Lenguaje y Comunicación"
             }
         }
     }
@@ -138,6 +154,44 @@ class AsistenciaTest : BehaviorSpec({
 
             then("debe tener curso vacío") {
                 asistenciaDefault.curso shouldBe ""
+            }
+
+            then("debe tener asignaturaId vacío") {
+                asistenciaDefault.asignaturaId shouldBe ""
+            }
+
+            then("debe tener asignaturaNombre vacío") {
+                asistenciaDefault.asignaturaNombre shouldBe ""
+            }
+        }
+    }
+
+    // Test de filtrado por asignatura
+    given("registros de asistencia de múltiples asignaturas") {
+        val registros = listOf(
+            Asistencia(id = "1", asignaturaNombre = "Matemática", alumnoId = "a1", presente = true),
+            Asistencia(id = "2", asignaturaNombre = "Lenguaje", alumnoId = "a1", presente = true),
+            Asistencia(id = "3", asignaturaNombre = "Matemática", alumnoId = "a1", presente = false),
+            Asistencia(id = "4", asignaturaNombre = "Historia", alumnoId = "a1", presente = true),
+            Asistencia(id = "5", asignaturaNombre = "Matemática", alumnoId = "a1", presente = true)
+        )
+
+        `when`("se filtran por asignatura") {
+            val matematica = registros.filter { it.asignaturaNombre == "Matemática" }
+
+            then("debe retornar solo los de la asignatura seleccionada") {
+                matematica shouldHaveSize 3
+                matematica.all { it.asignaturaNombre == "Matemática" } shouldBe true
+            }
+        }
+
+        `when`("se calcula asistencia por asignatura") {
+            val matematica = registros.filter { it.asignaturaNombre == "Matemática" }
+            val presentes = matematica.count { it.presente }
+            val porcentaje = (presentes.toDouble() / matematica.size) * 100
+
+            then("debe calcular porcentaje correctamente") {
+                porcentaje shouldBe (2.0 / 3.0 * 100) // 66.67%
             }
         }
     }

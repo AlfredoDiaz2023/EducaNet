@@ -533,6 +533,7 @@ fun AppNavegacion() {
                 onBack = { navController.popBackStack() },
                 onGestionLibros = { navController.navigate("gestion_libros") },
                 onGestionUsuarios = { navController.navigate("gestion_usuarios") },
+                onGestionAsignaturas = { navController.navigate("gestion_asignaturas") },
                 onHistorialReservas = { navController.navigate("historial_reservas") },
                 onEditarPerfil = { navController.navigate("editar_perfil_admin") }
             )
@@ -544,6 +545,10 @@ fun AppNavegacion() {
 
         composable("gestion_usuarios") {
             GestionUsuariosScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("gestion_asignaturas") {
+            GestionAsignaturasScreen(onBack = { navController.popBackStack() })
         }
 
         composable("historial_reservas") {
