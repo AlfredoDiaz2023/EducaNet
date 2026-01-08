@@ -29,6 +29,7 @@ fun AdminPanelScreen(
     onGestionLibros: () -> Unit,
     onGestionUsuarios: () -> Unit,
     onGestionAsignaturas: () -> Unit,
+    onGestionHorarios: () -> Unit,
     onHistorialReservas: () -> Unit,
     onEditarPerfil: () -> Unit
 ) {
@@ -98,6 +99,15 @@ fun AdminPanelScreen(
                     description = "Crear, editar y eliminar asignaturas del currículo",
                     color = Color(0xFF9C27B0),
                     onClick = onGestionAsignaturas
+                )
+
+                // Gestión de Horarios
+                AdminOptionCard(
+                    icon = Icons.Default.Schedule,
+                    title = "Gestión de Horarios",
+                    description = "Configurar horarios de jornada escolar completa por curso",
+                    color = Color(0xFF00897B),
+                    onClick = onGestionHorarios
                 )
 
                 // Historial de Reservas

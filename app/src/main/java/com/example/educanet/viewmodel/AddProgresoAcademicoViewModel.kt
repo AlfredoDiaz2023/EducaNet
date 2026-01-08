@@ -219,12 +219,18 @@ class AddProgresoAcademicoViewModel : ViewModel() {
                     return@launch
                 }
                 
+                // Obtener correo del profesor actual
+                val correoProfesor = auth.currentUser?.email ?: ""
+                
                 val data = ProgresoAcademico(
                     profesor = _uiState.value.profesor,
+                    profesorCorreo = correoProfesor,
                     alumno = _uiState.value.alumnoCorreo.ifEmpty { _uiState.value.alumno },
                     asignatura = _uiState.value.asignatura,
                     curso = _uiState.value.curso,
-                    notas = nota
+                    notas = nota,
+                    fechaCreacion = System.currentTimeMillis(),
+                    fechaModificacion = System.currentTimeMillis()
                 )
 
                 val ok = repo.agregarNota(data)

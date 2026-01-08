@@ -3,6 +3,7 @@ package com.example.educanet.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educanet.model.ClaseVirtual
+import com.example.educanet.model.Cursos
 import com.example.educanet.model.ProfesorSimple
 import com.example.educanet.repository.ClaseVirtualRepository
 import com.example.educanet.repository.NotificacionRepository
@@ -17,12 +18,14 @@ import kotlinx.coroutines.tasks.await
 data class AddClaseVirtualUiState(
     val nombre: String = "",
     val nivel: String = "",
+    val curso: String = "",
     val meetUrl: String = "",
     val descripcion: String = "",
     val duracion: Int = 0,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val cursosDisponibles: List<String> = Cursos.lista
 )
 
 class AddClaseVirtualViewModel : ViewModel() {
@@ -41,6 +44,10 @@ class AddClaseVirtualViewModel : ViewModel() {
 
     fun onNivelChange(nivel: String) {
         _uiState.value = _uiState.value.copy(nivel = nivel)
+    }
+
+    fun onCursoChange(curso: String) {
+        _uiState.value = _uiState.value.copy(curso = curso)
     }
 
     fun onMeetUrlChange(meetUrl: String) {
@@ -100,6 +107,7 @@ class AddClaseVirtualViewModel : ViewModel() {
                 val claseVirtual = ClaseVirtual(
                     nombre = _uiState.value.nombre,
                     nivel = _uiState.value.nivel,
+                    curso = _uiState.value.curso,
                     meet = _uiState.value.meetUrl,
                     descripcion = _uiState.value.descripcion,
                     duracion = _uiState.value.duracion,
@@ -110,8 +118,8 @@ class AddClaseVirtualViewModel : ViewModel() {
 
                 if (success) {
                     notificacionRepository.agregarNotificacion(
-                        titulo = "Nueva clase virtual agregada",
-                        mensaje = "Se ha agregado la clase: ${_uiState.value.nombre}"
+                        titulo = "📹 ¡Nueva clase virtual programada!",
+                        mensaje = "El profesor $profesorNombre ha programado: ${_uiState.value.nombre}. Curso: ${_uiState.value.curso}"
                     )
                     _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
                 } else {
@@ -121,5 +129,16 @@ class AddClaseVirtualViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = e.message ?: "Ocurrió un error desconocido.")
             }
         }
+    }
+
+    fun resetState() {
+        _uiState.value = AddClaseVirtualUiState()
+    }
+
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(
+            errorMessage = null,
+            saveSuccess = false
+        )
     }
 }

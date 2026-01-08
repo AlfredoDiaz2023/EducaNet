@@ -22,6 +22,7 @@ class ClaseVirtualRepository {
                 "descripcion" to claseVirtual.descripcion,
                 "duracion" to claseVirtual.duracion,
                 "nivel" to claseVirtual.nivel,
+                "curso" to claseVirtual.curso,
                 "clase" to claseVirtual.clase,
                 "meet" to claseVirtual.meet,
                 "profesor" to hashMapOf(
@@ -60,6 +61,7 @@ class ClaseVirtualRepository {
                 nombre = data["nombre"]?.toString() ?: "",
                 profesor = profesorSimple,
                 nivel = data["nivel"]?.toString() ?: "",
+                curso = data["curso"]?.toString() ?: "",
                 clase = data["clase"]?.toString() ?: "",
                 descripcion = data["descripcion"]?.toString() ?: "",
                 meet = data["meet"]?.toString() ?: "",
@@ -116,6 +118,41 @@ class ClaseVirtualRepository {
             }
 
             ResultadoClasesVirtuales(clases, nuevoUltimoDocumento)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResultadoClasesVirtuales(emptyList(), null)
+        }
+    }
+
+    /**
+     * Obtiene clases virtuales filtradas por curso específico
+     * Si el curso está vacío, devuelve todas las clases
+     */
+    suspend fun obtenerClasesPorCurso(curso: String, limite: Int = 50): ResultadoClasesVirtuales {
+        return try {
+            val query = if (curso.isNotBlank()) {
+                db.collection("clases_virtuales")
+                    .whereEqualTo("curso", curso)
+                    .orderBy("nombre", Query.Direction.ASCENDING)
+                    .limit(limite.toLong())
+            } else {
+                db.collection("clases_virtuales")
+                    .orderBy("nombre", Query.Direction.ASCENDING)
+                    .limit(limite.toLong())
+            }
+
+            val querySnapshot = query.get().await()
+            val clases = querySnapshot.documents.mapNotNull { doc ->
+                documentToClaseVirtual(doc)
+            }
+
+            val ultimoDocumento = if (querySnapshot.documents.isNotEmpty()) {
+                querySnapshot.documents.last()
+            } else {
+                null
+            }
+
+            ResultadoClasesVirtuales(clases, ultimoDocumento)
         } catch (e: Exception) {
             e.printStackTrace()
             ResultadoClasesVirtuales(emptyList(), null)

@@ -66,13 +66,19 @@ class ApoderadoViewModel : ViewModel() {
                 val nombreApoderado = apoderadoDoc.getString("nombre") ?: ""
                 val correoApoderado = apoderadoDoc.getString("correo") ?: ""
                 val fotoUrlApoderado = apoderadoDoc.getString("fotoUrl") ?: ""
-                val alumnoVinculadoId = apoderadoDoc.getString("alumnoVinculadoId")
-                val alumnoVinculadoNombre = apoderadoDoc.getString("alumnoVinculadoNombre")
-                val alumnoVinculadoCorreo = apoderadoDoc.getString("alumnoVinculadoCorreo")
+                val alumnoVinculadoId = apoderadoDoc.getString("alumnoVinculadoId") ?: ""
+                val alumnoVinculadoNombre = apoderadoDoc.getString("alumnoVinculadoNombre") ?: ""
+                val alumnoVinculadoCorreo = apoderadoDoc.getString("alumnoVinculadoCorreo") ?: ""
 
-                Log.d("ApoderadoVM", "Apoderado: $nombreApoderado")
-                Log.d("ApoderadoVM", "Alumno vinculado ID: $alumnoVinculadoId")
-                Log.d("ApoderadoVM", "Alumno vinculado Correo: $alumnoVinculadoCorreo")
+                Log.d("ApoderadoVM", "=== Datos del Apoderado ===")
+                Log.d("ApoderadoVM", "Nombre: $nombreApoderado")
+                Log.d("ApoderadoVM", "Correo: $correoApoderado")
+                Log.d("ApoderadoVM", "DocID: ${apoderadoDoc.id}")
+                Log.d("ApoderadoVM", "=== Datos del Alumno Vinculado ===")
+                Log.d("ApoderadoVM", "Alumno vinculado ID: '$alumnoVinculadoId'")
+                Log.d("ApoderadoVM", "Alumno vinculado Nombre: '$alumnoVinculadoNombre'")
+                Log.d("ApoderadoVM", "Alumno vinculado Correo: '$alumnoVinculadoCorreo'")
+                Log.d("ApoderadoVM", "Todos los campos del doc: ${apoderadoDoc.data}")
 
                 _uiState.value = _uiState.value.copy(
                     nombreApoderado = nombreApoderado,
@@ -81,18 +87,45 @@ class ApoderadoViewModel : ViewModel() {
                     fotoUrlApoderado = fotoUrlApoderado
                 )
 
-                // Si hay alumno vinculado, cargar su información y notas
-                if (!alumnoVinculadoId.isNullOrEmpty() && !alumnoVinculadoCorreo.isNullOrEmpty()) {
+                // Si hay alumno vinculado (verificar ID o correo)
+                if (alumnoVinculadoId.isNotEmpty() || alumnoVinculadoCorreo.isNotEmpty()) {
+                    Log.d("ApoderadoVM", "Alumno vinculado detectado, creando AlumnoVinculadoInfo")
+                    
+                    // Si el nombre está vacío pero tenemos correo, intentar buscar el nombre del alumno
+                    var nombreFinal = alumnoVinculadoNombre
+                    if (nombreFinal.isEmpty() && alumnoVinculadoCorreo.isNotEmpty()) {
+                        Log.d("ApoderadoVM", "Nombre vacío, buscando por correo...")
+                        try {
+                            val alumnoSnapshot = db.collection("usuario")
+                                .whereEqualTo("correo", alumnoVinculadoCorreo)
+                                .get()
+                                .await()
+                            if (!alumnoSnapshot.isEmpty) {
+                                nombreFinal = alumnoSnapshot.documents.first().getString("nombre") ?: ""
+                                Log.d("ApoderadoVM", "Nombre encontrado: $nombreFinal")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ApoderadoVM", "Error buscando nombre del alumno: ${e.message}")
+                        }
+                    }
+                    
                     val alumnoInfo = AlumnoVinculadoInfo(
                         id = alumnoVinculadoId,
-                        nombre = alumnoVinculadoNombre ?: "",
+                        nombre = nombreFinal,
                         correo = alumnoVinculadoCorreo
                     )
-                    _uiState.value = _uiState.value.copy(alumnoVinculado = alumnoInfo)
+                    Log.d("ApoderadoVM", "AlumnoVinculadoInfo creado: $alumnoInfo")
+                    _uiState.value = _uiState.value.copy(
+                        alumnoVinculado = alumnoInfo,
+                        cargando = false
+                    )
 
                     // Cargar notas del alumno
-                    cargarNotasAlumno(alumnoVinculadoCorreo)
+                    if (alumnoVinculadoCorreo.isNotEmpty()) {
+                        cargarNotasAlumno(alumnoVinculadoCorreo)
+                    }
                 } else {
+                    Log.d("ApoderadoVM", "No hay alumno vinculado, verificando solicitudes pendientes")
                     // No tiene alumno vinculado, verificar si hay solicitud pendiente
                     verificarSolicitudPendiente(apoderadoDoc.id)
                     _uiState.value = _uiState.value.copy(cargando = false)

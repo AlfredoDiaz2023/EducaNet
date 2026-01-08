@@ -5,6 +5,7 @@ plugins {
 
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    
 }
 
 android {
@@ -16,7 +17,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.8.4"
+        versionName = "1.9.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

@@ -150,5 +150,71 @@ class ProgresoAcademicoViewModel : ViewModel() {
     fun refreshProgresos() {
         loadData()
     }
+    
+    // Funciones para edición de notas (solo para profesores)
+    private val _editando = MutableStateFlow(false)
+    val editando: StateFlow<Boolean> = _editando.asStateFlow()
+    
+    private val _mensajeResultado = MutableStateFlow<String?>(null)
+    val mensajeResultado: StateFlow<String?> = _mensajeResultado.asStateFlow()
+    
+    fun editarNota(notaId: String, nuevaNota: Double) {
+        viewModelScope.launch {
+            _editando.value = true
+            try {
+                val correoProfesor = auth.currentUser?.email ?: ""
+                val exito = progresoAcademicoRepository.editarNota(notaId, nuevaNota, correoProfesor)
+                if (exito) {
+                    _mensajeResultado.value = "Nota actualizada correctamente"
+                    refreshProgresos()
+                } else {
+                    _mensajeResultado.value = "No tienes permiso para editar esta nota"
+                }
+            } catch (e: Exception) {
+                _mensajeResultado.value = "Error al editar nota: ${e.message}"
+            } finally {
+                _editando.value = false
+            }
+        }
+    }
+    
+    fun eliminarNota(notaId: String) {
+        viewModelScope.launch {
+            _editando.value = true
+            try {
+                val correoProfesor = auth.currentUser?.email ?: ""
+                val exito = progresoAcademicoRepository.eliminarNota(notaId, correoProfesor)
+                if (exito) {
+                    _mensajeResultado.value = "Nota eliminada correctamente"
+                    refreshProgresos()
+                } else {
+                    _mensajeResultado.value = "No tienes permiso para eliminar esta nota"
+                }
+            } catch (e: Exception) {
+                _mensajeResultado.value = "Error al eliminar nota: ${e.message}"
+            } finally {
+                _editando.value = false
+            }
+        }
+    }
+    
+    fun cargarNotasDelProfesor() {
+        viewModelScope.launch {
+            _cargando.value = true
+            try {
+                val correoProfesor = auth.currentUser?.email ?: ""
+                val notas = progresoAcademicoRepository.obtenerNotasPorProfesor(correoProfesor)
+                _progresos.value = notas
+                Log.d("ProgresoVM", "Notas del profesor cargadas: ${notas.size}")
+            } catch (e: Exception) {
+                Log.e("ProgresoVM", "Error al cargar notas del profesor: ${e.message}")
+            } finally {
+                _cargando.value = false
+            }
+        }
+    }
+    
+    fun limpiarMensaje() {
+        _mensajeResultado.value = null
+    }
 }
-

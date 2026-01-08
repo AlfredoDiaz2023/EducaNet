@@ -36,6 +36,7 @@ import com.example.educanet.viewmodel.ClaseVirtualViewModel
 @Composable
 fun ClasesVirtualesScreen(
     rol: String,
+    curso: String = "",  // Curso para filtrar (vacío = mostrar todas para profesores/admin)
     onBack: () -> Unit,
     onAddClase: () -> Unit,
     claseVirtualViewModel: ClaseVirtualViewModel = viewModel()
@@ -50,6 +51,11 @@ fun ClasesVirtualesScreen(
     
     val currentUserEmail = remember { claseVirtualViewModel.getCurrentUserEmail() }
     
+    // Cargar clases filtradas por curso al iniciar
+    LaunchedEffect(curso) {
+        claseVirtualViewModel.cargarClasesPorCurso(curso)
+    }
+    
     // Mostrar mensaje de eliminación
     LaunchedEffect(mensajeEliminacion) {
         mensajeEliminacion?.let {
@@ -60,14 +66,14 @@ fun ClasesVirtualesScreen(
     
     // Obtener niveles únicos
     val niveles = remember(clases) {
-        listOf("Todos") + clases.map { it.nivel }.distinct().sorted()
+        listOf("Todos") + clases.map { it.nivel }.filter { it.isNotBlank() }.distinct().sorted()
     }
     
     // Auto-refresh cada 15 segundos
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(15000)
-            claseVirtualViewModel.obtenerClases()
+            claseVirtualViewModel.cargarClasesPorCurso(curso)
         }
     }
 
@@ -469,7 +475,7 @@ fun ClaseVirtualItemModerno(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                clase.nivel,
+                                if (clase.curso.isNotBlank()) clase.curso else clase.nivel,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )

@@ -8,6 +8,7 @@ data class ClaseVirtual(
     val nombre: String = "",
     val profesor: ProfesorSimple = ProfesorSimple(),
     val nivel: String = "",
+    val curso: String = "",  // Curso al que va dirigido (ej: "4° Básico")
     val clase: String = "",
     val descripcion: String = "",
     val meet: String = "",

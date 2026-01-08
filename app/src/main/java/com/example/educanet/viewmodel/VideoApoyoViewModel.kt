@@ -25,6 +25,8 @@ class VideoApoyoViewModel : ViewModel() {
 
     private val _mensajeEliminacion = MutableStateFlow<String?>(null)
     val mensajeEliminacion: StateFlow<String?> = _mensajeEliminacion.asStateFlow()
+    
+    private var cursoActual: String = ""
 
     init {
         obtenerVideos()
@@ -33,13 +35,26 @@ class VideoApoyoViewModel : ViewModel() {
     private fun obtenerVideos() {
         viewModelScope.launch {
             _cargando.value = true
-            val resultado = repository.obtenerVideosDeApoyo()
+            val resultado = if (cursoActual.isNotBlank()) {
+                repository.obtenerVideosPorCurso(cursoActual)
+            } else {
+                repository.obtenerVideosDeApoyo()
+            }
             _videos.value = resultado.videos
             _cargando.value = false
         }
     }
 
     fun cargarVideos() {
+        obtenerVideos()
+    }
+    
+    /**
+     * Carga videos filtrados por curso
+     * Si el curso está vacío (para profesores/admin), carga todos
+     */
+    fun cargarVideosPorCurso(curso: String) {
+        cursoActual = curso
         obtenerVideos()
     }
 

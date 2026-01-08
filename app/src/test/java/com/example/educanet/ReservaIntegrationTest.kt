@@ -121,10 +121,10 @@ class ReservaIntegrationTest : BehaviorSpec({
     // Test de flujo de progreso académico
     given("un flujo de seguimiento de progreso académico") {
         val progresos = listOf(
-            ProgresoAcademico("1", "Prof. López", "Juan Pérez", "Matemáticas", "8vo A", 6.5),
-            ProgresoAcademico("2", "Prof. López", "Juan Pérez", "Lenguaje", "8vo A", 5.8),
-            ProgresoAcademico("3", "Prof. García", "Juan Pérez", "Ciencias", "8vo A", 6.2),
-            ProgresoAcademico("4", "Prof. López", "Ana Silva", "Matemáticas", "8vo A", 7.0)
+            ProgresoAcademico("1", "Prof. López", "lopez@test.com", "Juan Pérez", "Matemáticas", "8vo A", 6.5),
+            ProgresoAcademico("2", "Prof. López", "lopez@test.com", "Juan Pérez", "Lenguaje", "8vo A", 5.8),
+            ProgresoAcademico("3", "Prof. García", "garcia@test.com", "Juan Pérez", "Ciencias", "8vo A", 6.2),
+            ProgresoAcademico("4", "Prof. López", "lopez@test.com", "Ana Silva", "Matemáticas", "8vo A", 7.0)
         )
 
         `when`("se calcula el promedio de un alumno") {

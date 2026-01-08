@@ -2,7 +2,6 @@ package com.example.educanet.ui.screens.perfil
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,16 +18,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.educanet.R
 import com.example.educanet.ui.common.FotoPerfil
 import com.example.educanet.viewmodel.PerfilViewModel
 import kotlinx.coroutines.delay
@@ -45,9 +43,11 @@ fun PerfilAdminScreen(
     val uiState by perfilViewModel.uiState.collectAsState()
     val context = LocalContext.current
     
-    // Color principal para administrador (morado/violeta)
-    val adminColor = Color(0xFF673AB7)
-    val adminColorLight = Color(0xFF9575CD)
+    // Colores del gradiente para administrador (morado)
+    val gradientColors = listOf(Color(0xFF673AB7), Color(0xFF9575CD))
+    
+    // Snackbar para mensajes
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { 
         Log.d("PerfilAdminScreen", "Cargando datos iniciales...")
@@ -69,73 +69,137 @@ fun PerfilAdminScreen(
             perfilViewModel.onImageSelectedAndSave(uri)
         }
     }
+    
+    // Mostrar mensaje de éxito
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearSuccessMessage()
+        }
+    }
+    
+    // Mostrar mensaje de error
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            perfilViewModel.clearErrorMessage()
+        }
+    }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = adminColor
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        gradientColors[0].copy(alpha = 0.1f),
+                        Color(0xFFF5F5F5),
+                        Color.White
+                    )
                 )
             )
-        }
-    ) { paddingValues ->
+    ) {
+        // Círculos decorativos
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Fondo con logo
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.06f
-            )
+                .size(200.dp)
+                .offset(x = (-50).dp, y = (-50).dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            gradientColors[0].copy(alpha = 0.15f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+        
+        Box(
+            modifier = Modifier
+                .size(150.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 50.dp, y = 100.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            gradientColors[1].copy(alpha = 0.1f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
 
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(gradientColors),
+                            shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                        )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 60.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Volver",
+                                    tint = Color.White
+                                )
+                            }
+                            Text(
+                                "Mi Perfil",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(48.dp))
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp)
+                    .padding(paddingValues)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
+                // Foto de perfil superpuesta
+                Box(
+                    modifier = Modifier
+                        .offset(y = (-40).dp)
+                        .shadow(8.dp, CircleShape)
+                ) {
+                    FotoPerfil(
+                        fotoUrl = uiState.fotoUrl,
+                        isUploading = uiState.isUploading,
+                        onImageSelected = { uri -> perfilViewModel.onImageSelectedAndSave(uri) },
+                        onCameraClick = onCameraClick
+                    )
+                }
 
-                // Foto de perfil con opción de cámara
-                FotoPerfil(
-                    fotoUrl = uiState.fotoUrl,
-                    isUploading = uiState.isUploading,
-                    onImageSelected = { uri -> perfilViewModel.onImageSelectedAndSave(uri) },
-                    onCameraClick = onCameraClick
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Título
-                Text(
-                    "Mi Perfil",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = adminColor
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Badge de rol con gradiente
+                // Badge de rol
                 Surface(
+                    modifier = Modifier.offset(y = (-30).dp),
                     shape = RoundedCornerShape(20.dp),
-                    color = adminColor.copy(alpha = 0.15f)
+                    color = gradientColors[0].copy(alpha = 0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -144,128 +208,99 @@ fun PerfilAdminScreen(
                         Icon(
                             Icons.Default.AdminPanelSettings,
                             contentDescription = null,
-                            tint = adminColor,
+                            tint = gradientColors[0],
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Administrador",
-                            color = adminColor,
+                            "Administrador",
+                            color = gradientColors[0],
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Card de información personal
+                // Card de información principal
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
                     ) {
-                        // Header de la card
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(adminColor.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Badge,
-                                    contentDescription = null,
-                                    tint = adminColor,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                "Información Personal",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = adminColor
-                            )
-                        }
-
-                        HorizontalDivider(color = adminColor.copy(alpha = 0.1f))
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Nombre
-                        AdminInfoRow(
+                        PerfilInfoItem(
                             icon = Icons.Default.Person,
-                            label = "Nombre completo",
+                            label = "Nombre",
                             value = uiState.nombre.ifEmpty { "Cargando..." },
-                            iconColor = adminColor
+                            color = gradientColors[0]
                         )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Correo
-                        AdminInfoRow(
+                        
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            color = Color.Gray.copy(alpha = 0.1f)
+                        )
+                        
+                        PerfilInfoItem(
                             icon = Icons.Default.Email,
                             label = "Correo electrónico",
                             value = uiState.usuario?.correo ?: "No disponible",
-                            iconColor = adminColor
+                            color = gradientColors[0]
                         )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Rol
-                        AdminInfoRow(
+                        
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            color = Color.Gray.copy(alpha = 0.1f)
+                        )
+                        
+                        PerfilInfoItem(
                             icon = Icons.Default.Security,
                             label = "Rol en el sistema",
                             value = "Administrador",
-                            iconColor = adminColor
+                            color = gradientColors[0]
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Card de estadísticas/privilegios
+                // Card de privilegios
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .shadow(4.dp, RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(20.dp)
                     ) {
-                        // Header
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(adminColor.copy(alpha = 0.1f)),
+                                    .background(
+                                        gradientColors[0].copy(alpha = 0.15f),
+                                        CircleShape
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.VerifiedUser,
                                     contentDescription = null,
-                                    tint = adminColor,
+                                    tint = gradientColors[0],
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -273,141 +308,68 @@ fun PerfilAdminScreen(
                             Text(
                                 "Privilegios de Administrador",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = adminColor
+                                fontWeight = FontWeight.Bold,
+                                color = gradientColors[0]
                             )
                         }
 
-                        HorizontalDivider(color = adminColor.copy(alpha = 0.1f))
-
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Lista de privilegios
                         AdminPrivilegeItem(
                             icon = Icons.AutoMirrored.Filled.MenuBook,
                             text = "Gestión completa de libros",
-                            color = adminColor
+                            color = gradientColors[0]
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         AdminPrivilegeItem(
                             icon = Icons.Default.People,
                             text = "Administración de usuarios",
-                            color = adminColor
+                            color = gradientColors[0]
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         AdminPrivilegeItem(
                             icon = Icons.Default.History,
                             text = "Historial de reservas",
-                            color = adminColor
+                            color = gradientColors[0]
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         AdminPrivilegeItem(
                             icon = Icons.Default.Settings,
                             text = "Configuración del sistema",
-                            color = adminColor
+                            color = gradientColors[0]
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Mensaje de error si existe
-                if (uiState.errorMessage != null) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Error,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = uiState.errorMessage ?: "",
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
                 // Botón de cerrar sesión
                 Button(
                     onClick = onLogout,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        .padding(horizontal = 16.dp)
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE53935)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         "Cerrar Sesión",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyLarge
+                        fontSize = 16.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
-        }
-    }
-}
-
-@Composable
-private fun AdminInfoRow(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    iconColor: Color
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconColor.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column {
-            Text(
-                label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                value,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
 }
@@ -447,7 +409,7 @@ private fun AdminPrivilegeItem(
         Text(
             text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color(0xFF2D3436)
         )
     }
 }
