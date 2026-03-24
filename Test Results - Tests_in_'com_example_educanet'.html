@@ -572,9 +572,9 @@ jQuery.cookie = function(name, value, options) {
     <body>
         <div id="container">
             <div id="header">
-                <div class="time" xmlns="">19 ms</div>
+                <div class="time" xmlns="">819 ms</div>
                 <h1>
-                    Tests in 'com.example.educanet': <strong><span class="total" xmlns="http://www.w3.org/1999/xhtml">11 total, </span><span class="passed">11 passed</span></strong>
+                    Tests in 'com.example.educanet': <strong><span class="total" xmlns="http://www.w3.org/1999/xhtml">71 total, </span><span class="passed">71 passed</span></strong>
                 </h1>
                 <div id="treecontrol">
                     <ul>
@@ -593,77 +593,916 @@ jQuery.cookie = function(name, value, options) {
                 <ul id="tree">
                     <li xmlns="" class="level top open">
                         <span><em class="time">
-                                <div class="time">5 ms</div>
-                            </em>ExampleUnitTest</span>
+                                <div class="time">349 ms</div>
+                            </em>NotificacionBusinessLogicTest</span>
                         <ul>
                             <li class="level test">
                                 <span><em class="time">
-                                        <div class="time">5 ms</div>
-                                    </em><em class="status">passed</em>addition_isCorrect</span>
+                                        <div class="time">37 ms</div>
+                                    </em><em class="status">passed</em>una notificaci&oacute;n no le&iacute;da debe tener isRead = false</span>
+                            </li>
+                            <li class="level test">
+                                <span><em class="time">
+                                        <div class="time">1 ms</div>
+                                    </em><em class="status">passed</em>una notificaci&oacute;n marcada como le&iacute;da debe tener isRead = true</span>
+                            </li>
+                            <li class="level test">
+                                <span><em class="time">
+                                        <div class="time">311 ms</div>
+                                    </em><em class="status">passed</em>t&iacute;tulo y mensaje nunca deben ser nulos</span>
                             </li>
                         </ul>
                     </li>
                     <li class="level top open">
                         <span><em class="time">
-                                <div class="time">13 ms</div>
-                            </em>NotificacionesScreenTest</span>
+                                <div class="time">241 ms</div>
+                            </em>ReservaBusinessLogicTest</span>
                         <ul>
                             <li class="level test">
                                 <span><em class="time">
-                                        <div class="time">8 ms</div>
-                                    </em><em class="status">passed</em>content_description_eliminar_es_correcto</span>
+                                        <div class="time">1 ms</div>
+                                    </em><em class="status">passed</em>un libro con stock mayor a cero puede ser reservado</span>
                             </li>
                             <li class="level test">
                                 <span><em class="time">
-                                        <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>titulo_notificaciones_es_correcto</span>
+                                        <div class="time">1 ms</div>
+                                    </em><em class="status">passed</em>un libro sin stock no puede ser reservado</span>
                             </li>
                             <li class="level test">
                                 <span><em class="time">
-                                        <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>content_description_boton_volver_es_correcto</span>
+                                        <div class="time">3 ms</div>
+                                    </em><em class="status">passed</em>al reservar un libro el stock debe disminuir en uno</span>
                             </li>
                             <li class="level test">
                                 <span><em class="time">
-                                        <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>formato_notificacion_contiene_titulo_y_mensaje</span>
+                                        <div class="time">124 ms</div>
+                                    </em><em class="status">passed</em>el stock despu&eacute;s de reservar siempre debe ser &gt;= 0 cuando se valida</span>
                             </li>
                             <li class="level test">
                                 <span><em class="time">
-                                        <div class="time">5 ms</div>
-                                    </em><em class="status">passed</em>lista_vacia_notificaciones_tiene_size_cero</span>
+                                        <div class="time">1 ms</div>
+                                    </em><em class="status">passed</em>las notas deben estar en rango v&aacute;lido de 1.0 a 7.0</span>
+                            </li>
+                            <li class="level test">
+                                <span><em class="time">
+                                        <div class="time">1 ms</div>
+                                    </em><em class="status">passed</em>detectar notas fuera del rango v&aacute;lido</span>
+                            </li>
+                            <li class="level test">
+                                <span><em class="time">
+                                        <div class="time">1 ms</div>
+                                    </em><em class="status">passed</em>usuario sin rol definido</span>
+                            </li>
+                            <li class="level test">
+                                <span><em class="time">
+                                        <div class="time">2 ms</div>
+                                    </em><em class="status">passed</em>alumno debe heredar propiedades de usuario</span>
+                            </li>
+                            <li class="level test">
+                                <span><em class="time">
+                                        <div class="time">107 ms</div>
+                                    </em><em class="status">passed</em>una reserva v&aacute;lida debe tener libroId y userId</span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">90 ms</div>
+                            </em>ReservaIntegrationTest</span>
+                        <ul>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">68 ms</div>
+                                    </em>Given: un flujo de reserva de libros</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: se filtran libros disponibles para reservar</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">3 ms</div>
+                                                    </em><em class="status">passed</em>Then: solo deben aparecer libros con stock mayor a 0</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">51 ms</div>
+                                            </em>When: se crea una reserva para un libro disponible</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">51 ms</div>
+                                                    </em><em class="status">passed</em>Then: la reserva debe contener la informaci&oacute;n correcta</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">14 ms</div>
+                                            </em>When: se intenta reservar un libro sin stock</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">14 ms</div>
+                                                    </em><em class="status">passed</em>Then: el libro sin stock debe ser identificado</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">2 ms</div>
+                                    </em>Given: un flujo de gesti&oacute;n de clases virtuales</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se filtran clases por nivel</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe retornar solo las clases del nivel especificado</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se verifica el link de meet de una clase</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el link de meet debe ser v&aacute;lido</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se obtiene informaci&oacute;n del profesor de una clase</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: el profesor debe estar asignado correctamente</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">19 ms</div>
+                                    </em>Given: un flujo de seguimiento de progreso acad&eacute;mico</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se calcula el promedio de un alumno</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el promedio debe calcularse correctamente</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se filtran progresos por asignatura</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe retornar todos los progresos de esa asignatura</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">17 ms</div>
+                                            </em>When: se busca la mejor nota</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">17 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe retornar el progreso con la nota m&aacute;s alta</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">1 ms</div>
+                                    </em>Given: una lista de reservas activas</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se eliminan reservas de un usuario espec&iacute;fico</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe identificar todas las reservas del usuario</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se elimina una reserva espec&iacute;fica</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: la lista debe tener una reserva menos</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">7 ms</div>
+                            </em>ClaseVirtualTest</span>
+                        <ul>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">7 ms</div>
+                                    </em>Given: una ClaseVirtual</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores por defecto</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los campos deben estar vac&iacute;os y duraci&oacute;n en 0</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">2 ms</div>
+                                            </em>When: se crea con un profesor asignado</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: la clase debe tener el profesor asignado</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los dem&aacute;s valores deben coincidir</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se verifica el link de Google Meet</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el link debe tener el formato correcto de Google Meet</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea una clase sin link de meet</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el link de meet debe estar vac&iacute;o</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se filtran clases por nivel</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe retornar solo las clases del nivel especificado</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se verifica la duraci&oacute;n de clases</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe identificar clases con duraci&oacute;n mayor a 60 minutos</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se copia una clase modificando la duraci&oacute;n</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: la clase copiada debe tener la nueva duraci&oacute;n</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: la clase original no debe cambiar</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">7 ms</div>
+                            </em>LibroTest</span>
+                        <ul>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">7 ms</div>
+                                    </em>Given: un Libro</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores por defecto</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los campos deben estar vac&iacute;os y cantidad en 0</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores espec&iacute;ficos</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los valores deben coincidir con los entregados</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se verifica la disponibilidad de un libro con stock</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe estar disponible para reservar</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se verifica la disponibilidad de un libro sin stock</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: no debe estar disponible para reservar</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">4 ms</div>
+                                            </em>When: se comparan dos libros con el mismo id</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">4 ms</div>
+                                                    </em><em class="status">passed</em>Then: deben ser iguales</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se copia un libro modificando la cantidad</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: el libro copiado debe tener la nueva cantidad</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: el libro original no debe cambiar</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                     </li>
                     <li class="level top open">
                         <span><em class="time">
                                 <div class="time">1 ms</div>
-                            </em>ReservaScreenTest</span>
+                            </em>NotificacionTest</span>
                         <ul>
-                            <li class="level test">
-                                <span><em class="time">
-                                        <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>content_description_eliminar_es_correcto</span>
-                            </li>
-                            <li class="level test">
+                            <li class="level suite open">
                                 <span><em class="time">
                                         <div class="time">1 ms</div>
-                                    </em><em class="status">passed</em>formato_reserva_contiene_libro_y_usuario</span>
+                                    </em>Given: una Notificacion</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores por defecto</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los campos deben quedar vac&iacute;os y isRead en false</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se crea con valores espec&iacute;ficos</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: los valores deben coincidir con los entregados</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
                             </li>
-                            <li class="level test">
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">12 ms</div>
+                            </em>ProgresoAcademicoTest</span>
+                        <ul>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">12 ms</div>
+                                    </em>Given: un ProgresoAcademico</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">2 ms</div>
+                                            </em>When: se crea con valores por defecto</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">2 ms</div>
+                                                    </em><em class="status">passed</em>Then: los campos deben estar vac&iacute;os y notas en 0</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores espec&iacute;ficos</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los valores deben coincidir con los entregados</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se valida una nota en rango v&aacute;lido (1.0 - 7.0)</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: la nota debe estar en rango v&aacute;lido</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se verifica una nota perfecta</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: la nota perfecta debe ser 7.0</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">2 ms</div>
+                                            </em>When: se calcula el promedio de m&uacute;ltiples progresos</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">2 ms</div>
+                                                    </em><em class="status">passed</em>Then: el promedio debe calcularse correctamente</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se filtran progresos por asignatura</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe retornar solo los progresos de la asignatura especificada</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se busca la mejor nota de un alumno</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe identificar la mejor nota</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: se copia un progreso modificando la nota</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el progreso copiado debe tener la nueva nota</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">2 ms</div>
+                                                    </em><em class="status">passed</em>Then: el progreso original no debe cambiar</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">0 ms</div>
+                            </em>ReservaTest</span>
+                        <ul>
+                            <li class="level suite open">
                                 <span><em class="time">
                                         <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>lista_vacia_debe_tener_size_cero</span>
+                                    </em>Given: una Reserva</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se crea con valores por defecto</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: los campos deben quedar vac&iacute;os y el timestamp en null</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">0 ms</div>
+                                            </em>When: se crea con valores espec&iacute;ficos</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: los valores deben coincidir con los entregados</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
                             </li>
-                            <li class="level test">
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">9 ms</div>
+                            </em>UsuarioTest</span>
+                        <ul>
+                            <li class="level suite open">
                                 <span><em class="time">
-                                        <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>titulo_reservas_es_correcto</span>
+                                        <div class="time">4 ms</div>
+                                    </em>Given: un Usuario base</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores por defecto</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los campos deben estar vac&iacute;os</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea con valores espec&iacute;ficos</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: los valores deben coincidir con los entregados</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se usa el m&eacute;todo copy para modificar el nombre</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el usuario copiado debe tener el nuevo nombre</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se verifica si es administrador</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: solo el admin debe tener rol Admin</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
                             </li>
-                            <li class="level test">
+                            <li class="level suite open">
                                 <span><em class="time">
-                                        <div class="time">0 ms</div>
-                                    </em><em class="status">passed</em>content_description_volver_es_correcto</span>
+                                        <div class="time">2 ms</div>
+                                    </em>Given: un Alumno que hereda de Usuario</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">2 ms</div>
+                                            </em>When: se crea un Alumno</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe tener el rol 'Alumno' por defecto</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">0 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe heredar las propiedades de Usuario</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe tener la fecha de registro</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">2 ms</div>
+                                    </em>Given: un Profesor que hereda de Usuario</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">2 ms</div>
+                                            </em>When: se crea un Profesor</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe tener el rol 'Profesor' por defecto</span>
+                                            </li>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe heredar las propiedades de Usuario</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">1 ms</div>
+                                    </em>Given: un Apoderado que hereda de Usuario</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se crea un Apoderado</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe tener el rol 'Apoderado' por defecto</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">87 ms</div>
+                            </em>NotificacionTest</span>
+                        <ul>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">84 ms</div>
+                                    </em>Given: un sistema que maneja notificaciones sin ViewModel</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">1 ms</div>
+                                            </em>When: se cargan notificaciones desde el repositorio</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">1 ms</div>
+                                                    </em><em class="status">passed</em>Then: el estado debe contener esas notificaciones</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">81 ms</div>
+                                            </em>When: se elimina una notificaci&oacute;n</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">81 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe desaparecer de la lista</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">2 ms</div>
+                                            </em>When: ocurre un error</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">2 ms</div>
+                                                    </em><em class="status">passed</em>Then: el estado debe reflejar el error</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">3 ms</div>
+                                    </em>Given: lista vac&iacute;a de notificaciones</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: no hay notificaciones</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">3 ms</div>
+                                                    </em><em class="status">passed</em>Then: la lista debe estar vac&iacute;a</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level top open">
+                        <span><em class="time">
+                                <div class="time">16 ms</div>
+                            </em>ReservaViewModelTest</span>
+                        <ul>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">9 ms</div>
+                                    </em>Given: un ReservaViewModel mockeado</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: el ViewModel carga reservas</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">3 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe contener la lista de reservas mockeada</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: se elimina una reserva</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">3 ms</div>
+                                                    </em><em class="status">passed</em>Then: la reserva debe ser removida del estado</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: se intenta eliminar una reserva y falla</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">3 ms</div>
+                                                    </em><em class="status">passed</em>Then: debe contener un error en el uiState</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="level suite open">
+                                <span><em class="time">
+                                        <div class="time">7 ms</div>
+                                    </em>Given: un ReservaViewModel con lista vac&iacute;a</span>
+                                <ul>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">4 ms</div>
+                                            </em>When: no hay reservas</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">4 ms</div>
+                                                    </em><em class="status">passed</em>Then: reservas debe ser una lista vac&iacute;a</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="level suite open">
+                                        <span><em class="time">
+                                                <div class="time">3 ms</div>
+                                            </em>When: el estado indica isLoading = false</span>
+                                        <ul>
+                                            <li class="level test">
+                                                <span><em class="time">
+                                                        <div class="time">3 ms</div>
+                                                    </em><em class="status">passed</em>Then: el loading debe reflejarlo correctamente</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                     </li>
@@ -671,7 +1510,7 @@ jQuery.cookie = function(name, value, options) {
             </div>
         </div>
         <div id="footer">
-            <p>Generated by Android Studio on 03-12-25, 12:54</p>
+            <p>Generated by Android Studio on 10-12-25, 23:53</p>
         </div>
     </body>
 </html>
