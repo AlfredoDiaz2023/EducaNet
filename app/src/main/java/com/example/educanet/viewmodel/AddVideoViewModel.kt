@@ -2,6 +2,7 @@ package com.example.educanet.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educanet.model.Cursos
 import com.example.educanet.model.ProfesorSimple
 import com.example.educanet.model.VideoApoyo
 import com.example.educanet.repository.NotificacionRepository
@@ -18,13 +19,15 @@ import java.util.regex.Pattern
 data class AddVideoUiState(
     val nombre: String = "",
     val nivel: String = "",
+    val curso: String = "",
     val videoUrl: String = "",
     val descripcion: String = "",
     val duracion: Int = 0,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val cursosDisponibles: List<String> = Cursos.lista
 )
 
 class AddVideoViewModel : ViewModel() {
@@ -43,6 +46,10 @@ class AddVideoViewModel : ViewModel() {
 
     fun onNivelChange(nivel: String) {
         _uiState.value = _uiState.value.copy(nivel = nivel)
+    }
+
+    fun onCursoChange(curso: String) {
+        _uiState.value = _uiState.value.copy(curso = curso)
     }
 
     fun onVideoUrlChange(videoUrl: String) {
@@ -119,6 +126,7 @@ class AddVideoViewModel : ViewModel() {
                 val video = VideoApoyo(
                     nombre = _uiState.value.nombre,
                     nivel = _uiState.value.nivel,
+                    curso = _uiState.value.curso,
                     video = embedUrl, // Guardamos la URL de incrustación
                     descripcion = _uiState.value.descripcion,
                     duracion = _uiState.value.duracion,
@@ -130,7 +138,7 @@ class AddVideoViewModel : ViewModel() {
                 if (success) {
                     notificacionRepository.agregarNotificacion(
                         titulo = "📹 ¡Nuevo video de apoyo disponible!",
-                        mensaje = "El profesor $profesorNombre ha publicado: ${_uiState.value.nombre}. Nivel: ${_uiState.value.nivel}"
+                        mensaje = "El profesor $profesorNombre ha publicado: ${_uiState.value.nombre}. Curso: ${_uiState.value.curso}"
                     )
                     _uiState.value = _uiState.value.copy(
                         isSaving = false, 
@@ -144,5 +152,16 @@ class AddVideoViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = e.message ?: "Ocurrió un error desconocido.")
             }
         }
+    }
+
+    fun resetState() {
+        _uiState.value = AddVideoUiState()
+    }
+
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(
+            errorMessage = null,
+            successMessage = null
+        )
     }
 }

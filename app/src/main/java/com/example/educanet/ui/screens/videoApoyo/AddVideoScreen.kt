@@ -32,6 +32,11 @@ fun AddVideoScreen(
     val uiState by addVideoViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Resetear estado cuando se abre la pantalla
+    LaunchedEffect(Unit) {
+        addVideoViewModel.resetState()
+    }
+
     // Mostrar mensaje de éxito y luego navegar
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { msg ->
@@ -43,6 +48,7 @@ fun AddVideoScreen(
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(it)
+            addVideoViewModel.clearMessages()
         }
     }
 
@@ -170,11 +176,66 @@ fun AddVideoScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // Campo Curso (Dropdown)
+                        var cursoExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(
+                            expanded = cursoExpanded,
+                            onExpandedChange = { cursoExpanded = !cursoExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = uiState.curso.ifEmpty { "Seleccionar curso" },
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Curso") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Class,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4CAF50)
+                                    )
+                                },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = cursoExpanded)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF4CAF50),
+                                    focusedLabelColor = Color(0xFF4CAF50)
+                                )
+                            )
+                            ExposedDropdownMenu(
+                                expanded = cursoExpanded,
+                                onDismissRequest = { cursoExpanded = false }
+                            ) {
+                                uiState.cursosDisponibles.forEach { curso ->
+                                    DropdownMenuItem(
+                                        text = { Text(curso) },
+                                        onClick = {
+                                            addVideoViewModel.onCursoChange(curso)
+                                            cursoExpanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.School,
+                                                contentDescription = null,
+                                                tint = if (curso.contains("Medio")) Color(0xFF9C27B0) else Color(0xFF4CAF50)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         // Campo Nivel
                         OutlinedTextField(
                             value = uiState.nivel,
                             onValueChange = addVideoViewModel::onNivelChange,
-                            label = { Text("Nivel Educativo") },
+                            label = { Text("Nivel Educativo (opcional)") },
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.School,
@@ -322,7 +383,7 @@ fun AddVideoScreen(
                 // Botón guardar
                 Button(
                     onClick = { addVideoViewModel.saveVideo() },
-                    enabled = !uiState.isSaving && uiState.nombre.isNotBlank() && uiState.videoUrl.isNotBlank(),
+                    enabled = !uiState.isSaving && uiState.nombre.isNotBlank() && uiState.videoUrl.isNotBlank() && uiState.curso.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

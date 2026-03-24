@@ -9,6 +9,7 @@ data class Alumno(
     override val correo: String = "",
     override val clave: String = "",
     override val rol: String = "Alumno",
-    override val fotoUrl: String = "" ,
-    val fechaRegistro: String = ""
+    override val fotoUrl: String = "",
+    val fechaRegistro: String = "",
+    val curso: String = "" // Curso del alumno (1° Básico a 4° Medio)
 ) : Usuario(id, nombre, correo, clave, rol, fotoUrl)

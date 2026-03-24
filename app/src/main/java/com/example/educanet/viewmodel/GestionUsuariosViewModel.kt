@@ -22,6 +22,7 @@ data class UsuarioAdmin(
     val clave: String = "",
     val rol: String = "",
     val fotoUrl: String = "",
+    val curso: String = "", // Curso del alumno
     val alumnoVinculadoId: String = "",
     val alumnoVinculadoNombre: String = "",
     val alumnoVinculadoCorreo: String = ""
@@ -76,6 +77,7 @@ class GestionUsuariosViewModel : ViewModel() {
                         clave = doc.getString("clave") ?: "",
                         rol = rol,
                         fotoUrl = doc.getString("fotoUrl") ?: "",
+                        curso = doc.getString("curso") ?: "",
                         alumnoVinculadoId = doc.getString("alumnoVinculadoId") ?: "",
                         alumnoVinculadoNombre = doc.getString("alumnoVinculadoNombre") ?: "",
                         alumnoVinculadoCorreo = doc.getString("alumnoVinculadoCorreo") ?: ""
@@ -345,5 +347,38 @@ class GestionUsuariosViewModel : ViewModel() {
     private fun getCurrentDate(): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         return sdf.format(Date())
+    }
+
+    fun asignarCurso(alumnoId: String, curso: String) {
+        viewModelScope.launch {
+            try {
+                db.collection("usuario").document(alumnoId).update(
+                    mapOf("curso" to curso)
+                ).await()
+                _uiState.value = _uiState.value.copy(successMessage = "Curso asignado correctamente")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Error al asignar curso: ${e.message}")
+            }
+        }
+    }
+
+    fun asignarCursosMasivos(asignaciones: Map<String, String>) {
+        viewModelScope.launch {
+            try {
+                val batch = db.batch()
+                asignaciones.forEach { (alumnoId, curso) ->
+                    val docRef = db.collection("usuario").document(alumnoId)
+                    batch.update(docRef, "curso", curso)
+                }
+                batch.commit().await()
+                _uiState.value = _uiState.value.copy(
+                    successMessage = "Cursos asignados a ${asignaciones.size} alumnos"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al asignar cursos: ${e.message}"
+                )
+            }
+        }
     }
 }

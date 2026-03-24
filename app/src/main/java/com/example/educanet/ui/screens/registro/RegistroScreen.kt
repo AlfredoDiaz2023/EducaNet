@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.MenuAnchorType
 import com.example.educanet.model.Usuario
+import com.example.educanet.model.Cursos
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +43,10 @@ fun RegistroScreen(
     val roles = listOf("Profesor", "Apoderado", "Alumno")
     var rol by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    
+    // Estado para curso (solo para alumnos)
+    var cursoSeleccionado by remember { mutableStateOf("") }
+    var cursoExpanded by remember { mutableStateOf(false) }
 
     val viewModel: com.example.educanet.viewmodel.RegistroViewModel = viewModel()
     val cargando by viewModel.cargando.collectAsState()
@@ -242,6 +247,10 @@ fun RegistroScreen(
                                     onClick = {
                                         rol = opcion
                                         expanded = false
+                                        // Limpiar curso si cambia de rol
+                                        if (opcion != "Alumno") {
+                                            cursoSeleccionado = ""
+                                        }
                                     },
                                     leadingIcon = {
                                         Icon(
@@ -261,6 +270,61 @@ fun RegistroScreen(
                         }
                     }
 
+                    // Selector de Curso (solo visible para Alumnos)
+                    if (rol == "Alumno") {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        ExposedDropdownMenuBox(
+                            expanded = cursoExpanded,
+                            onExpandedChange = { cursoExpanded = !cursoExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = cursoSeleccionado.ifEmpty { "Seleccionar curso" },
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Curso") },
+                                leadingIcon = { 
+                                    Icon(
+                                        Icons.Default.Class, 
+                                        contentDescription = null, 
+                                        tint = Color(0xFF4CAF50)
+                                    ) 
+                                },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cursoExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF4CAF50),
+                                    focusedLabelColor = Color(0xFF4CAF50)
+                                )
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = cursoExpanded,
+                                onDismissRequest = { cursoExpanded = false }
+                            ) {
+                                Cursos.lista.forEach { curso ->
+                                    DropdownMenuItem(
+                                        text = { Text(curso) },
+                                        onClick = {
+                                            cursoSeleccionado = curso
+                                            cursoExpanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.School,
+                                                contentDescription = null,
+                                                tint = Color(0xFF4CAF50)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(32.dp))
 
                     // Botón de Registro
@@ -268,8 +332,10 @@ fun RegistroScreen(
                         onClick = {
                             if (nombre.isBlank() || correo.isBlank() || clave.isBlank() || confirmarClave.isBlank() || rol.isBlank()) {
                                 Toast.makeText(context, "Por favor, complete todos los campos", Toast.LENGTH_SHORT).show()
+                            } else if (rol == "Alumno" && cursoSeleccionado.isBlank()) {
+                                Toast.makeText(context, "Por favor, seleccione un curso", Toast.LENGTH_SHORT).show()
                             } else {
-                                viewModel.registroUsuario(correo, clave, confirmarClave, nombre, rol)
+                                viewModel.registroUsuario(correo, clave, confirmarClave, nombre, rol, cursoSeleccionado)
                             }
                         },
                         modifier = Modifier

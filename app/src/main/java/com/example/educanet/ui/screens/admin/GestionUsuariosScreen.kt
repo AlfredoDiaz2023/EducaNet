@@ -44,6 +44,7 @@ fun GestionUsuariosScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showVincularDialog by remember { mutableStateOf(false) }
+    var showAsignarCursosDialog by remember { mutableStateOf(false) }
     var selectedUsuario by remember { mutableStateOf<UsuarioAdmin?>(null) }
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -94,6 +95,16 @@ fun GestionUsuariosScreen(
                                     tint = if (uiState.showSolicitudes) MaterialTheme.colorScheme.primary else Color.Gray
                                 )
                             }
+                        }
+                    }
+                    // Botón de asignar cursos masivamente (solo visible en tab Alumnos)
+                    if (selectedTab == 2) {
+                        IconButton(onClick = { showAsignarCursosDialog = true }) {
+                            Icon(
+                                Icons.Default.School,
+                                contentDescription = "Asignar cursos",
+                                tint = Color(0xFF9C27B0)
+                            )
                         }
                     }
                     IconButton(onClick = { showAddDialog = true }) {
@@ -164,6 +175,9 @@ fun GestionUsuariosScreen(
                                 },
                                 onDesvincular = {
                                     viewModel.desvincularAlumno(usuario.id)
+                                },
+                                onAsignarCurso = { curso ->
+                                    viewModel.asignarCurso(usuario.id, curso)
                                 }
                             )
                         }
@@ -274,6 +288,18 @@ fun GestionUsuariosScreen(
                     alumnoCorreo = alumno.correo
                 )
                 showVincularDialog = false
+            }
+        )
+    }
+
+    // Diálogo para asignar cursos masivamente
+    if (showAsignarCursosDialog) {
+        AsignarCursosMasivosDialog(
+            alumnos = uiState.alumnos,
+            onDismiss = { showAsignarCursosDialog = false },
+            onAsignar = { asignaciones ->
+                viewModel.asignarCursosMasivos(asignaciones)
+                showAsignarCursosDialog = false
             }
         )
     }
@@ -438,7 +464,8 @@ fun UsuarioAdminCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onVincular: () -> Unit = {},
-    onDesvincular: () -> Unit = {}
+    onDesvincular: () -> Unit = {},
+    onAsignarCurso: (String) -> Unit = {} // Nuevo parámetro
 ) {
     val colorRol = when (usuario.rol) {
         "Profesor" -> Color(0xFF2196F3)
@@ -475,16 +502,35 @@ fun UsuarioAdminCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(usuario.nombre, fontWeight = FontWeight.Bold)
                     Text(usuario.correo, style = MaterialTheme.typography.bodySmall)
-                    Surface(
-                        color = colorRol.copy(alpha = 0.2f),
-                        shape = MaterialTheme.shapes.small
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            usuario.rol,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colorRol
-                        )
+                        Surface(
+                            color = colorRol.copy(alpha = 0.2f),
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(
+                                usuario.rol,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = colorRol
+                            )
+                        }
+                        // Mostrar curso para alumnos
+                        if (usuario.rol == "Alumno" && usuario.curso.isNotEmpty()) {
+                            Surface(
+                                color = Color(0xFF9C27B0).copy(alpha = 0.2f),
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    usuario.curso,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF9C27B0)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -578,6 +624,100 @@ fun UsuarioAdminCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Vincular", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+
+            // Sección para asignar curso a alumnos
+            if (usuario.rol == "Alumno") {
+                var cursoExpandido by remember { mutableStateOf(false) }
+                val cursos = listOf(
+                    "1° Básico", "2° Básico", "3° Básico", "4° Básico",
+                    "5° Básico", "6° Básico", "7° Básico", "8° Básico",
+                    "1° Medio", "2° Medio", "3° Medio", "4° Medio"
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.School,
+                            contentDescription = null,
+                            tint = Color(0xFF9C27B0),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "Curso asignado:",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray
+                            )
+                            Text(
+                                if (usuario.curso.isEmpty()) "Sin asignar" else usuario.curso,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = if (usuario.curso.isEmpty()) Color(0xFFFF9800) else Color(0xFF9C27B0)
+                            )
+                        }
+                    }
+
+                    Box {
+                        OutlinedButton(
+                            onClick = { cursoExpandido = true },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF9C27B0)),
+                            border = BorderStroke(1.dp, Color(0xFF9C27B0)),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.School,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                if (usuario.curso.isEmpty()) "Asignar" else "Cambiar",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = cursoExpandido,
+                            onDismissRequest = { cursoExpandido = false }
+                        ) {
+                            cursos.forEach { curso ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text(curso)
+                                            if (curso == usuario.curso) {
+                                                Icon(
+                                                    Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF4CAF50),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        onAsignarCurso(curso)
+                                        cursoExpandido = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -815,4 +955,319 @@ fun UsuarioFormDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AsignarCursosMasivosDialog(
+    alumnos: List<UsuarioAdmin>,
+    onDismiss: () -> Unit,
+    onAsignar: (Map<String, String>) -> Unit
+) {
+    val cursos = listOf(
+        "1° Básico", "2° Básico", "3° Básico", "4° Básico",
+        "5° Básico", "6° Básico", "7° Básico", "8° Básico",
+        "1° Medio", "2° Medio", "3° Medio", "4° Medio"
+    )
+    
+    // Estado para las asignaciones
+    val asignaciones = remember { mutableStateMapOf<String, String>() }
+    var cursoSeleccionado by remember { mutableStateOf("") }
+    var cursoExpandido by remember { mutableStateOf(false) }
+    
+    // Inicializar con los cursos actuales
+    LaunchedEffect(alumnos) {
+        alumnos.forEach { alumno ->
+            if (alumno.curso.isNotEmpty()) {
+                asignaciones[alumno.id] = alumno.curso
+            }
+        }
+    }
+    
+    // Alumnos sin curso asignado
+    val alumnosSinCurso = alumnos.filter { it.curso.isEmpty() }
+    val alumnosConCurso = alumnos.filter { it.curso.isNotEmpty() }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.9f)
+                .padding(8.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+            ) {
+                // Título
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.School,
+                            contentDescription = null,
+                            tint = Color(0xFF9C27B0),
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            "Asignar Cursos",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Resumen
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        color = Color(0xFFFF9800).copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            "⚠️ ${alumnosSinCurso.size} sin curso",
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFE65100)
+                        )
+                    }
+                    Surface(
+                        color = Color(0xFF4CAF50).copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            "✓ ${alumnosConCurso.size} con curso",
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF2E7D32)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Asignación rápida (para alumnos sin curso)
+                if (alumnosSinCurso.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                "Asignación Rápida",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                ExposedDropdownMenuBox(
+                                    expanded = cursoExpandido,
+                                    onExpandedChange = { cursoExpandido = !cursoExpandido },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    OutlinedTextField(
+                                        value = cursoSeleccionado.ifEmpty { "Seleccionar curso" },
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cursoExpandido) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                                        textStyle = MaterialTheme.typography.bodySmall
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = cursoExpandido,
+                                        onDismissRequest = { cursoExpandido = false }
+                                    ) {
+                                        cursos.forEach { curso ->
+                                            DropdownMenuItem(
+                                                text = { Text(curso) },
+                                                onClick = {
+                                                    cursoSeleccionado = curso
+                                                    cursoExpandido = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = {
+                                        if (cursoSeleccionado.isNotEmpty()) {
+                                            alumnosSinCurso.forEach { alumno ->
+                                                asignaciones[alumno.id] = cursoSeleccionado
+                                            }
+                                        }
+                                    },
+                                    enabled = cursoSeleccionado.isNotEmpty(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0))
+                                ) {
+                                    Text("Asignar a todos", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                // Lista de alumnos
+                Text(
+                    "Alumnos (${alumnos.size})",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(alumnos, key = { it.id }) { alumno ->
+                        var alumnoExpanded by remember { mutableStateOf(false) }
+                        val cursoActual = asignaciones[alumno.id] ?: alumno.curso
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (cursoActual.isEmpty()) Color(0xFFFFF8E1) else Color(0xFFF5F5F5)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF4CAF50).copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        alumno.nombre.take(1).uppercase(),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF4CAF50),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        alumno.nombre,
+                                        fontWeight = FontWeight.Medium,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        alumno.correo,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                }
+
+                                Box {
+                                    OutlinedButton(
+                                        onClick = { alumnoExpanded = true },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = if (cursoActual.isEmpty()) Color(0xFFFF9800) else Color(0xFF9C27B0)
+                                        ),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (cursoActual.isEmpty()) Color(0xFFFF9800) else Color(0xFF9C27B0)
+                                        )
+                                    ) {
+                                        Text(
+                                            cursoActual.ifEmpty { "Asignar" },
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+
+                                    DropdownMenu(
+                                        expanded = alumnoExpanded,
+                                        onDismissRequest = { alumnoExpanded = false }
+                                    ) {
+                                        cursos.forEach { curso ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Row(
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    ) {
+                                                        Text(curso)
+                                                        if (curso == cursoActual) {
+                                                            Icon(
+                                                                Icons.Default.Check,
+                                                                contentDescription = null,
+                                                                tint = Color(0xFF4CAF50),
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                                onClick = {
+                                                    asignaciones[alumno.id] = curso
+                                                    alumnoExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botones de acción
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancelar")
+                    }
+                    Button(
+                        onClick = { 
+                            onAsignar(asignaciones.filter { it.value.isNotEmpty() })
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = asignaciones.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0))
+                    ) {
+                        Icon(
+                            Icons.Default.Save,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Guardar (${asignaciones.size})")
+                    }
+                }
+            }
+        }
+    }
 }

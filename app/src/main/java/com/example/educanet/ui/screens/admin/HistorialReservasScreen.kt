@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educanet.viewmodel.HistorialReservasViewModel
 import com.example.educanet.viewmodel.ReservaHistorial
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,6 +27,14 @@ fun HistorialReservasScreen(
     viewModel: HistorialReservasViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Auto-refresh cada 15 segundos
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(15000)
+            viewModel.refrescar()
+        }
+    }
 
     Scaffold(
         topBar = {

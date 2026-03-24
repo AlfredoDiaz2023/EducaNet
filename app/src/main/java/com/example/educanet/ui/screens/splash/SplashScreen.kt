@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.educanet.BuildConfig
 import com.example.educanet.R
 import kotlinx.coroutines.delay
 
@@ -170,7 +171,7 @@ fun SplashScreen(
 
         // Versión en la parte inferior
         Text(
-            text = "v1.0.0",
+            text = "v${BuildConfig.VERSION_NAME}",
             fontSize = 12.sp,
             color = Color.White.copy(alpha = 0.6f),
             modifier = Modifier

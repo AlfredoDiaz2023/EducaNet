@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -57,6 +58,7 @@ import java.util.Locale
 fun PerfilApoderadoScreen(
     onLogout: () -> Unit = {},
     onBack: () -> Unit = {},
+    onVerAsistencia: (String, String) -> Unit = { _, _ -> }, // alumnoId, alumnoNombre
     perfilViewModel: PerfilViewModel = viewModel(),
     apoderadoViewModel: ApoderadoViewModel = viewModel()
 ) {
@@ -357,6 +359,29 @@ fun PerfilApoderadoScreen(
                                                             .size(24.dp)
                                                     )
                                                 }
+                                            }
+                                            
+                                            // Botón para ver asistencia
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Button(
+                                                onClick = {
+                                                    apoderadoState.alumnoVinculado?.let { alumno ->
+                                                        onVerAsistencia(alumno.id, alumno.nombre)
+                                                    }
+                                                },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFF4CAF50)
+                                                ),
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.AutoMirrored.Filled.FactCheck,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Ver Asistencia", fontWeight = FontWeight.Bold)
                                             }
                                         }
                                     }

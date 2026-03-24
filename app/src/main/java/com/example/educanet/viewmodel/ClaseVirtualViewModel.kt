@@ -25,6 +25,8 @@ class ClaseVirtualViewModel : ViewModel() {
 
     private val _mensajeEliminacion = MutableStateFlow<String?>(null)
     val mensajeEliminacion: StateFlow<String?> = _mensajeEliminacion.asStateFlow()
+    
+    private var cursoActual: String = ""
 
     init {
         obtenerClases()
@@ -33,10 +35,23 @@ class ClaseVirtualViewModel : ViewModel() {
     fun obtenerClases() {
         viewModelScope.launch {
             _cargando.value = true
-            val resultado = repository.obtenerClasesVirtuales()
+            val resultado = if (cursoActual.isNotBlank()) {
+                repository.obtenerClasesPorCurso(cursoActual)
+            } else {
+                repository.obtenerClasesVirtuales()
+            }
             _clases.value = resultado.clases
             _cargando.value = false
         }
+    }
+    
+    /**
+     * Carga clases virtuales filtradas por curso
+     * Si el curso está vacío (para profesores/admin), carga todas
+     */
+    fun cargarClasesPorCurso(curso: String) {
+        cursoActual = curso
+        obtenerClases()
     }
 
     fun getCurrentUserEmail(): String? {

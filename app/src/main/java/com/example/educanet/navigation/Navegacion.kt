@@ -28,6 +28,7 @@ import com.example.educanet.ui.screens.libro.LibroScreen
 import com.example.educanet.ui.screens.login.LoginScreen
 import com.example.educanet.ui.screens.progresoacademico.AddProgresoAcademicoScreen
 import com.example.educanet.ui.screens.progresoacademico.ProgresoAcademicoScreen
+import com.example.educanet.ui.screens.progresoacademico.TablaNotasScreen
 import com.example.educanet.ui.screens.menu.MenuScreen
 import com.example.educanet.ui.screens.notificaciones.NotificacionesScreen
 import com.example.educanet.ui.screens.perfil.*
@@ -166,11 +167,20 @@ fun AppNavegacion() {
             val correo = entry.arguments?.getString("correo")
 
             var correoAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            var idAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            var nombreAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            var cursoAlumnoVinculado by remember { mutableStateOf<String?>(null) }
+            
+            // Variables para el alumno actual (cuando el rol es Alumno)
+            var idAlumnoActual by remember { mutableStateOf<String?>(null) }
+            var cursoAlumnoActual by remember { mutableStateOf<String?>(null) }
 
             LaunchedEffect(rol, correo) {
+                val db = FirebaseFirestore.getInstance()
+                
+                // Si es Apoderado, obtener datos del alumno vinculado
                 if (rol == "Apoderado" && correo != null) {
                     try {
-                        val db = FirebaseFirestore.getInstance()
                         val decodedCorreo = java.net.URLDecoder.decode(correo, StandardCharsets.UTF_8.toString())
                         val snapshot = db.collection("usuario")
                             .whereEqualTo("correo", decodedCorreo)
@@ -180,10 +190,38 @@ fun AppNavegacion() {
                         if (!snapshot.isEmpty) {
                             val doc = snapshot.documents.first()
                             correoAlumnoVinculado = doc.getString("alumnoVinculadoCorreo")
-                            Log.d("Navegacion", "Alumno vinculado encontrado: $correoAlumnoVinculado")
+                            idAlumnoVinculado = doc.getString("alumnoVinculadoId")
+                            nombreAlumnoVinculado = doc.getString("alumnoVinculadoNombre")
+                            
+                            // Obtener curso del alumno vinculado
+                            if (idAlumnoVinculado != null) {
+                                val alumnoDoc = db.collection("usuario").document(idAlumnoVinculado!!).get().await()
+                                cursoAlumnoVinculado = alumnoDoc.getString("curso")
+                            }
+                            Log.d("Navegacion", "Alumno vinculado encontrado: $nombreAlumnoVinculado (Curso: $cursoAlumnoVinculado)")
                         }
                     } catch (e: Exception) {
                         Log.e("Navegacion", "Error buscando alumno vinculado: ${e.message}")
+                    }
+                }
+                
+                // Si es Alumno, obtener su propio ID de documento y curso
+                if (rol == "Alumno" && correo != null) {
+                    try {
+                        val decodedCorreo = java.net.URLDecoder.decode(correo, StandardCharsets.UTF_8.toString())
+                        val snapshot = db.collection("usuario")
+                            .whereEqualTo("correo", decodedCorreo)
+                            .get()
+                            .await()
+                        
+                        if (!snapshot.isEmpty) {
+                            val doc = snapshot.documents.first()
+                            idAlumnoActual = doc.id
+                            cursoAlumnoActual = doc.getString("curso")
+                            Log.d("Navegacion", "Alumno actual: $idAlumnoActual (Curso: $cursoAlumnoActual)")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Navegacion", "Error obteniendo ID del alumno: ${e.message}")
                     }
                 }
             }
@@ -193,8 +231,26 @@ fun AppNavegacion() {
                 rol = rol,
                 fotoUrl = fotoUrl,
                 onLibroClick = { navController.navigate("libros/$rol/$nombre") },
-                onVideoClick = { navController.navigate("video_apoyo/$rol") },
-                onClaseVirtualClick = { navController.navigate("clases_virtuales/$rol") },
+                onVideoClick = { 
+                    // Pasar curso para filtrar videos
+                    val cursoParaVideo = when (rol) {
+                        "Apoderado" -> cursoAlumnoVinculado ?: ""
+                        "Alumno" -> cursoAlumnoActual ?: ""
+                        else -> "" // Profesor y Admin ven todos
+                    }
+                    val cursoEncoded = URLEncoder.encode(cursoParaVideo, StandardCharsets.UTF_8.toString())
+                    navController.navigate("video_apoyo/$rol?curso=$cursoEncoded") 
+                },
+                onClaseVirtualClick = { 
+                    // Pasar curso para filtrar clases virtuales
+                    val cursoParaClase = when (rol) {
+                        "Apoderado" -> cursoAlumnoVinculado ?: ""
+                        "Alumno" -> cursoAlumnoActual ?: ""
+                        else -> "" // Profesor y Admin ven todas
+                    }
+                    val cursoEncoded = URLEncoder.encode(cursoParaClase, StandardCharsets.UTF_8.toString())
+                    navController.navigate("clases_virtuales/$rol?curso=$cursoEncoded") 
+                },
                 onProgresoAcademicoClick = {
                     val correoParaProgreso = if (rol == "Apoderado" && correoAlumnoVinculado != null) {
                         URLEncoder.encode(correoAlumnoVinculado, StandardCharsets.UTF_8.toString())
@@ -221,6 +277,41 @@ fun AppNavegacion() {
                 },
                 onAdminPanelClick = { navController.navigate("admin_panel") },
                 onVerResenasClick = { navController.navigate("resenas_recientes") },
+                onAsistenciaClick = { navController.navigate("asistencia") },
+                onVerAsistenciaHijoClick = {
+                    // Navegar a ver asistencia del hijo vinculado (para apoderados)
+                    if (idAlumnoVinculado != null && nombreAlumnoVinculado != null) {
+                        val nombreEncoded = URLEncoder.encode(nombreAlumnoVinculado, StandardCharsets.UTF_8.toString())
+                        navController.navigate("ver_asistencia/$idAlumnoVinculado/$nombreEncoded")
+                    } else {
+                        // Si no hay alumno vinculado, ir a Mi Familia para vincular
+                        navController.navigate("mi_familia_apoderado/$nombre")
+                    }
+                },
+                onVerMiAsistenciaClick = {
+                    // Navegar a ver mi propia asistencia (para alumnos)
+                    if (idAlumnoActual != null) {
+                        val nombreEncoded = URLEncoder.encode(nombre, StandardCharsets.UTF_8.toString())
+                        navController.navigate("ver_asistencia/$idAlumnoActual/$nombreEncoded")
+                    }
+                },
+                onMisAsignaturasClick = {
+                    // Navegar a la pantalla de asignaturas del profesor
+                    val nombreEncoded = URLEncoder.encode(nombre, StandardCharsets.UTF_8.toString())
+                    navController.navigate("mis_asignaturas/$nombreEncoded")
+                },
+                onVerHorarioClick = {
+                    // Navegar a ver horario (alumno o apoderado)
+                    val cursoParaHorario = if (rol == "Apoderado") cursoAlumnoVinculado else cursoAlumnoActual
+                    val nombreParaHorario = if (rol == "Apoderado") nombreAlumnoVinculado else nombre
+                    val esApoderado = rol == "Apoderado"
+                    
+                    if (cursoParaHorario != null && nombreParaHorario != null) {
+                        val cursoEncoded = URLEncoder.encode(cursoParaHorario, StandardCharsets.UTF_8.toString())
+                        val nombreEncoded = URLEncoder.encode(nombreParaHorario, StandardCharsets.UTF_8.toString())
+                        navController.navigate("ver_horario/$cursoEncoded/$nombreEncoded/$esApoderado")
+                    }
+                },
                 onLogout = {
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") {
@@ -272,12 +363,25 @@ fun AppNavegacion() {
         }
 
         composable(
-            route = "video_apoyo/{rol}",
-            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+            route = "video_apoyo/{rol}?curso={curso}",
+            arguments = listOf(
+                navArgument("rol") { type = NavType.StringType },
+                navArgument("curso") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
         ) { entry ->
             val rol = entry.arguments?.getString("rol") ?: ""
+            val cursoEncoded = entry.arguments?.getString("curso") ?: ""
+            val curso = try {
+                java.net.URLDecoder.decode(cursoEncoded, StandardCharsets.UTF_8.toString())
+            } catch (e: Exception) { "" }
+            
             VideoApoyoScreen(
                 rol = rol,
+                curso = curso,
                 onBack = { navController.popBackStack() },
                 onAddVideo = { navController.navigate("add_video") }
             )
@@ -288,12 +392,25 @@ fun AppNavegacion() {
         }
 
         composable(
-            route = "clases_virtuales/{rol}",
-            arguments = listOf(navArgument("rol") { type = NavType.StringType })
+            route = "clases_virtuales/{rol}?curso={curso}",
+            arguments = listOf(
+                navArgument("rol") { type = NavType.StringType },
+                navArgument("curso") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
         ) { entry ->
             val rol = entry.arguments?.getString("rol") ?: ""
+            val cursoEncoded = entry.arguments?.getString("curso") ?: ""
+            val curso = try {
+                java.net.URLDecoder.decode(cursoEncoded, StandardCharsets.UTF_8.toString())
+            } catch (e: Exception) { "" }
+            
             ClasesVirtualesScreen(
                 rol = rol,
+                curso = curso,
                 onBack = { navController.popBackStack() },
                 onAddClase = { navController.navigate("add_clase_virtual") }
             )
@@ -325,7 +442,17 @@ fun AppNavegacion() {
         }
 
         composable("add_progreso_academico") {
-            AddProgresoAcademicoScreen(onBack = { navController.popBackStack() })
+            AddProgresoAcademicoScreen(
+                onBack = { navController.popBackStack() },
+                onVerTablaNotas = { navController.navigate("tabla_notas") }
+            )
+        }
+        
+        // Tabla de conversión de notas (solo profesores)
+        composable("tabla_notas") {
+            TablaNotasScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(
@@ -404,7 +531,11 @@ fun AppNavegacion() {
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") { popUpTo(0) { inclusive = true } }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onVerAsistencia = { alumnoId, alumnoNombre ->
+                    val nombreEncoded = URLEncoder.encode(alumnoNombre, StandardCharsets.UTF_8.toString())
+                    navController.navigate("ver_asistencia/$alumnoId/$nombreEncoded")
+                }
             )
         }
 
@@ -473,6 +604,8 @@ fun AppNavegacion() {
                 onBack = { navController.popBackStack() },
                 onGestionLibros = { navController.navigate("gestion_libros") },
                 onGestionUsuarios = { navController.navigate("gestion_usuarios") },
+                onGestionAsignaturas = { navController.navigate("gestion_asignaturas") },
+                onGestionHorarios = { navController.navigate("gestion_horarios") },
                 onHistorialReservas = { navController.navigate("historial_reservas") },
                 onEditarPerfil = { navController.navigate("editar_perfil_admin") }
             )
@@ -486,12 +619,180 @@ fun AppNavegacion() {
             GestionUsuariosScreen(onBack = { navController.popBackStack() })
         }
 
+        composable("gestion_asignaturas") {
+            GestionAsignaturasScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("gestion_horarios") {
+            GestionHorarioScreen(onBack = { navController.popBackStack() })
+        }
+
         composable("historial_reservas") {
             HistorialReservasScreen(onBack = { navController.popBackStack() })
         }
 
         composable("editar_perfil_admin") {
             EditarPerfilAdminScreen(onBack = { navController.popBackStack() })
+        }
+
+        // Pantallas de Asistencia
+        composable("asistencia") {
+            com.example.educanet.ui.screens.asistencia.AsistenciaScreen(
+                onBack = { navController.popBackStack() },
+                onTomarAsistencia = { curso ->
+                    val cursoEncoded = URLEncoder.encode(curso, StandardCharsets.UTF_8.toString())
+                    navController.navigate("tomar_asistencia/$cursoEncoded")
+                }
+            )
+        }
+
+        composable(
+            route = "tomar_asistencia/{curso}",
+            arguments = listOf(
+                navArgument("curso") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val curso = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("curso") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            // Obtener nombre del profesor desde el estado guardado o Firebase
+            var profesorNombre by remember { mutableStateOf("Profesor") }
+            
+            LaunchedEffect(Unit) {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                if (uid != null) {
+                    try {
+                        val snapshot = FirebaseFirestore.getInstance()
+                            .collection("usuario")
+                            .whereEqualTo("uid", uid)
+                            .get()
+                            .await()
+                        if (!snapshot.isEmpty) {
+                            profesorNombre = snapshot.documents.first().getString("nombre") ?: "Profesor"
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Navegacion", "Error obteniendo nombre profesor: ${e.message}")
+                    }
+                }
+            }
+
+            com.example.educanet.ui.screens.asistencia.TomarAsistenciaScreen(
+                curso = curso,
+                profesorNombre = profesorNombre,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Ver asistencia de un alumno (para apoderados/alumnos)
+        composable(
+            route = "ver_asistencia/{alumnoId}/{alumnoNombre}",
+            arguments = listOf(
+                navArgument("alumnoId") { type = NavType.StringType },
+                navArgument("alumnoNombre") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val alumnoId = backStackEntry.arguments?.getString("alumnoId") ?: ""
+            val alumnoNombre = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("alumnoNombre") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            
+            com.example.educanet.ui.screens.asistencia.VerAsistenciaAlumnoScreen(
+                alumnoId = alumnoId,
+                alumnoNombre = alumnoNombre,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Pantalla de Mis Asignaturas (para profesores)
+        composable(
+            route = "mis_asignaturas/{profesorNombre}",
+            arguments = listOf(
+                navArgument("profesorNombre") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val profesorNombre = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("profesorNombre") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            
+            com.example.educanet.ui.screens.profesor.MisAsignaturasScreen(
+                profesorNombre = profesorNombre,
+                onBack = { navController.popBackStack() },
+                onIniciarClase = { asignatura, curso ->
+                    val asignaturaEncoded = URLEncoder.encode(asignatura, StandardCharsets.UTF_8.toString())
+                    val cursoEncoded = URLEncoder.encode(curso, StandardCharsets.UTF_8.toString())
+                    val nombreEncoded = URLEncoder.encode(profesorNombre, StandardCharsets.UTF_8.toString())
+                    navController.navigate("ensenar_clase/$asignaturaEncoded/$cursoEncoded/$nombreEncoded")
+                }
+            )
+        }
+
+        // Pantalla de Enseñar Clase (para profesores)
+        composable(
+            route = "ensenar_clase/{asignatura}/{curso}/{profesorNombre}",
+            arguments = listOf(
+                navArgument("asignatura") { type = NavType.StringType },
+                navArgument("curso") { type = NavType.StringType },
+                navArgument("profesorNombre") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val asignatura = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("asignatura") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val curso = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("curso") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val profesorNombre = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("profesorNombre") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            
+            com.example.educanet.ui.screens.profesor.EnsenarClaseScreen(
+                asignatura = asignatura,
+                curso = curso,
+                profesorNombre = profesorNombre,
+                onBack = { navController.popBackStack() },
+                onFinalizarClase = {
+                    // Navegar de vuelta a Mis Asignaturas eliminando la pantalla de clase del stack
+                    val nombreEncoded = URLEncoder.encode(profesorNombre, StandardCharsets.UTF_8.toString())
+                    navController.navigate("mis_asignaturas/$nombreEncoded") {
+                        popUpTo("ensenar_clase/{asignatura}/{curso}/{profesorNombre}") {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+        // Pantalla de Ver Horario (para alumnos y apoderados)
+        composable(
+            route = "ver_horario/{curso}/{nombreUsuario}/{esApoderado}",
+            arguments = listOf(
+                navArgument("curso") { type = NavType.StringType },
+                navArgument("nombreUsuario") { type = NavType.StringType },
+                navArgument("esApoderado") { type = NavType.BoolType }
+            )
+        ) { backStackEntry ->
+            val curso = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("curso") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val nombreUsuario = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("nombreUsuario") ?: "",
+                StandardCharsets.UTF_8.toString()
+            )
+            val esApoderado = backStackEntry.arguments?.getBoolean("esApoderado") ?: false
+            
+            com.example.educanet.ui.screens.horario.VerHorarioScreen(
+                curso = curso,
+                nombreUsuario = nombreUsuario,
+                esApoderado = esApoderado,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

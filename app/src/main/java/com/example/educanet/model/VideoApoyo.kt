@@ -15,6 +15,7 @@ data class VideoApoyo(
     val id: String = "",
     val nombre: String = "",
     val nivel: String = "",
+    val curso: String = "",  // Curso al que va dirigido (ej: "4° Básico")
     val video: String = "",
     val descripcion: String = "",
     val duracion: Int = 0,

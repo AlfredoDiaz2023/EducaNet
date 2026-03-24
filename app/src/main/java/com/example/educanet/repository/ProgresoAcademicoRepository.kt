@@ -29,6 +29,80 @@ class ProgresoAcademicoRepository {
             false
         }
     }
+    
+    suspend fun editarNota(notaId: String, nuevaNota: Double, profesorCorreo: String): Boolean {
+        return try {
+            Log.d("ProgresoRepo", "Editando nota ID: $notaId, nueva nota: $nuevaNota")
+            
+            // Verificar que el profesor sea el dueño de la nota
+            val notaDoc = db.collection(collectionName).document(notaId).get().await()
+            val profesorOriginal = notaDoc.getString("profesorCorreo") ?: ""
+            
+            if (profesorOriginal.isNotEmpty() && profesorOriginal != profesorCorreo) {
+                Log.e("ProgresoRepo", "El profesor no tiene permiso para editar esta nota")
+                return false
+            }
+            
+            db.collection(collectionName)
+                .document(notaId)
+                .update(
+                    mapOf(
+                        "notas" to nuevaNota,
+                        "fechaModificacion" to System.currentTimeMillis()
+                    )
+                )
+                .await()
+            Log.d("ProgresoRepo", "Nota editada exitosamente")
+            true
+        } catch (e: Exception) {
+            Log.e("ProgresoRepo", "Error al editar nota: ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+    
+    suspend fun eliminarNota(notaId: String, profesorCorreo: String): Boolean {
+        return try {
+            Log.d("ProgresoRepo", "Eliminando nota ID: $notaId")
+            
+            // Verificar que el profesor sea el dueño de la nota
+            val notaDoc = db.collection(collectionName).document(notaId).get().await()
+            val profesorOriginal = notaDoc.getString("profesorCorreo") ?: ""
+            
+            if (profesorOriginal.isNotEmpty() && profesorOriginal != profesorCorreo) {
+                Log.e("ProgresoRepo", "El profesor no tiene permiso para eliminar esta nota")
+                return false
+            }
+            
+            db.collection(collectionName)
+                .document(notaId)
+                .delete()
+                .await()
+            Log.d("ProgresoRepo", "Nota eliminada exitosamente")
+            true
+        } catch (e: Exception) {
+            Log.e("ProgresoRepo", "Error al eliminar nota: ${e.message}")
+            e.printStackTrace()
+            false
+        }
+    }
+    
+    suspend fun obtenerNotasPorProfesor(profesorCorreo: String): List<ProgresoAcademico> {
+        return try {
+            Log.d("ProgresoRepo", "Buscando notas del profesor: $profesorCorreo")
+            val querySnapshot = db.collection(collectionName)
+                .whereEqualTo("profesorCorreo", profesorCorreo)
+                .get()
+                .await()
+            
+            querySnapshot.documents.mapNotNull { doc ->
+                doc.toObject(ProgresoAcademico::class.java)?.copy(id = doc.id)
+            }.sortedByDescending { it.fechaCreacion }
+        } catch (e: Exception) {
+            Log.e("ProgresoRepo", "Error al obtener notas del profesor: ${e.message}")
+            emptyList()
+        }
+    }
 
     suspend fun obtenerNotas(
         userEmail: String? = null,

@@ -44,6 +44,7 @@ import com.example.educanet.viewmodel.VideoApoyoViewModel
 @Composable
 fun VideoApoyoScreen(
     rol: String,
+    curso: String = "",  // Curso para filtrar (vacío = mostrar todos para profesores/admin)
     onBack: () -> Unit,
     onAddVideo: () -> Unit,
     videoApoyoViewModel: VideoApoyoViewModel = viewModel()
@@ -59,6 +60,11 @@ fun VideoApoyoScreen(
     
     val currentUserEmail = remember { videoApoyoViewModel.getCurrentUserEmail() }
     
+    // Cargar videos filtrados por curso al iniciar
+    LaunchedEffect(curso) {
+        videoApoyoViewModel.cargarVideosPorCurso(curso)
+    }
+    
     // Mostrar mensaje de eliminación
     LaunchedEffect(mensajeEliminacion) {
         mensajeEliminacion?.let {
@@ -69,14 +75,14 @@ fun VideoApoyoScreen(
     
     // Obtener niveles únicos
     val niveles = remember(videos) {
-        listOf("Todos") + videos.map { it.nivel }.distinct().sorted()
+        listOf("Todos") + videos.map { it.nivel }.filter { it.isNotBlank() }.distinct().sorted()
     }
     
     // Auto-refresh cada 15 segundos
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(15000)
-            videoApoyoViewModel.cargarVideos()
+            videoApoyoViewModel.cargarVideosPorCurso(curso)
         }
     }
 
@@ -506,7 +512,7 @@ fun VideoApoyoItemModerno(
                     )
                 }
                 
-                // Badge de nivel
+                // Badge de nivel/curso
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -515,7 +521,7 @@ fun VideoApoyoItemModerno(
                     color = Color(0xFF9C27B0)
                 ) {
                     Text(
-                        video.nivel,
+                        if (video.curso.isNotBlank()) video.curso else video.nivel,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White,
@@ -817,25 +823,26 @@ fun VideoPlayerDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Chip del curso
                         Surface(
                             shape = RoundedCornerShape(20.dp),
-                            color = Color(0xFF9C27B0).copy(alpha = 0.15f)
+                            color = Color(0xFF4CAF50).copy(alpha = 0.15f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    Icons.Default.School,
+                                    Icons.Default.Class,
                                     contentDescription = null,
-                                    tint = Color(0xFF9C27B0),
+                                    tint = Color(0xFF4CAF50),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    video.nivel,
+                                    if (video.curso.isNotBlank()) video.curso else video.nivel,
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = Color(0xFF9C27B0),
+                                    color = Color(0xFF4CAF50),
                                     fontWeight = FontWeight.Bold
                                 )
                             }

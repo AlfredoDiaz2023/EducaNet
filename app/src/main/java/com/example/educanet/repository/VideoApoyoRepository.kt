@@ -22,6 +22,7 @@ class VideoApoyoRepository {
                 "descripcion" to video.descripcion,
                 "duracion" to video.duracion,
                 "nivel" to video.nivel,
+                "curso" to video.curso,
                 "video" to video.video,
                 "profesor" to hashMapOf(
                     "correo" to video.profesor.correo,
@@ -58,6 +59,7 @@ class VideoApoyoRepository {
                 id = doc.id,
                 nombre = data["nombre"]?.toString() ?: "",
                 nivel = data["nivel"]?.toString() ?: "",
+                curso = data["curso"]?.toString() ?: "",
                 video = data["video"]?.toString() ?: "",
                 descripcion = data["descripcion"]?.toString() ?: "",
                 duracion = (data["duracion"] as? Number)?.toInt() ?: 0,
@@ -130,6 +132,41 @@ class VideoApoyoRepository {
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    /**
+     * Obtiene videos filtrados por curso específico
+     * Si el curso está vacío, devuelve todos los videos
+     */
+    suspend fun obtenerVideosPorCurso(curso: String, limite: Int = 50): ResultadoVideosApoyo {
+        return try {
+            val query = if (curso.isNotBlank()) {
+                db.collection("video_apoyo")
+                    .whereEqualTo("curso", curso)
+                    .orderBy("nombre", Query.Direction.ASCENDING)
+                    .limit(limite.toLong())
+            } else {
+                db.collection("video_apoyo")
+                    .orderBy("nombre", Query.Direction.ASCENDING)
+                    .limit(limite.toLong())
+            }
+
+            val querySnapshot = query.get().await()
+            val videos = querySnapshot.documents.mapNotNull { doc ->
+                documentToVideoApoyo(doc)
+            }
+
+            val ultimoDocumento = if (querySnapshot.documents.isNotEmpty()) {
+                querySnapshot.documents.last()
+            } else {
+                null
+            }
+
+            ResultadoVideosApoyo(videos, ultimoDocumento)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResultadoVideosApoyo(emptyList(), null)
         }
     }
 
